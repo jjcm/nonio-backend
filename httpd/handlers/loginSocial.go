@@ -3,9 +3,7 @@ package handlers
 import (
 	"net/http"
 	"os"
-	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"gopkg.in/danilopolani/gocialite.v1"
 )
 
@@ -49,11 +47,8 @@ func LoginSocial(w http.ResponseWriter, r *http.Request) {
 // LoginSocialCallback callback for oauth app
 func LoginSocialCallback(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-
 	code := r.FormValue("code")
 	state := r.FormValue("state")
-	Log.Info(code)
-	Log.Info(state)
 
 	// Handle callback and check for errors
 	user, _, err := gocial.Handle(state, code)
@@ -62,18 +57,11 @@ func LoginSocialCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Print in terminal user information
-	Log.Info(user)
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email":     user.Email,
-		"expiresAt": time.Now().Add(time.Minute * 10).Unix(), // tokens are valid for 10 minutes?
-	})
-	tokenString, err := token.SignedString(HmacSampleSecret)
+	token, err := tokenCreator(user.Email)
 	if err != nil {
 		SendResponse(w, "There was an error signing your JWT token: "+err.Error(), 500)
 		return
 	}
 
-	SendResponse(w, tokenString, 200)
+	SendResponse(w, token, 200)
 }

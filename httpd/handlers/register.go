@@ -16,6 +16,15 @@ type RegisterPayload struct {
 
 // Register Save a new user in the DB
 func Register(w http.ResponseWriter, r *http.Request) {
+	// any non GET handlers need to attach CORS headers. I always forget about that
+	CorsAdjustments(&w)
+
+	// silly AJAX prflight, here's where we can put in the CORS requirements
+	if r.Method == "OPTIONS" {
+		SendResponse(w, "", 200)
+		return
+	}
+
 	if r.Method != "POST" {
 		SendResponse(w, "You can only POST to the registration route", 405)
 		return
@@ -37,6 +46,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	Log.Info("now creating new user")
 	models.CreateUser(payload.Email, payload.Password)
-	u.FindByEmail(payload.Email)
-	SendResponse(w, u, 201)
+
+	// send a token
+	token, err := tokenCreator(u.Email)
+	if err != nil {
+		SendResponse(w, "There was an error signing your JWT token: "+err.Error(), 500)
+		return
+	}
+
+	SendResponse(w, token, 200)
 }
