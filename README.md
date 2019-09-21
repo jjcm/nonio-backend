@@ -38,3 +38,15 @@ goose mysql "root:password@tcp(127.0.0.1:3306)/socidb" up
 ## Building the app
 
 If all is well up to this point, you can build the binary. The included `build.sh` bash script will try and build the go code and place two different binary files into the `dist/` folder. There's one for linux, and one for OSX, so jump into that folder and run whichever one makes sense for you.
+
+## Example
+
+Start up the Go API (if you're on OSX, the example below needs to run the socid-osx binary), then jump into the example directory and start up a dev server (example below uses PHP 🤔) to see how this works. There's a very basic HTML file in there that uses vue.js to make a few AJAX requests.
+
+```
+# from the project root
+APP_KEY=asdfasdfasdfasdf DB_USER=root DB_PASSWORD=secret OAUTH_ID=1234 OAUTH_SECRET=12345678 dist/socid &
+
+cd example/
+php -S localhost:8888
+```

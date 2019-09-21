@@ -7,19 +7,22 @@ import (
 )
 
 func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
-	routes := make(map[string]func(http.ResponseWriter, *http.Request))
-	routes["/"] = handlers.Home
-	routes["/register"] = handlers.Register
-	routes["/login"] = handlers.Login
-	routes["/login-social"] = handlers.LoginSocial
-	routes["/login-social/callback"] = handlers.LoginSocialCallback
+	routes := map[string]func(http.ResponseWriter, *http.Request){
+		"/":                      handlers.Home,
+		"/register":              handlers.Register,
+		"/login":                 handlers.Login,
+		"/login-social":          handlers.LoginSocial,
+		"/login-social/callback": handlers.LoginSocialCallback,
+		"/info":                  handlers.Info,
+	}
 
 	return routes
 }
 
 func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
-	routes := make(map[string]func(http.ResponseWriter, *http.Request))
-	routes["/protected"] = handlers.GetTokenDetails
+	routes := map[string]func(http.ResponseWriter, *http.Request){
+		"/protected": handlers.GetTokenDetails,
+	}
 
 	return routes
 }

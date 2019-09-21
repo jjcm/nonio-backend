@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jjcm/soci-backend/httpd/handlers"
@@ -12,8 +13,14 @@ import (
 // CheckToken this acts as a middleware, but I'm not really using any middleware packages
 func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "OPTIONS" {
+			handlers.CorsAdjustments(&w)
+			handlers.SendResponse(w, "", 200)
+			return
+		}
+
 		token := r.Header.Get("Authorization")
-		if token == "" {
+		if strings.TrimSpace(token) == "" || strings.TrimSpace(token) == "Bearer" {
 			handlers.SendResponse(w, "Authorization required", http.StatusUnauthorized)
 			return
 		}
