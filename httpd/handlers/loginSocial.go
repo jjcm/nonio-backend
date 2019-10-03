@@ -59,9 +59,12 @@ func LoginSocialCallback(w http.ResponseWriter, r *http.Request) {
 
 	token, err := tokenCreator(user.Email)
 	if err != nil {
-		SendResponse(w, "There was an error signing your JWT token: "+err.Error(), 500)
+		SendResponse(w, MakeError("There was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 
-	SendResponse(w, token, 200)
+	response := map[string]string{
+		"token": token,
+	}
+	SendResponse(w, response, 200)
 }

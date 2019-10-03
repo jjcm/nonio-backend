@@ -9,6 +9,7 @@ import (
 // and set the headers and stuff
 func SendResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Access-Control-Allow-Origin", "*") // this should be locked down before launch
+	w.Header().Set("Content-Type", "application/json")
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {

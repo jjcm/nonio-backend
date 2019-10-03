@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jjcm/soci-backend/httpd/handlers"
@@ -42,15 +44,23 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 
 		claims, ok := goodies.Claims.(jwt.MapClaims)
 		if !ok || !goodies.Valid || err != nil {
-			handlers.SendResponse(w, "Error working with your token", 500)
+			handlers.SendResponse(w, handlers.MakeError("Error working with your token"), 500)
 			return
 		}
 
 		// check expiresAt inside the token
-		Log.Info(claims["expiresAt"])
+		// convert unix timestamp to int
+		i := int64(claims["expiresAt"].(float64))
+		ts := time.Unix(i, 0)
+		now := time.Now()
+		if now.After(ts) {
+			handlers.SendResponse(w, handlers.MakeError("Your token is expired"), http.StatusUnauthorized)
+			return
+		}
+		secondsRemaining := int(ts.Sub(now).Seconds())
+		w.Header().Set("X-Seconds-Remaining", strconv.Itoa(secondsRemaining))
 
 		ctx := context.WithValue(r.Context(), "email", claims["email"])
-		Log.Info("token! " + token)
 		next(w, r.WithContext(ctx))
 	}
 }

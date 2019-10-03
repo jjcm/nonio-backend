@@ -26,7 +26,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != "POST" {
-		SendResponse(w, "You can only POST to the registration route", 405)
+		SendResponse(w, MakeError("You can only POST to the registration route"), 405)
 		return
 	}
 
@@ -40,7 +40,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	err := u.FindByEmail(payload.Email)
 	if err == nil {
 		// err is nil, meaning there was not a problem looking up this user, so one was found
-		SendResponse(w, "This email has already been registered", 500)
+		SendResponse(w, MakeError("This email has already been registered"), 500)
 		return
 	}
 
@@ -48,11 +48,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	models.CreateUser(payload.Email, payload.Password)
 
 	// send a token
-	token, err := tokenCreator(u.Email)
+	token, err := tokenCreator(payload.Email)
 	if err != nil {
-		SendResponse(w, "There was an error signing your JWT token: "+err.Error(), 500)
+		SendResponse(w, MakeError("There was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 
-	SendResponse(w, token, 200)
+	response := map[string]string{
+		"token": token,
+	}
+	SendResponse(w, response, 200)
 }
