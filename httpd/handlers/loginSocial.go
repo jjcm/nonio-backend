@@ -18,7 +18,7 @@ func LoginSocial(w http.ResponseWriter, r *http.Request) {
 		"github": {
 			"clientID":     os.Getenv("OAUTH_ID"),
 			"clientSecret": os.Getenv("OAUTH_SECRET"),
-			"redirectURL":  "http://syd.jjcm.org:9000/login-social/callback",
+			"redirectURL":  "https://api.non.io/login-social/callback",
 		},
 	}
 	providerScopes := map[string][]string{
