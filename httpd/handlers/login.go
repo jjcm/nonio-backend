@@ -19,7 +19,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != "POST" {
-		SendResponse(w, "You can only POST to the login route", 405)
+		SendResponse(w, MakeError("You can only POST to the login route"), 405)
 		return
 	}
 
@@ -30,21 +30,24 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	err := u.FindByEmail(requestUser.Email)
 	if err != nil {
-		SendResponse(w, "Those credentials do not match our records", 404)
+		SendResponse(w, MakeError("Those credentials do not match our records"), 404)
 		return
 	}
 
 	err = u.Login(requestUser.Password)
 	if err != nil {
-		SendResponse(w, "Those credentials do not match our records", 404)
+		SendResponse(w, MakeError("Those credentials do not match our records"), 404)
 		return
 	}
 
 	token, err := tokenCreator(u.Email)
 	if err != nil {
-		SendResponse(w, "There was an error signing your JWT token: "+err.Error(), 500)
+		SendResponse(w, MakeError("There was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 
-	SendResponse(w, token, 200)
+	response := map[string]string{
+		"token": token,
+	}
+	SendResponse(w, response, 200)
 }

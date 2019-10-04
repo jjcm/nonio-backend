@@ -19,10 +19,6 @@ func main() {
 			Name:  "port, p",
 			Usage: "The port number should we run the API on",
 		},
-		cli.StringFlag{
-			Name:  "dbuser, u",
-			Usage: "Database username",
-		},
 	}
 	app.Action = runApp
 

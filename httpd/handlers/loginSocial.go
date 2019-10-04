@@ -18,7 +18,7 @@ func LoginSocial(w http.ResponseWriter, r *http.Request) {
 		"github": {
 			"clientID":     os.Getenv("OAUTH_ID"),
 			"clientSecret": os.Getenv("OAUTH_SECRET"),
-			"redirectURL":  "http://localhost:9000/login-social/callback",
+			"redirectURL":  "https://api.non.io/login-social/callback",
 		},
 	}
 	providerScopes := map[string][]string{
@@ -59,9 +59,12 @@ func LoginSocialCallback(w http.ResponseWriter, r *http.Request) {
 
 	token, err := tokenCreator(user.Email)
 	if err != nil {
-		SendResponse(w, "There was an error signing your JWT token: "+err.Error(), 500)
+		SendResponse(w, MakeError("There was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 
-	SendResponse(w, token, 200)
+	response := map[string]string{
+		"token": token,
+	}
+	SendResponse(w, response, 200)
 }

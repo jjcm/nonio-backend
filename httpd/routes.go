@@ -22,6 +22,7 @@ func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
 		"/protected": handlers.GetTokenDetails,
+		"/posts":     handlers.GetPosts,
 	}
 
 	return routes
