@@ -10,6 +10,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jjcm/soci-backend/httpd/handlers"
+	"github.com/jjcm/soci-backend/models"
 )
 
 // CheckToken this acts as a middleware, but I'm not really using any middleware packages
@@ -60,7 +61,14 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		secondsRemaining := int(ts.Sub(now).Seconds())
 		w.Header().Set("X-Seconds-Remaining", strconv.Itoa(secondsRemaining))
 
-		ctx := context.WithValue(r.Context(), "email", claims["email"])
+		user := models.User{}
+		user.FindByEmail(claims["email"].(string))
+		if user.ID == 0 {
+			handlers.SendResponse(w, handlers.MakeError("Your user is no longer valid"), http.StatusUnauthorized)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "user_email", user.Email)
+		ctx = context.WithValue(ctx, "user_id", user.ID)
 		next(w, r.WithContext(ctx))
 	}
 }
