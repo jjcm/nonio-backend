@@ -20,3 +20,17 @@ func SendResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.WriteHeader(statusCode)
 	w.Write(jsonData)
 }
+
+func sendNotFound(w http.ResponseWriter, err error) {
+	output := map[string]string{
+		"error": err.Error(),
+	}
+	SendResponse(w, output, 404)
+}
+
+func sendSystemError(w http.ResponseWriter, err error) {
+	output := map[string]string{
+		"error": err.Error(),
+	}
+	SendResponse(w, output, 500)
+}

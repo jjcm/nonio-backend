@@ -14,6 +14,7 @@ func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/login-social":          handlers.LoginSocial,
 		"/login-social/callback": handlers.LoginSocialCallback,
 		"/info":                  handlers.Info,
+		"/posts/":                handlers.GetPostByURL,
 	}
 
 	return routes
@@ -22,7 +23,15 @@ func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
 		"/protected": handlers.GetTokenDetails,
-		"/posts":     handlers.GetPosts,
+
+		// post routes
+		"/posts/new":               handlers.GetNewestPosts,
+		"/posts":                   handlers.GetPosts,
+		"/post/create":             handlers.CreatePost,
+		"/posts/url-is-available/": handlers.CheckIfURLIsAvailable,
+
+		// tag routes
+		"/tags": handlers.GetTags,
 	}
 
 	return routes

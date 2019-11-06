@@ -30,13 +30,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	err := u.FindByEmail(requestUser.Email)
 	if err != nil {
-		SendResponse(w, MakeError("Those credentials do not match our records"), 404)
+		sendNotFound(w, err)
 		return
 	}
 
 	err = u.Login(requestUser.Password)
 	if err != nil {
-		SendResponse(w, MakeError("Those credentials do not match our records"), 404)
+		sendNotFound(w, err)
 		return
 	}
 

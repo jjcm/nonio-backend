@@ -4,24 +4,12 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/jjcm/soci-backend/models"
 )
 
-// GetPosts - get all the posts in the system
-func GetPosts(w http.ResponseWriter, r *http.Request) {
-	// check duration of 24 hours vs. last login
-	user := models.User{}
-	user.FindByID(r.Context().Value("user_id").(int))
-
-	lastLogin := user.LastLogin
-	twenty24HoursAgo := time.Now().AddDate(0, 0, -1)
-	cutoff := lastLogin
-	if lastLogin.After(twenty24HoursAgo) {
-		cutoff = twenty24HoursAgo
-	}
-
+// GetNewestPosts - get 100 of the latest posts and return them as JSON
+func GetNewestPosts(w http.ResponseWriter, r *http.Request) {
 	// check for offset
 	r.ParseForm()
 	formOffset := r.FormValue("offset")
@@ -34,7 +22,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	posts, err := models.GetPostsByScoreSince(cutoff, offset)
+	posts, err := models.GetLatestPosts(offset)
 	if err != nil {
 		sendSystemError(w, err)
 		return
