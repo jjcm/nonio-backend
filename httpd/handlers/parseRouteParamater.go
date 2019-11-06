@@ -3,5 +3,5 @@ package handlers
 import "strings"
 
 func parseRouteParamater(fullpath, pattern string) string {
-	return strings.TrimLeft(fullpath, pattern)
+	return strings.TrimPrefix(fullpath, pattern)
 }
