@@ -25,9 +25,10 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/protected": handlers.GetTokenDetails,
 
 		// post routes
-		"/posts/new":   handlers.GetNewestPosts,
-		"/posts":       handlers.GetPosts,
-		"/post/create": handlers.CreatePost,
+		"/posts/new":               handlers.GetNewestPosts,
+		"/posts":                   handlers.GetPosts,
+		"/post/create":             handlers.CreatePost,
+		"/posts/url-is-available/": handlers.CheckIfURLIsAvailable,
 
 		// tag routes
 		"/tags": handlers.GetTags,
