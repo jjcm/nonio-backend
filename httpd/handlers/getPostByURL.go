@@ -14,6 +14,7 @@ func GetPostByURL(w http.ResponseWriter, r *http.Request) {
 	url := parseRouteParamater(r.URL.Path, "/posts/")
 	if strings.TrimSpace(url) == "" {
 		sendSystemError(w, errors.New("Please pass a valid URL for us to get you your requested content"))
+		return
 	}
 
 	p := models.Post{}
