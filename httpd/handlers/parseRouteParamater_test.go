@@ -10,6 +10,8 @@ func TestWeCanParseAURLParamater(t *testing.T) {
 		expected string
 	}{
 		{"/posts/yippie", "/posts/", "yippie"},
+		{"/posts/url-is-available/zestibular", "/posts/url-is-available/", "zestibular"},
+		{"/posts/url-is-available/vestibular", "/posts/url-is-available/", "vestibular"},
 	}
 
 	for _, tc := range testCases {
