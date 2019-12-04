@@ -12,7 +12,7 @@ func TestWeCanCreateAPost(t *testing.T) {
 	CreateUser("example@example.com", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	p, err := author.CreatePost("Post Title", "lorem ipsum", "image")
+	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
@@ -32,7 +32,7 @@ func TestWeCanFindAPostByItsURL(t *testing.T) {
 	CreateUser("example@example.com", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	author.CreatePost("Post Title", "lorem ipsum", "image")
+	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 
 	p := Post{}
 	p.FindByURL("post-title")
@@ -50,7 +50,7 @@ func TestWeCanFindAPostByItsID(t *testing.T) {
 	CreateUser("example@example.com", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	author.CreatePost("Post Title", "lorem ipsum", "image")
+	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 
 	p := Post{}
 	p.FindByID(1)
@@ -69,7 +69,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 	CreateUser("example@example.com", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	p, err := author.CreatePost("Post Title", "lorem ipsum", "image")
+	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 	if err != nil {
 		t.Errorf("We should be able to create a post. Error: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestWeTagAPost(t *testing.T) {
 	CreateUser("example@example.com", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	author.CreatePost("Post Title", "lorem ipsum", "image")
+	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 
 	p := Post{}
 	p.FindByURL("post-title")
@@ -115,7 +115,7 @@ func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 	CreateUser("example@example.com", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	author.CreatePost("Post Title", "lorem ipsum", "image")
+	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 
 	p := Post{}
 	p.FindByURL("post-title")
@@ -149,7 +149,7 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 	CreateUser("example@example.com", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	p1, err := author.CreatePost("Post Title", "lorem ipsum", "image")
+	p1, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
@@ -158,7 +158,7 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 	}
 
 	// now let's create a second post with the same title
-	p2, err := author.CreatePost("Post Title", "Dolor sit amit", "image")
+	p2, err := author.CreatePost("Post Title", "post-title", "Dolor sit amit", "image")
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
@@ -167,46 +167,12 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 	}
 
 	// now let's create a third post with the same title
-	p3, err := author.CreatePost("Post Title", "Dolor sit amit", "image")
+	p3, err := author.CreatePost("Post Title", "post-title", "Dolor sit amit", "image")
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
 	if p3.URL != "post-title-3" {
 		t.Errorf("The URL for the third post should be different from the original created post. Post3 url: %v", p2.URL)
-	}
-}
-
-func TestOurUrlGeneratorCorrectlyTruncatesToASafeDatabaseLength(t *testing.T) {
-	title := "This is a really long post title that will be truncated into a url that has the correct length for the database, and although this is a really silly example it still needs a test so the database doesn't blow up when some random human does something like this just to push the system to its limits"
-	if createURLFromTitle(title) != "this-is-a-really-long-post-title-that-will-be-truncated-into-a-url-that-has-the-correct-length-for-the-database-and-although-this-is-a-really-silly-example-it-still-needs-a-test-so-the-database-doesnt-blow-up-when-some-random-human-does-something-like-th" {
-		t.Errorf("Expected title wasn't generated")
-	}
-}
-
-func TestIfWeCreateAPostWithAReallyLongTitleTheTitleAndUrlAreTruncatedCorrectly(t *testing.T) {
-	setupTestingDB()
-	defer teardownTestingDB()
-
-	// create an author for post
-	CreateUser("example@example.com", "password")
-	author := User{}
-	author.FindByEmail("example@example.com")
-	p1, err := author.CreatePost("This is a really long post title that will be truncated into a url that has the correct length for the database, and although this is a really silly example it still needs a test so the database doesn't blow up when some random human does something like this just to push the system to its limits", "lorem ipsum", "image")
-	if err != nil {
-		t.Errorf("Post creation should have worked. Error recieved: %v", err)
-	}
-	if p1.URL != "this-is-a-really-long-post-title-that-will-be-truncated-into-a-url-that-has-the-correct-length-for-the-database-and-although-this-is-a-really-silly-example-it-still-needs-a-test-so-the-database-doesnt-blow-up-when-some-random-human-does-something-like-th" {
-		t.Errorf("The post that is returned should be the newly created post")
-	}
-
-	// do it again for url suffix generation checking
-
-	p2, err := author.CreatePost("This is a really long post title that will be truncated into a url that has the correct length for the database, and although this is a really silly example it still needs a test so the database doesn't blow up when some random human does something like this just to push the system to its limits", "lorem ipsum", "image")
-	if err != nil {
-		t.Errorf("Post creation should have worked. Error recieved: %v", err)
-	}
-	if p2.URL != "this-is-a-really-long-post-title-that-will-be-truncated-into-a-url-that-has-the-correct-length-for-the-database-and-although-this-is-a-really-silly-example-it-still-needs-a-test-so-the-database-doesnt-blow-up-when-some-random-human-does-something-like--2" {
-		t.Errorf("The post that is returned should be the newly created post")
 	}
 }
 
@@ -218,7 +184,7 @@ func TestIfAPostIsCreatedWithAnEmptyTypeItGetsSetToTheDefaultTypeImage(t *testin
 	CreateUser("example@example.com", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	p, err := author.CreatePost("Title", "lorem ipsum", "") // note the empty 3rd param
+	p, err := author.CreatePost("Title", "post-title", "lorem ipsum", "") // note the empty 3rd param
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}

@@ -48,11 +48,12 @@ func (u *User) FindByID(id int) error {
 
 // CreatePost - create a new post in the database and set the current User as
 // the author
-func (u *User) CreatePost(title, content, postType string) (Post, error) {
+func (u *User) CreatePost(title, url, content, postType string) (Post, error) {
 	p := Post{}
 	now := time.Now().Format("2006-01-02 15:04:05")
 
-	postURL := createURLFromTitle(title)
+	postURL := url
+	// TODO: this needs some backend verification that it's only /^[0-9A-Za-z-_]+$/
 
 	// perpare and truncate the title if necessary
 	postTitle := title
