@@ -37,13 +37,13 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Title     string `json:"title"`
 		UserName  string `json:"user"`
-		TimeStamp string `json:"time"`
+		TimeStamp int64  `json:"time"`
 		URL       string `json:"url"`
 		Tags      []Tag  `json:"tags"`
 	}{
 		Title:     p.Title,
 		UserName:  p.Author.Name,
-		TimeStamp: p.CreatedAt.Format("2006-01-02 03:04PM"),
+		TimeStamp: p.CreatedAt.UnixNano() / int64(time.Millisecond),
 		URL:       p.URL,
 		Tags:      p.Tags,
 	})
