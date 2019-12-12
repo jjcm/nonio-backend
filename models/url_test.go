@@ -12,10 +12,10 @@ func TestWeCanCheckIfAUrlIsAvailable(t *testing.T) {
 	}
 
 	// cool, now let's create a post and the URL should not be available anymore
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	p, _ := author.CreatePost("Post Title", "lorem ipsum", "image")
+	p, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 
 	// now the URL for the existing post should be taken
 	isAvaiable, _ = URLIsAvailable(p.URL)

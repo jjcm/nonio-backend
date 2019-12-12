@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strconv"
 	"testing"
 )
 
@@ -9,7 +10,7 @@ func TestWeCanCreateAPost(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
@@ -29,7 +30,7 @@ func TestWeCanFindAPostByItsURL(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
@@ -47,7 +48,7 @@ func TestWeCanFindAPostByItsID(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
@@ -66,7 +67,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
@@ -74,10 +75,10 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 		t.Errorf("We should be able to create a post. Error: %v", err)
 	}
 
-	expectedJSON := `{"title":"Post Title","user":"","time":"` + p.GetCreatedAtTimestamp() + `","url":"post-title","tags":[]}`
+	expectedJSON := `{"title":"Post Title","user":"","time":` + strconv.Itoa(int(p.GetCreatedAtTimestamp())) + `,"url":"post-title","tags":[]}`
 
 	if p.ToJSON() != expectedJSON {
-		t.Errorf("JSON output wasn't what we expected it to be.\nExpected: %v\nActual: %v", expectedJSON, p.ToJSON())
+		t.Errorf("JSON output wasn't what we expected it to be.\nExpected: %v\nActual:   %v", expectedJSON, p.ToJSON())
 	}
 }
 
@@ -86,7 +87,7 @@ func TestWeTagAPost(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
@@ -112,7 +113,7 @@ func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
@@ -146,7 +147,7 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	p1, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
@@ -181,7 +182,7 @@ func TestIfAPostIsCreatedWithAnEmptyTypeItGetsSetToTheDefaultTypeImage(t *testin
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	p, err := author.CreatePost("Title", "post-title", "lorem ipsum", "") // note the empty 3rd param

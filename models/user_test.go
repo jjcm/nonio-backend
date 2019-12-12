@@ -8,7 +8,7 @@ func TestCanCreateAUser(t *testing.T) {
 	setupTestingDB()
 	defer teardownTestingDB()
 
-	err := CreateUser("user@example.com", "password")
+	err := CreateUser("user@example.com", "", "password")
 	if err != nil {
 		t.Errorf("Creating a user should not have errors. Error: " + err.Error())
 	}
@@ -18,7 +18,7 @@ func TestAUsersPasswordCanBeChecked(t *testing.T) {
 	setupTestingDB()
 	defer teardownTestingDB()
 
-	err := CreateUser("user@example.com", "password")
+	err := CreateUser("user@example.com", "", "password")
 	if err != nil {
 		panic(err)
 	}
@@ -39,13 +39,13 @@ func TestAUserCantBeCreatedIfTheEmailAlreadyExists(t *testing.T) {
 	setupTestingDB()
 	defer teardownTestingDB()
 
-	err := CreateUser("user@example.com", "anything")
+	err := CreateUser("user@example.com", "", "anything")
 	if err != nil {
 		t.Errorf("Initial creation of a user should work fine")
 	}
 
 	// now let's try and create another user with the same email address
-	err = CreateUser("user@example.com", "anything")
+	err = CreateUser("user@example.com", "", "anything")
 	if err == nil {
 		t.Errorf("An error should have been thrown when we tried to create a user with an existing email address")
 	}
@@ -62,7 +62,7 @@ func TestFindingAUserByTheirEmailAddress(t *testing.T) {
 	}
 
 	// now let's create a user and search with an invalid email address, we are expecting an error
-	CreateUser("user@example.com", "anything")
+	CreateUser("user@example.com", "", "anything")
 	err = u.FindByEmail("wrong@address.com")
 	if err == nil {
 		t.Errorf("The email address 'wrong@address.com' should not exist in the database so an error should have been thrown")
@@ -80,7 +80,7 @@ func TestFindingAUserByTheirPrimaryKeyID(t *testing.T) {
 	}
 
 	// this should be the very first user, so I should be able to find them by the ID 1
-	CreateUser("user@example.com", "whatever")
+	CreateUser("user@example.com", "", "whatever")
 	err = u.FindByID(1)
 	if err != nil {
 		t.Errorf("No error should have been thrown while looking up the newly created user")
@@ -91,7 +91,7 @@ func TestWeCanTrackTheUsersLastLogin(t *testing.T) {
 	setupTestingDB()
 	defer teardownTestingDB()
 
-	CreateUser("user@example.com", "whatever")
+	CreateUser("user@example.com", "", "whatever")
 
 	u := User{}
 	u.FindByID(1)

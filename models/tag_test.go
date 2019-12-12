@@ -16,7 +16,7 @@ func TestCanGetTags(t *testing.T) {
 	}
 
 	// create an author for tags
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 
@@ -45,7 +45,7 @@ func TestWeCanCreateAndRetrieveATag(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create our author
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 
@@ -70,7 +70,7 @@ func TestYouCantCreateATagWithTheNameOfAnExistingTag(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create our author
-	CreateUser("example@example.com", "password")
+	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 
