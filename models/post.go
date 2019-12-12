@@ -83,8 +83,8 @@ func (p *Post) FindByID(id int) error {
 }
 
 // GetCreatedAtTimestamp - get the created at timestamp in the predetermined format
-func (p *Post) GetCreatedAtTimestamp() string {
-	return p.CreatedAt.Format("2006-01-02 03:04PM")
+func (p *Post) GetCreatedAtTimestamp() int64 {
+	return p.CreatedAt.UnixNano() / int64(time.Millisecond)
 }
 
 // AddTag - associate a post with an existing tag

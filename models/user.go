@@ -13,6 +13,7 @@ import (
 type User struct {
 	ID        int       `db:"id" json:"id"`
 	Email     string    `db:"email" json:"email"`
+	Username  string    `db:"username" json:"username"`
 	Name      string    `db:"name" json:"name"`
 	Password  string    `db:"password" json:"password"`
 	LastLogin time.Time `db:"last_login" json:"-"`
@@ -120,10 +121,10 @@ func (u *User) update() error {
 }
 
 // CreateUser try and create a new user
-func CreateUser(email, password string) error {
+func CreateUser(email, username, password string) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	hashedPassword, err := hashPassword(password)
-	_, err = DBConn.Exec("INSERT INTO users (email, password, created_at, updated_at) VALUES (?, ?, ?, ?)", email, hashedPassword, now, now)
+	_, err = DBConn.Exec("INSERT INTO users (email, username, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", email, username, hashedPassword, now, now)
 	if err != nil {
 		return err
 	}

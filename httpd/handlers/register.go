@@ -11,6 +11,7 @@ import (
 // the API to register a new user
 type RegisterPayload struct {
 	Email    string `json:"email"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
@@ -45,7 +46,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Log.Info("now creating new user")
-	models.CreateUser(payload.Email, payload.Password)
+	models.CreateUser(payload.Email, payload.Username, payload.Password)
 
 	// send a token
 	token, err := tokenCreator(payload.Email)
