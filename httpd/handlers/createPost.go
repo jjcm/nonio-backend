@@ -11,6 +11,7 @@ import (
 // create a new post
 type PostCreationRequest struct {
 	Title   string `json:"title"`
+	URL     string `json:"url"`
 	Content string `json:"content"`
 	Type    string `json:"type"`
 }
@@ -39,7 +40,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&postRequest)
-	newPost, err := u.CreatePost(postRequest.Title, postRequest.Content, postRequest.Type)
+	newPost, err := u.CreatePost(postRequest.Title, postRequest.URL, postRequest.Content, postRequest.Type)
 	if err != nil {
 		sendSystemError(w, err)
 		return

@@ -4,14 +4,6 @@ import (
 	"strings"
 )
 
-func createURLFromTitle(title string) string {
-	convertedString := strings.ToLower(strings.Join(splitByWords(title), "-"))
-	if len(convertedString) > 255 {
-		convertedString = convertedString[0:254]
-	}
-	return convertedString
-}
-
 func splitByWords(s string) []string {
 	trimmedString := strings.TrimSpace(removeReservedChars(s))
 	parts := strings.Split(trimmedString, " ")
