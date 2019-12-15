@@ -124,3 +124,36 @@ func TestWeCanCheckIfAUsernameIsAvailable(t *testing.T) {
 		t.Errorf("The username should be taken, but the system said it's available")
 	}
 }
+
+func TestWeCanGetTheUsersPreferredDisplayName(t *testing.T) {
+	u := User{
+		ID:       88,
+		Email:    "user@example.com",
+		Username: "sociuser",
+		Name:     "Soci User",
+	}
+
+	// default is to show the user by their username
+	expected := "sociuser"
+	if u.GetDisplayName() != expected {
+		t.Errorf("If the username isn't an empty string, then it should be the value returned.\nExpected: %s\n  Actual: %s\n", expected, u.GetDisplayName())
+	}
+
+	u.Username = ""
+	expected = "Soci User"
+	if u.GetDisplayName() != expected {
+		t.Errorf("If the username is an empty string, then it should be the name that is returned.\nExpected: %s\n  Actual: %s\n", expected, u.GetDisplayName())
+	}
+
+	u.Name = ""
+	expected = "user@example.com"
+	if u.GetDisplayName() != expected {
+		t.Errorf("If the username and name are both empty, then the user's email should be returned.\nExpected: %s\n  Actual: %s\n", expected, u.GetDisplayName())
+	}
+
+	u.Email = ""
+	expected = "User88"
+	if u.GetDisplayName() != expected {
+		t.Errorf("If the username, name, and email address are all empty, then we need to have some sort of fallback. Why not their Primary Key?\nExpected: %s\n  Actual: %s\n", expected, u.GetDisplayName())
+	}
+}

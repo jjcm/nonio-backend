@@ -152,3 +152,17 @@ func UsernameIsAvailable(username string) (bool, error) {
 	}
 	return true, nil
 }
+
+// GetDisplayName - return a string that shows the user's preferred display name
+func (u *User) GetDisplayName() string {
+	if u.Username != "" {
+		return u.Username
+	}
+	if u.Name != "" {
+		return u.Name
+	}
+	if u.Email != "" {
+		return u.Email
+	}
+	return "User" + strconv.Itoa(u.ID)
+}
