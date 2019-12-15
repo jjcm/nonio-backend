@@ -28,8 +28,9 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		// post routes
 		"/posts/new":   handlers.GetNewestPosts,
-		"/posts":       handlers.GetPosts,
 		"/post/create": handlers.CreatePost,
+		"/posts/top/":  handlers.GetTopPosts,
+		"/posts":       handlers.GetPosts,
 
 		// tag routes
 		"/tags": handlers.GetTags,
