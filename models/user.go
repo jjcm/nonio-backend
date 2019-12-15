@@ -140,3 +140,15 @@ func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
+
+func UsernameIsAvailable(username string) (bool, error) {
+	var total int
+	err := DBConn.Get(&total, "SELECT COUNT(*) FROM users WHERE username = ?", username)
+	if err != nil {
+		return false, err
+	}
+	if total != 0 {
+		return false, nil
+	}
+	return true, nil
+}

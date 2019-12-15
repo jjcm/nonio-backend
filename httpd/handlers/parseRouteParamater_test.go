@@ -15,7 +15,7 @@ func TestWeCanParseAURLParamater(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		output := parseRouteParamater(tc.fullURL, tc.pattern)
+		output := parseRouteParameter(tc.fullURL, tc.pattern)
 		if output != tc.expected {
 			t.Errorf("URL param was not caught correctly. Expected %v got %v", tc.expected, output)
 		}

@@ -8,14 +8,15 @@ import (
 
 func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
-		"/":                        handlers.Home,
-		"/register":                handlers.Register,
-		"/login":                   handlers.Login,
-		"/login-social":            handlers.LoginSocial,
-		"/login-social/callback":   handlers.LoginSocialCallback,
-		"/info":                    handlers.Info,
-		"/posts/":                  handlers.GetPostByURL,
-		"/posts/url-is-available/": handlers.CheckIfURLIsAvailable,
+		"/":                             handlers.Home,
+		"/register":                     handlers.Register,
+		"/login":                        handlers.Login,
+		"/login-social":                 handlers.LoginSocial,
+		"/login-social/callback":        handlers.LoginSocialCallback,
+		"/info":                         handlers.Info,
+		"/posts/":                       handlers.GetPostByURL,
+		"/posts/url-is-available/":      handlers.CheckIfURLIsAvailable,
+		"/users/username-is-available/": handlers.CheckIfUsernameIsAvailable,
 	}
 
 	return routes
