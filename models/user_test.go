@@ -105,3 +105,22 @@ func TestWeCanTrackTheUsersLastLogin(t *testing.T) {
 		t.Errorf("A user that has logged in should have a non-zero timestamp stored in the DB")
 	}
 }
+
+func TestWeCanCheckIfAUsernameIsAvailable(t *testing.T) {
+	setupTestingDB()
+	defer teardownTestingDB()
+
+	isAvaiable, _ := UsernameIsAvailable("anything")
+	if !isAvaiable {
+		t.Errorf("Because the database is empty, any url should be available")
+	}
+
+	// create our user with a username of "anything"
+	CreateUser("user@example.com", "anything", "password")
+
+	// now the username "anything" shouldn't be available
+	isAvaiable, _ = UsernameIsAvailable("anything")
+	if isAvaiable {
+		t.Errorf("The username should be taken, but the system said it's available")
+	}
+}

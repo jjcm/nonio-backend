@@ -11,7 +11,7 @@ import (
 // GetPostByURL find a specific post in the database and send back a JSON
 // representation of it
 func GetPostByURL(w http.ResponseWriter, r *http.Request) {
-	url := parseRouteParamater(r.URL.Path, "/posts/")
+	url := parseRouteParameter(r.URL.Path, "/posts/")
 	if strings.TrimSpace(url) == "" {
 		sendSystemError(w, errors.New("Please pass a valid URL for us to get you your requested content"))
 		return
