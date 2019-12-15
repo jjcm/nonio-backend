@@ -13,7 +13,7 @@ import (
 func CheckIfURLIsAvailable(w http.ResponseWriter, r *http.Request) {
 	requestedUsername := parseRouteParameter(r.URL.Path, "/users/username-is-available/")
 	if strings.TrimSpace(requestedURL) == "" {
-		sendSystemError(w, errors.New("Please pass a valid usernmae for us to get you your requested content"))
+		sendSystemError(w, errors.New("Please pass a valid username for us to get you your requested content"))
 		return
 	}
 
