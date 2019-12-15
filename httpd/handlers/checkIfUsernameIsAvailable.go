@@ -8,11 +8,11 @@ import (
 	"github.com/jjcm/soci-backend/models"
 )
 
-// CheckIfURLIsAvailable - return a boolean value to see if a given URL is
+// CheckIfUsernameIsAvailable - return a boolean value to see if a given URL is
 // already taken
-func CheckIfURLIsAvailable(w http.ResponseWriter, r *http.Request) {
+func CheckIfUsernameIsAvailable(w http.ResponseWriter, r *http.Request) {
 	requestedUsername := parseRouteParameter(r.URL.Path, "/users/username-is-available/")
-	if strings.TrimSpace(requestedURL) == "" {
+	if strings.TrimSpace(requestedUsername) == "" {
 		sendSystemError(w, errors.New("Please pass a valid username for us to get you your requested content"))
 		return
 	}
