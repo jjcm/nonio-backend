@@ -141,6 +141,8 @@ func checkPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
+// UsernameIsAvailable - check the database to see if a certian username is
+// already taken
 func UsernameIsAvailable(username string) (bool, error) {
 	var total int
 	err := DBConn.Get(&total, "SELECT COUNT(*) FROM users WHERE username = ?", username)
