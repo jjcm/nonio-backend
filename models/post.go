@@ -39,10 +39,12 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		UserName  string `json:"user"`
 		TimeStamp int64  `json:"time"`
 		URL       string `json:"url"`
+		Score     int    `json:"score"`
 		Tags      []Tag  `json:"tags"`
 	}{
 		Title:     p.Title,
 		UserName:  p.Author.Name,
+		Score:     p.Score,
 		TimeStamp: p.CreatedAt.UnixNano() / int64(time.Millisecond),
 		URL:       p.URL,
 		Tags:      p.Tags,
@@ -119,7 +121,7 @@ func (p *Post) getTags() error {
 func GetPostsByScoreSince(cutoff time.Time, offset int) ([]Post, error) {
 	posts := []Post{}
 
-	err := DBConn.Select(&posts, "SELECT * FROM `posts` WHERE created_at > ? ORDER BY `score` LIMIT 100 OFFSET ?", cutoff.Format("2006-01-02 15:04:05"), offset)
+	err := DBConn.Select(&posts, "SELECT * FROM `posts` WHERE created_at > ? ORDER BY `score` DESC LIMIT 100 OFFSET ?", cutoff.Format("2006-01-02 15:04:05"), offset)
 
 	return posts, err
 }
