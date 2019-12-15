@@ -43,7 +43,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		Tags      []Tag  `json:"tags"`
 	}{
 		Title:     p.Title,
-		UserName:  p.Author.Name,
+		UserName:  p.Author.GetDisplayName(),
 		Score:     p.Score,
 		TimeStamp: p.CreatedAt.UnixNano() / int64(time.Millisecond),
 		URL:       p.URL,
