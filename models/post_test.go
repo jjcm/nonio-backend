@@ -67,7 +67,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "", "password")
+	CreateUser("example@example.com", "userName", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
 	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
@@ -75,7 +75,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 		t.Errorf("We should be able to create a post. Error: %v", err)
 	}
 
-	expectedJSON := `{"title":"Post Title","user":"","time":` + strconv.Itoa(int(p.GetCreatedAtTimestamp())) + `,"url":"post-title","tags":[]}`
+	expectedJSON := `{"title":"Post Title","user":"userName","time":` + strconv.Itoa(int(p.GetCreatedAtTimestamp())) + `,"url":"post-title","score":0,"tags":[]}`
 
 	if p.ToJSON() != expectedJSON {
 		t.Errorf("JSON output wasn't what we expected it to be.\nExpected: %v\nActual:   %v", expectedJSON, p.ToJSON())
