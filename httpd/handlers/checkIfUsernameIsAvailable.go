@@ -8,7 +8,7 @@ import (
 	"github.com/jjcm/soci-backend/models"
 )
 
-// CheckIfUsernameIsAvailable - return a boolean value to see if a given URL is
+// CheckIfUsernameIsAvailable - return a boolean value to see if a given username is
 // already taken
 func CheckIfUsernameIsAvailable(w http.ResponseWriter, r *http.Request) {
 	requestedUsername := parseRouteParameter(r.URL.Path, "/users/username-is-available/")
