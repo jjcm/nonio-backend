@@ -137,7 +137,7 @@ func TestWeCanCheckIfAUsernameIsAvailable(t *testing.T) {
 
 	isAvaiable, _ := UsernameIsAvailable("anything")
 	if !isAvaiable {
-		t.Errorf("Because the database is empty, any url should be available")
+		t.Errorf("Because the database is empty, any username should be available")
 	}
 
 	// create our user with a username of "anything"

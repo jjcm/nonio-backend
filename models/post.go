@@ -39,14 +39,16 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		UserName  string `json:"user"`
 		TimeStamp int64  `json:"time"`
 		URL       string `json:"url"`
+		Content   string `json:"content"`
 		Score     int    `json:"score"`
 		Tags      []Tag  `json:"tags"`
 	}{
 		Title:     p.Title,
 		UserName:  p.Author.GetDisplayName(),
-		Score:     p.Score,
 		TimeStamp: p.CreatedAt.UnixNano() / int64(time.Millisecond),
 		URL:       p.URL,
+		Content:   p.Content,
+		Score:     p.Score,
 		Tags:      p.Tags,
 	})
 }
