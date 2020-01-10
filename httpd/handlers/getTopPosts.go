@@ -49,5 +49,4 @@ func GetTopPosts(w http.ResponseWriter, r *http.Request) {
 		"posts":     posts,
 	}
 	SendResponse(w, output, 200)
-
 }
