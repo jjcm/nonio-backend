@@ -45,7 +45,6 @@ func GetTopPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	output := map[string]interface{}{
-		"yay":       "yay!",
 		"timeframe": timeframeParam,
 		"posts":     posts,
 	}
