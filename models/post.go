@@ -40,6 +40,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		TimeStamp int64  `json:"time"`
 		URL       string `json:"url"`
 		Content   string `json:"content"`
+		Type      string `json:"type"`
 		Score     int    `json:"score"`
 		Tags      []Tag  `json:"tags"`
 	}{
@@ -48,6 +49,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		TimeStamp: p.CreatedAt.UnixNano() / int64(time.Millisecond),
 		URL:       p.URL,
 		Content:   p.Content,
+		Type:      p.Type,
 		Score:     p.Score,
 		Tags:      p.Tags,
 	})
