@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strconv"
 	"testing"
 )
 
@@ -180,5 +181,59 @@ func TestWeCanGetTheUsersPreferredDisplayName(t *testing.T) {
 	expected = "User88"
 	if u.GetDisplayName() != expected {
 		t.Errorf("If the username, name, and email address are all empty, then we need to have some sort of fallback. Why not their Primary Key?\nExpected: %s\n  Actual: %s\n", expected, u.GetDisplayName())
+	}
+}
+
+func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
+	setupTestingDB()
+	defer teardownTestingDB()
+
+	CreateUser("example@example.com", "", "password")
+	author := User{}
+	author.FindByEmail("example@example.com")
+	// the author shouldn't have any posts at this point
+	posts, err := author.MyPosts(-1, 0)
+	if len(posts) != 0 {
+		t.Errorf("Expected the User to not have any posts")
+	}
+	if err != nil {
+		t.Error(err)
+	}
+
+	// create a post
+	author.CreatePost("It's my post! Yay!", "post-title", "lorem ipsum", "image")
+	posts, err = author.MyPosts(-1, 0)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(posts) == 0 {
+		t.Errorf("Expected a user to have posts")
+		t.Errorf("%v", posts)
+	}
+
+	// now let's create a ton of posts to test the offset and limit behavior
+	for index := 1; index < 200; index++ {
+		indexAsString := strconv.Itoa(index)
+		author.CreatePost("Post Title "+indexAsString, "post-title-"+indexAsString, "lorem ipsum", "image")
+	}
+
+	posts, err = author.MyPosts(-1, 0)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(posts) != 200 {
+		t.Errorf("Expected a user to have 200 posts:\nExpected: %v\n  Actual: %v", 200, len(posts))
+		return
+	}
+
+	limitedPosts, err := author.MyPosts(100, 0)
+	if err != nil {
+		t.Error(err)
+	}
+	if limitedPosts[0].Title != "It's my post! Yay!" {
+		t.Errorf("Expected the first Post to be the one we created at the beginning of this test")
+	}
+	if len(limitedPosts) != 100 {
+		t.Errorf("Expected that we could limit the total number of Posts returned.\nExpected: %v\n  Actual: %v", 100, len(limitedPosts))
 	}
 }

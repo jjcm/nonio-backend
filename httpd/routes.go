@@ -14,6 +14,7 @@ func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/login-social":                 handlers.LoginSocial,
 		"/login-social/callback":        handlers.LoginSocialCallback,
 		"/info":                         handlers.Info,
+		"/posts/user/":                  handlers.GetPostsByAuthor,
 		"/posts/":                       handlers.GetPostByURL,
 		"/posts/url-is-available/":      handlers.CheckIfURLIsAvailable,
 		"/users/username-is-available/": handlers.CheckIfUsernameIsAvailable,

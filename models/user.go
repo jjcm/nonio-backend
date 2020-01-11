@@ -184,3 +184,28 @@ func (u *User) GetDisplayName() string {
 	}
 	return "User" + strconv.Itoa(u.ID)
 }
+
+// MyPosts will return all Posts that were authored by this user.
+// limit and offset will adjust the SQL query to return a smaller subset
+// pass -1 for limit and you can return all
+func (u *User) MyPosts(limit, offset int) ([]Post, error) {
+	posts := []Post{}
+
+	// run the correct sql query
+	var query string
+	if limit == -1 {
+		query = "SELECT * FROM posts WHERE user_id = ?"
+		err := DBConn.Select(&posts, query, u.ID)
+		if err != nil {
+			return posts, err
+		}
+	} else {
+		query = "SELECT * FROM posts WHERE user_id = ? LIMIT ? OFFSET ?"
+		err := DBConn.Select(&posts, query, u.ID, limit, offset)
+		if err != nil {
+			return posts, err
+		}
+	}
+
+	return posts, nil
+}
