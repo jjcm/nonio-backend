@@ -26,6 +26,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	requestUser := models.User{}
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&requestUser)
+	if requestUser.Email == "" {
+		SendResponse(w, MakeError("both password and email are required"), 400)
+		return
+	}
 
 	u := models.User{}
 	err := u.FindByEmail(requestUser.Email)
@@ -47,7 +51,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]string{
-		"token": token,
+		"token":    token,
+		"username": u.Username,
 	}
 	SendResponse(w, response, 200)
 }

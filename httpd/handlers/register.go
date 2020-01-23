@@ -34,14 +34,24 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	var payload RegisterPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
-	Log.Info(payload)
+	if payload.Username == "" || payload.Password == "" || payload.Email == "" {
+		SendResponse(w, MakeError("username, password and email are all required"), 400)
+		return
+	}
 
-	// let's check and see if the registered email is already registered
+	// let's check and see if the registered email is already taken
 	u := models.User{}
 	err := u.FindByEmail(payload.Email)
 	if err == nil {
 		// err is nil, meaning there was not a problem looking up this user, so one was found
 		SendResponse(w, MakeError("This email has already been registered"), 500)
+		return
+	}
+	// let's check and see if the registered username is already taken
+	err = u.FindByUsername(payload.Username)
+	if err == nil {
+		// err is nil, meaning there was not a problem looking up this user, so one was found
+		SendResponse(w, MakeError("This username has already been registered"), 500)
 		return
 	}
 
@@ -61,7 +71,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]string{
-		"token": token,
+		"token":    token,
+		"username": payload.Username,
 	}
 	SendResponse(w, response, 200)
 }
