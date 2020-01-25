@@ -76,7 +76,7 @@ func (p *Post) FindByURL(url string) error {
 	return nil
 }
 
-// FindByID - find a given post in the database by its primary kye
+// FindByID - find a given post in the database by its primary key
 func (p *Post) FindByID(id int) error {
 	dbPost := Post{}
 	err := DBConn.Get(&dbPost, "SELECT * FROM posts WHERE id = ?", id)
@@ -138,4 +138,11 @@ func GetLatestPosts(offset int) ([]Post, error) {
 	err := DBConn.Select(&posts, "SELECT * FROM `posts` ORDER BY `created_at` DESC, `id` DESC LIMIT 100 OFFSET ?", offset)
 
 	return posts, err
+}
+
+// Comments will return all comments associated with the current post
+func (p *Post) Comments() ([]Comment, error) {
+	comments := []Comment{}
+	err := DBConn.Select(&comments, "SELECT * FROM `comments` WHERE post_id = ?", p.ID)
+	return comments, err
 }
