@@ -121,6 +121,33 @@ func (u *User) CreatePost(title, url, content, postType string) (Post, error) {
 	return p, nil
 }
 
+// CommentOnPost will try and create a comment in the database
+func (u *User) CommentOnPost(post Post, parent *Comment, commentType, text, content string) (Comment, error) {
+	c := Comment{}
+	now := time.Now().Format("2006-01-02 15:04:05")
+
+	if u.ID == 0 || post.ID == 0 {
+		return c, errors.New("Can't create a comment for an invalid user or post")
+	}
+
+	var commentParentID int
+	if parent != nil {
+		commentParentID = parent.ID
+	}
+
+	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, type, content, text, parent_id) VALUES (?, ?, ?, ?, ?, ?, ?)", u.ID, post.ID, now, commentType, content, text, commentParentID)
+	if err != nil {
+		return c, err
+	}
+	insertID, err := result.LastInsertId()
+	if err != nil {
+		return c, err
+	}
+
+	c.FindByID(int(insertID))
+	return c, err
+}
+
 // Login a user if their password matches the stored hash
 func (u *User) Login(password string) error {
 	if !checkPasswordHash(password, u.Password) {

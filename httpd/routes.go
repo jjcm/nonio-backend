@@ -18,6 +18,7 @@ func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posts/":                       handlers.GetPostByURL,
 		"/posts/url-is-available/":      handlers.CheckIfURLIsAvailable,
 		"/users/username-is-available/": handlers.CheckIfUsernameIsAvailable,
+		"/comments/post/":               handlers.GetCommentsForPost,
 	}
 
 	return routes
@@ -35,6 +36,9 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		// tag routes
 		"/tags": handlers.GetTags,
+
+		// comment routes
+		"/comments/create": handlers.CommentOnPost,
 	}
 
 	return routes
