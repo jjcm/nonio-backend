@@ -8,9 +8,6 @@ cd httpd
 echo "Building linux binary..."
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../dist/socid
 echo "done!"
-echo "Building OSX binary..."
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o ../dist/socid-osx
-echo "done!"
 
 
 
