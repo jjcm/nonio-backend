@@ -2,6 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -140,9 +143,64 @@ func GetLatestPosts(offset int) ([]Post, error) {
 	return posts, err
 }
 
-// Comments will return all comments associated with the current post
-func (p *Post) Comments() ([]Comment, error) {
-	comments := []Comment{}
-	err := DBConn.Select(&comments, "SELECT * FROM `comments` WHERE post_id = ?", p.ID)
+// Comments will return comments associated with the current post
+// This method has gone back and forth a bit, and
+func (p *Post) Comments(depthLimit int) ([]Comment, error) {
+	var err error
+	var comments []Comment
+
+	// this is a temporary work around to let front end dev get back at it...
+	err = DBConn.Select(&comments, "SELECT * FROM comments WHERE post_id = ?", p.ID)
+	return comments, err
+
+	// everything below this line won't get run because of the above return statement,
+	// but it's here to pick up where I left off... :-/
+
+	// we're going to run this query X times, where X = depthLimit
+	query := "SELECT id FROM comments WHERE post_id = ? and parent_id IN (?)"
+	var commentIDs []string
+	parentIDs := []string{"0"}
+
+	for index := 0; index < depthLimit; index++ {
+		fmt.Println(query, p.ID, strings.Join(parentIDs, ","))
+		rows, err := DBConn.Query(query, p.ID, strings.Join(parentIDs, ","))
+		if err != nil {
+			return comments, err
+		}
+		for rows.Next() {
+			var id int
+			rows.Scan(&id)
+			fmt.Println(id)
+			parentIDs = append(parentIDs, strconv.Itoa(id))
+		}
+		rows.Close()
+	}
+	fmt.Println(commentIDs)
+	return comments, err
+
+	for depth := 0; depth < depthLimit; depth++ {
+		parentIDs := getUniqueCommentParentIDs(comments)
+		fmt.Println(parentIDs)
+		// prepare for the next loop
+		// run the query
+		rows, err := DBConn.Query("SELECT id, author_id, post_id, created_at, type, content, text, parent_id FROM `comments` WHERE post_id = ? AND parent_id in (?)", p.ID, parentIDs)
+		for rows.Next() {
+			c := Comment{}
+			err = rows.Scan(
+				&(c.ID),
+				&(c.AuthorID),
+				&(c.PostID),
+				&(c.CreatedAt),
+				&(c.Type),
+				&(c.Content),
+				&(c.Text),
+				&(c.ParentID),
+			)
+			if err != nil {
+				return comments, err
+			}
+			comments = append(comments, c)
+		}
+	}
 	return comments, err
 }

@@ -18,7 +18,8 @@ func GetCommentsForPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comments, err := p.Comments()
+	// spec say to get comments 5 levels deep to not get too far into a recursive mess
+	comments, err := p.Comments(5)
 	if err != nil {
 		sendSystemError(w, err)
 		return
