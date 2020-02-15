@@ -15,7 +15,7 @@ func main() {
 	app.Version = "0.0.0"
 	app.Usage = "launch the web API server for SOCI"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "port, p",
 			Usage: "The port number should we run the API on",
 		},
