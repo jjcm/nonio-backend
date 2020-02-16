@@ -54,6 +54,18 @@ func CreateTag(tag string, author User) error {
 	return nil
 }
 
+// FindByID - find a given tag in the database by its primary key
+func (t *Tag) FindByID(id int) error {
+	dbTag := Tag{}
+	err := DBConn.Get(&dbTag, "SELECT * FROM tags WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	*t = dbTag
+	return nil
+}
+
 // FindByTagName - find a tag in the database by it's name
 func (t *Tag) FindByTagName(name string) error {
 	dbTag := Tag{}
