@@ -14,8 +14,8 @@ type PostTageVote struct {
 // PostTagCreationRequest this is the shape of the JSON request that is needed to
 // create a new post
 type PostTagCreationRequest struct {
-	PostId int `json:"post_id"`
-	TagId  int `json:"tag_id"`
+	PostURL string `json:"post"`
+	TagName string `json:"tag"`
 }
 
 // CreatePostTag - protected http handler
@@ -49,14 +49,14 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 
 	// query the post by post id
 	post := models.Post{}
-	if err := post.FindByID(request.PostId); err != nil {
+	if err := post.FindByURL(request.PostURL); err != nil {
 		sendSystemError(w, fmt.Errorf("Query post: %v", err))
 		return
 	}
 
 	// query the tag by tag id
 	tag := models.Tag{}
-	if err := tag.FindByID(request.TagId); err != nil {
+	if err := tag.FindByTagName(request.TagName); err != nil {
 		sendSystemError(w, fmt.Errorf("Query tag: %v", err))
 		return
 	}
@@ -66,7 +66,7 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		Tag:  &tag,
 	}
 	// check if the PostTag is existed in database
-	item, err := postTag.FindByPostTagIds(request.PostId, request.TagId)
+	item, err := postTag.FindByPostTagIds(post.ID, tag.ID)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("Query post-tag: %v", err))
 		return
