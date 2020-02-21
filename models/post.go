@@ -101,7 +101,7 @@ func (p *Post) AddTag(t Tag) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 
 	// create a new tag association
-	_, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, created_at) VALUES (?, ?, ?)", p.ID, t.ID, now)
+	_, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", p.ID, t.ID, now)
 	if err != nil {
 		return err
 	}

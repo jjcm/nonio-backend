@@ -40,16 +40,15 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		// comment routes
 		"/comments/create": handlers.CommentOnPost,
 		/*
-		"/comments/add-vote": handlers.AddCommentVote,
-		"/comments/remove-vote": handlers.RemoveCommentVote,
+			"/comments/add-vote": handlers.AddCommentVote,
+			"/comments/remove-vote": handlers.RemoveCommentVote,
 		*/
 
-
 		// posttag routes
-		/*
 		"/posttags/create": handlers.CreatePostTag,
-		"/posttags/add-vote": handlers.AddPostTagVote,
-		"/posttags/remove-vote": handlers.RemovePostTagVote,
+		/*
+			"/posttags/add-vote": handlers.AddPostTagVote,
+			"/posttags/remove-vote": handlers.RemovePostTagVote,
 		*/
 	}
 

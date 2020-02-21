@@ -1,2 +1,4 @@
 dist/*
 release.sh
+.env
+start.sh
