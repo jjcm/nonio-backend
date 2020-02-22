@@ -44,14 +44,14 @@ func GetTags(offset int, limit int) ([]Tag, error) {
 }
 
 // CreateTag - create a tag in the database by a given word
-func CreateTag(tag string, author User) error {
+func CreateTag(tag string, author User) (int64, error) {
 	now := time.Now().Format("2006-01-02 15:04:05")
 
-	_, err := DBConn.Exec("INSERT INTO tags (name, user_id, created_at) VALUES (?, ?, ?)", tag, author.ID, now)
+	res, err := DBConn.Exec("INSERT INTO tags (name, user_id, created_at) VALUES (?, ?, ?)", tag, author.ID, now)
 	if err != nil {
-		return err
+		return -1, err
 	}
-	return nil
+	return res.LastInsertId()
 }
 
 // FindByID - find a given tag in the database by its primary key

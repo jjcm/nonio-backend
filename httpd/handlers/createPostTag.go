@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -57,8 +58,21 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	// query the tag by tag id
 	tag := models.Tag{}
 	if err := tag.FindByTagName(request.TagName); err != nil {
-		sendSystemError(w, fmt.Errorf("Query tag: %v", err))
-		return
+		// if there is no rows about the tag name, insert a new one
+		if err == sql.ErrNoRows {
+			id, err := models.CreateTag(request.TagName, user)
+			if err != nil {
+				sendSystemError(w, fmt.Errorf("Create tag: %v", err))
+				return
+			}
+			// update the Tag structure
+			tag.ID = int(id)
+			tag.Author = user
+			tag.Name = request.TagName
+		} else {
+			sendSystemError(w, fmt.Errorf("Query tag: %v", err))
+			return
+		}
 	}
 
 	postTag := models.PostTag{
