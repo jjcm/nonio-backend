@@ -36,6 +36,8 @@ func GetTopPosts(w http.ResponseWriter, r *http.Request) {
 		cutoff = time.Now().AddDate(0, -1, 0)
 	case "year":
 		cutoff = time.Now().AddDate(-1, 0, 0)
+	case "all":
+		cutoff = time.Now().AddDate(-50, 0, 0)
 	}
 
 	posts, err := models.GetPostsByScoreSince(cutoff, offset)
