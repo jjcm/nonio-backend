@@ -7,10 +7,9 @@ import (
 
 // PostTag - struct representation of a single post-tag
 type PostTag struct {
-	ID        int           `db:"id" json:"-"`
 	Post      *Post         `db:"-" json:"-"`
 	PostID    int           `db:"post_id" json:"-"`
-	PostURL   string        `db:"-" json:"post"`
+	PostURL   string        `db:"-" json:"-"`
 	Tag       *Tag          `db:"-" json:"-"`
 	TagName   string        `db:"-" json:"tag"`
 	TagID     int           `db:"tag_id" json:"-"`
@@ -32,16 +31,27 @@ func (p *PostTag) FindByID(id int) error {
 }
 
 // FindByPostTagIds - query the PostTag by post id and tag id
-func (p *PostTag) FindByPostTagIds(postId int, tagId int) (*PostTag, error) {
+func (p *PostTag) FindByPostTagIds(postId int, tagId int) error {
 	dbPostTag := PostTag{}
 	err := DBConn.Get(&dbPostTag, "select * from posts_tags where post_id = ? and tag_id = ?", postId, tagId)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil
 		}
-		return nil, err
+		return err
 	}
-	return &dbPostTag, nil
+
+	*p = dbPostTag
+	return nil
+}
+
+// IncrementScore - increment the score by post id and tag id
+func (p *PostTag) IncrementScore(postID int, tagID int) error {
+	_, err := DBConn.Exec("update posts_tags set score=score+1 where post_id = ? and tag_id = ?", postID, tagID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreatePostTag - create the PostTag with post and tag information
@@ -49,7 +59,7 @@ func (p *PostTag) CreatePostTag() error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 
 	// create a new PostTag association
-	_, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", p.Post.ID, p.Tag.ID, now)
+	_, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", p.PostID, p.TagID, now)
 	if err != nil {
 		return err
 	}

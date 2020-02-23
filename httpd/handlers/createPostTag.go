@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,14 +8,45 @@ import (
 	"github.com/jjcm/soci-backend/models"
 )
 
-type PostTageVote struct {
-}
-
 // PostTagCreationRequest this is the shape of the JSON request that is needed to
-// create a new post
+// create a new tag for post
 type PostTagCreationRequest struct {
 	PostURL string `json:"post"`
 	TagName string `json:"tag"`
+}
+
+// find the structure of user, post, tag with user id, post url, tag name from database
+func findUserPostTag(userID int, postURL string, tagName string) (*models.User, *models.Post, *models.Tag, error) {
+	// query the user by user id
+	user := models.User{}
+	if err := user.FindByID(userID); err != nil {
+		return nil, nil, nil, fmt.Errorf("Query user: %v", err)
+	}
+
+	// query the post by post id
+	post := models.Post{}
+	if err := post.FindByURL(postURL); err != nil {
+		return nil, nil, nil, fmt.Errorf("Query post: %v", err)
+	}
+
+	// query the tag by tag id
+	tag := models.Tag{}
+	if err := tag.FindByTagName(tagName); err != nil {
+		return nil, nil, nil, fmt.Errorf("Query tag: %v", err)
+	}
+	// if there is no rows about the tag name, insert a new one
+	if tag.ID == 0 {
+		id, err := models.CreateTag(tagName, user)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("Create tag: %v", err)
+		}
+		// update the Tag structure
+		tag.ID = int(id)
+		tag.Author = user
+		tag.Name = tagName
+	}
+
+	return &user, &post, &tag, nil
 }
 
 // CreatePostTag - protected http handler
@@ -36,57 +66,29 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// decode the request parameters 'post_id' and 'tag_id'
+	// decode the request parameters 'post' and 'tag'
 	var request PostTagCreationRequest
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&request)
 
-	// query the user by user id
-	user := models.User{}
-	if err := user.FindByID(r.Context().Value("user_id").(int)); err != nil {
-		sendSystemError(w, fmt.Errorf("Query user: %v", err))
-		return
-	}
+	// get the user id from context
+	userID := r.Context().Value("user_id").(int)
 
-	// query the post by post id
-	post := models.Post{}
-	if err := post.FindByURL(request.PostURL); err != nil {
-		sendSystemError(w, fmt.Errorf("Query post: %v", err))
-		return
-	}
-
-	// query the tag by tag id
-	tag := models.Tag{}
-	if err := tag.FindByTagName(request.TagName); err != nil {
-		// if there is no rows about the tag name, insert a new one
-		if err == sql.ErrNoRows {
-			id, err := models.CreateTag(request.TagName, user)
-			if err != nil {
-				sendSystemError(w, fmt.Errorf("Create tag: %v", err))
-				return
-			}
-			// update the Tag structure
-			tag.ID = int(id)
-			tag.Author = user
-			tag.Name = request.TagName
-		} else {
-			sendSystemError(w, fmt.Errorf("Query tag: %v", err))
-			return
-		}
-	}
-
-	postTag := models.PostTag{
-		Post: &post,
-		Tag:  &tag,
-	}
-	// check if the PostTag is existed in database
-	item, err := postTag.FindByPostTagIds(post.ID, tag.ID)
+	// find the structure of user, post, tag with user id, post url and tag name
+	user, post, tag, err := findUserPostTag(userID, request.PostURL, request.TagName)
 	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
+	postTag := models.PostTag{}
+	// check if the PostTag is existed in database
+	if err := postTag.FindByPostTagIds(post.ID, tag.ID); err != nil {
 		sendSystemError(w, fmt.Errorf("Query post-tag: %v", err))
 		return
 	}
 	// if the PostTag is existed, return error
-	if item != nil {
+	if postTag.PostID > 0 {
 		sendSystemError(w, fmt.Errorf("PostTag is existed"))
 		return
 	}
@@ -99,13 +101,13 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 
 	// prepare the value for insertion
 	postTagVote := &models.PostTagVote{
-		Post:      &post,
+		Post:      post,
 		PostID:    post.ID,
 		PostURL:   post.URL,
-		Tag:       &tag,
+		Tag:       tag,
 		TagID:     tag.ID,
 		TagName:   tag.Name,
-		Voter:     &user,
+		Voter:     user,
 		VoterID:   user.ID,
 		VoterName: user.Name,
 	}

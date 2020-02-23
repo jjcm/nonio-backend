@@ -1,8 +1,9 @@
 package models
 
+import "database/sql"
+
 // PostTagVote - struct representation of a single post-tag-vote
 type PostTagVote struct {
-	ID        int    `db:"id" json:"-"`
 	Post      *Post  `db:"-" json:"-"`
 	PostID    int    `db:"post_id" json:"-"`
 	PostURL   string `db:"-" json:"post"`
@@ -14,11 +15,14 @@ type PostTagVote struct {
 	VoterID   int    `db:"user_id" json:"-"`
 }
 
-// FindByID - find a given PostTagVote in the database by its primary key
-func (v *PostTagVote) FindByID(id int) error {
+// FindByUK - find a given PostTagVote in the database by unique keys
+func (v *PostTagVote) FindByUK(postID int, tagID int, userID int) error {
 	dbPostTagVote := PostTagVote{}
-	err := DBConn.Get(&dbPostTagVote, "SELECT * FROM posts_tags_votes WHERE id = ?", id)
+	err := DBConn.Get(&dbPostTagVote, "SELECT * FROM posts_tags_votes WHERE post_id = ? and tag_id = ? and voter_id = ?", postID, tagID, userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
 		return err
 	}
 
@@ -34,4 +38,15 @@ func (v *PostTagVote) CreatePostTagVote() error {
 		return err
 	}
 	return nil
+}
+
+// GetVotesByPostUser - query the rows from posts_tags_votes with post id and user id
+func (v *PostTagVote) GetVotesByPostUser(postID int, userID int) ([]PostTagVote, error) {
+	votes := []PostTagVote{}
+
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where post_id = ? and voter_id = ?", postID, userID)
+	if err == sql.ErrNoRows {
+		return votes, nil
+	}
+	return votes, err
 }

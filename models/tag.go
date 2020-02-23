@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 )
@@ -71,6 +72,9 @@ func (t *Tag) FindByTagName(name string) error {
 	dbTag := Tag{}
 	err := DBConn.Get(&dbTag, "SELECT * FROM tags WHERE name = ?", name)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
 		return err
 	}
 
