@@ -45,11 +45,9 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		*/
 
 		// posttag routes
-		"/posttags/create":   handlers.CreatePostTag,
-		"/posttags/add-vote": handlers.AddPostTagVote,
-		/*
-			"/posttags/remove-vote": handlers.RemovePostTagVote,
-		*/
+		"/posttags/create":      handlers.CreatePostTag,
+		"/posttags/add-vote":    handlers.AddPostTagVote,
+		"/posttags/remove-vote": handlers.RemovePostTagVote,
 	}
 
 	return routes

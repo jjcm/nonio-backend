@@ -49,19 +49,25 @@ func (p *PostTag) FindByUK(postId int, tagId int) error {
 // IncrementScore - increment the score by post id and tag id
 func (p *PostTag) IncrementScore(postID int, tagID int) error {
 	_, err := DBConn.Exec("update posts_tags set score=score+1 where post_id = ? and tag_id = ?", postID, tagID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // IncrementScoreWithTx - increment the score by post id and tag id
 func (p *PostTag) IncrementScoreWithTx(tx Transaction, postID int, tagID int) error {
 	_, err := tx.Exec("update posts_tags set score=score+1 where post_id = ? and tag_id = ?", postID, tagID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
+}
+
+// DecrementScoreWithTx - decrement the score by post id and tag id
+func (p *PostTag) DecrementScoreWithTx(tx Transaction, postID int, tagID int) error {
+	_, err := tx.Exec("update posts_tags set score=score-1 where post_id = ? and tag_id = ?", postID, tagID)
+	return err
+}
+
+// DeleteByUK - delete a PostTag in the database by unique keys
+func (p *PostTag) DeleteByUKWithTx(tx Transaction, postID int, tagID int) error {
+	_, err := tx.Exec("delete from posts_tags where post_id = ? and tag_id = ?", postID, tagID)
+	return err
 }
 
 // CreatePostTag - create the PostTag with post and tag information

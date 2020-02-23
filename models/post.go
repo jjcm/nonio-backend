@@ -94,19 +94,19 @@ func (p *Post) FindByID(id int) error {
 // IncrementScore - increment the score by post id
 func (p *Post) IncrementScore(id int) error {
 	_, err := DBConn.Exec("update posts set score=score+1 where id = ?", id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // IncrementScoreWithTx - increment the score by post id
 func (p *Post) IncrementScoreWithTx(tx Transaction, id int) error {
 	_, err := tx.Exec("update posts set score=score+1 where id = ?", id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
+}
+
+// DecrementScoreWithTx - decrement the score by post id
+func (p *Post) DecrementScoreWithTx(tx Transaction, id int) error {
+	_, err := tx.Exec("update posts set score=score-1 where id = ?", id)
+	return err
 }
 
 // GetCreatedAtTimestamp - get the created at timestamp in the predetermined format

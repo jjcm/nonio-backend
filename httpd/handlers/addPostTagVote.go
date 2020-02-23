@@ -67,6 +67,10 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	}
 	// if there is existed vote rows, just return directly
 	if postTagVote.ID > 0 {
+		postTagVote.PostURL = post.URL
+		postTagVote.TagName = tag.Name
+		postTagVote.VoterName = user.Name
+
 		SendResponse(w, postTagVote, 200)
 		return
 	}
