@@ -28,7 +28,7 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the post creation route"), 405)
+		SendResponse(w, MakeError("You can only POST to AddPostTagVote route"), 405)
 		return
 	}
 
@@ -47,7 +47,7 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postTag := models.PostTag{}
+	postTag := &models.PostTag{}
 	// check if the PostTag is existed in database
 	if err := postTag.FindByUK(post.ID, tag.ID); err != nil {
 		sendSystemError(w, fmt.Errorf("Query post-tag: %v", err))
@@ -60,7 +60,7 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// find the PostTagVote by post id, tag id, user id
-	postTagVote := models.PostTagVote{}
+	postTagVote := &models.PostTagVote{}
 	if err := postTagVote.FindByUK(post.ID, tag.ID, user.ID); err != nil {
 		sendSystemError(w, fmt.Errorf("Query post-tag-vote: %v", err))
 		return
@@ -75,13 +75,13 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	needUpdatePost := true
 	// check if this is the first PostTagVote by user for the specific post
 	votes, err := postTagVote.GetVotesByPostUser(post.ID, user.ID)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("Query votes: %v", err))
 		return
 	}
+	needUpdatePost := true
 	if len(votes) > 0 {
 		needUpdatePost = false
 	}
@@ -105,7 +105,6 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// increment the score for PostTag
-		postTag := models.PostTag{}
 		if err := postTag.IncrementScoreWithTx(tx, post.ID, tag.ID); err != nil {
 			return fmt.Errorf("Increment PostTag's score: %v", err)
 		}

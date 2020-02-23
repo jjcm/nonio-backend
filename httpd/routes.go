@@ -35,7 +35,8 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posts/user/": handlers.GetPostsByAuthor,
 
 		// tag routes
-		"/tags": handlers.GetTags,
+		"/tags":          handlers.GetTags,
+		"/tags/popular/": handlers.GetPopularPosts,
 
 		// comment routes
 		"/comments/create": handlers.CommentOnPost,

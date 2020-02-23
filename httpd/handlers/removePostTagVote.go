@@ -28,7 +28,7 @@ func RemovePostTagVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the post creation route"), 405)
+		SendResponse(w, MakeError("You can only POST to RemovePostTagVote route"), 405)
 		return
 	}
 
@@ -48,7 +48,7 @@ func RemovePostTagVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if there is PostTagVote for the user id, post id and tag id
-	postTagVote := models.PostTagVote{}
+	postTagVote := &models.PostTagVote{}
 	if err := postTagVote.FindByUK(post.ID, tag.ID, user.ID); err != nil {
 		sendSystemError(w, fmt.Errorf("Query post-tag-vote: %v", err))
 		return
@@ -59,7 +59,6 @@ func RemovePostTagVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	needDelPostTag := false
 	// query the votes with post id and tag id
 	votes, err := postTagVote.GetVotesByPostTag(post.ID, tag.ID)
 	if err != nil {
@@ -67,17 +66,18 @@ func RemovePostTagVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// only there is the user's PostTagVote, so it needs to delete the PostTag
+	needDelPostTag := false
 	if len(votes) == 1 {
 		needDelPostTag = true
 	}
 
-	needUpdatePost := false
 	// check if this is the only one PostTagVote by user for the specific post
 	votes, err = postTagVote.GetVotesByPostUser(post.ID, user.ID)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("Query votes: %v", err))
 		return
 	}
+	needUpdatePost := false
 	if len(votes) == 1 {
 		needUpdatePost = true
 	}
@@ -89,7 +89,7 @@ func RemovePostTagVote(w http.ResponseWriter, r *http.Request) {
 			return fmt.Errorf("Delete post-tag-vote: %v", err)
 		}
 
-		postTag := models.PostTag{}
+		postTag := &models.PostTag{}
 		if needDelPostTag {
 			// delete the PostTag with unique key: post id, tag id
 			if err := postTag.DeleteByUKWithTx(tx, post.ID, tag.ID); err != nil {
