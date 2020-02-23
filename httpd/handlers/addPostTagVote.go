@@ -67,7 +67,7 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	}
 	// if there is existed vote rows, just return directly
 	if postTagVote.ID > 0 {
-		sendSystemError(w, fmt.Errorf("PostTagVote is existed"))
+		SendResponse(w, postTagVote, 200)
 		return
 	}
 
