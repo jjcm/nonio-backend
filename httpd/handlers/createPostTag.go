@@ -93,13 +93,7 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// insert the PostTag to database
-	if err := postTag.CreatePostTag(); err != nil {
-		sendSystemError(w, fmt.Errorf("Create PostTag: %v", err))
-		return
-	}
-
-	// prepare the value for insertion
+	// prepare the PostTagVote for insertion
 	postTagVote := &models.PostTagVote{
 		Post:      post,
 		PostID:    post.ID,
@@ -111,9 +105,22 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		VoterID:   user.ID,
 		VoterName: user.Name,
 	}
-	// insert the PostTagVote to database
-	if err := postTagVote.CreatePostTagVote(); err != nil {
-		sendSystemError(w, fmt.Errorf("Create PostTagVote: %v", err))
+
+	// do many database operations with transaction
+	if err = models.WithTransaction(func(tx models.Transaction) error {
+		// insert the PostTag to database
+		if err := postTag.CreatePostTag(); err != nil {
+			return fmt.Errorf("Create PostTag: %v", err)
+		}
+
+		// insert the PostTagVote to database
+		if err := postTagVote.CreatePostTagVote(); err != nil {
+			return fmt.Errorf("Create PostTagVote: %v", err)
+		}
+
+		return nil
+	}); err != nil {
+		sendSystemError(w, err)
 		return
 	}
 

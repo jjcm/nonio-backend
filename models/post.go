@@ -21,14 +21,14 @@ type Post struct {
 	Type      string    `db:"type" json:"type"`
 	CreatedAt time.Time `db:"created_at" json:"date"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
-	Tags      []Tag     `db:"-"`
+	Tags      []PostTag `db:"-"`
 }
 
 // MarshalJSON custom JSON builder for Post structs
 func (p *Post) MarshalJSON() ([]byte, error) {
 	// build tag array for JS if the tag list is currently empty
 	if len(p.Tags) < 1 {
-		p.getTags()
+		p.getPostTags()
 	}
 
 	// populate user if it currently isn't hydrated
@@ -38,14 +38,14 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
-		Title     string `json:"title"`
-		UserName  string `json:"user"`
-		TimeStamp int64  `json:"time"`
-		URL       string `json:"url"`
-		Content   string `json:"content"`
-		Type      string `json:"type"`
-		Score     int    `json:"score"`
-		Tags      []Tag  `json:"tags"`
+		Title     string    `json:"title"`
+		UserName  string    `json:"user"`
+		TimeStamp int64     `json:"time"`
+		URL       string    `json:"url"`
+		Content   string    `json:"content"`
+		Type      string    `json:"type"`
+		Score     int       `json:"score"`
+		Tags      []PostTag `json:"tags"`
 	}{
 		Title:     p.Title,
 		UserName:  p.Author.GetDisplayName(),
@@ -115,20 +115,22 @@ func (p *Post) AddTag(t Tag) error {
 		return err
 	}
 
-	err = p.getTags()
+	// get the post tags from 'posts_tags'
+	err = p.getPostTags()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *Post) getTags() error {
-	tags := []Tag{}
-	err := DBConn.Select(&tags, "SELECT * FROM `tags` WHERE id IN (SELECT `tag_id` FROM posts_tags WHERE post_id = ?)", p.ID)
+// get the post tags
+func (p *Post) getPostTags() error {
+	postTags := []PostTag{}
+	err := DBConn.Select(&postTags, "SELECT * FROM posts_tags where post_id = ?)", p.ID)
 	if err != nil {
 		return err
 	}
-	p.Tags = tags
+	p.Tags = postTags
 	return nil
 }
 

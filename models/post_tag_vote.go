@@ -4,6 +4,7 @@ import "database/sql"
 
 // PostTagVote - struct representation of a single post-tag-vote
 type PostTagVote struct {
+	ID        int    `db:"id" json:"-"`
 	Post      *Post  `db:"-" json:"-"`
 	PostID    int    `db:"post_id" json:"-"`
 	PostURL   string `db:"-" json:"post"`

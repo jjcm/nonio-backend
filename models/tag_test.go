@@ -24,7 +24,7 @@ func TestCanGetTags(t *testing.T) {
 	limit := 500
 	index := 0
 	for index < limit {
-		err := CreateTag(fake.Words(), author)
+		_, err := CreateTag(fake.Words(), author)
 		// i expect the faker library to return a bunch of duplicates, but I want 500 unique words so we will only increment the index counter if they are all unique
 		if err == nil {
 			index++

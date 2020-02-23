@@ -7,6 +7,7 @@ import (
 
 // PostTag - struct representation of a single post-tag
 type PostTag struct {
+	ID        int           `db:"id" json:"-"`
 	Post      *Post         `db:"-" json:"-"`
 	PostID    int           `db:"post_id" json:"-"`
 	PostURL   string        `db:"-" json:"-"`

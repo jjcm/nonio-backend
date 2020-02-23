@@ -59,7 +59,18 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// prepare the value for insertion
+	needUpdatePost := true
+	// check if this is the first PostTagVote by user for the specific post
+	votes, err := postTagVote.GetVotesByPostUser(post.ID, user.ID)
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("Query votes: %v", err))
+		return
+	}
+	if len(votes) > 0 {
+		needUpdatePost = false
+	}
+
+	// prepare the PostTagVote for insertion
 	postTagVote.Post = post
 	postTagVote.PostID = post.ID
 	postTagVote.PostURL = post.URL
@@ -69,31 +80,32 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	postTagVote.Voter = user
 	postTagVote.VoterID = user.ID
 	postTagVote.VoterName = user.Name
-	// insert the PostTagVote to database
-	if err := postTagVote.CreatePostTagVote(); err != nil {
-		sendSystemError(w, fmt.Errorf("Create PostTagVote: %v", err))
-		return
-	}
 
-	// increment the score for PostTag
-	postTag := models.PostTag{}
-	if err := postTag.IncrementScore(post.ID, tag.ID); err != nil {
-		sendSystemError(w, fmt.Errorf("Increment PostTag's score: %v", err))
-		return
-	}
-
-	// check if this is the first PostTagVote by user for the specific post
-	votes, err := postTagVote.GetVotesByPostUser(post.ID, user.ID)
-	if err != nil {
-		sendSystemError(w, fmt.Errorf("Query votes: %v", err))
-		return
-	}
-	if len(votes) == 1 {
-		// increment the score of Post
-		if err := post.IncrementScore(post.ID); err != nil {
-			sendSystemError(w, fmt.Errorf("Increment Post's score: %v", err))
-			return
+	// do many database operations with transaction
+	if err = models.WithTransaction(func(tx models.Transaction) error {
+		// insert the PostTagVote to database
+		if err := postTagVote.CreatePostTagVote(); err != nil {
+			return fmt.Errorf("Create PostTagVote: %v", err)
 		}
+
+		// increment the score for PostTag
+		postTag := models.PostTag{}
+		if err := postTag.IncrementScore(post.ID, tag.ID); err != nil {
+			return fmt.Errorf("Increment PostTag's score: %v", err)
+		}
+
+		// check if it needs to increment the score of post
+		if needUpdatePost {
+			// increment the score of Post
+			if err := post.IncrementScore(post.ID); err != nil {
+				return fmt.Errorf("Increment Post's score: %v", err)
+			}
+		}
+
+		return nil
+	}); err != nil {
+		sendSystemError(w, err)
+		return
 	}
 
 	SendResponse(w, postTagVote, 200)
