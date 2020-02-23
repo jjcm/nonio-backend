@@ -25,6 +25,27 @@ func TestWeCanCreateAPost(t *testing.T) {
 	}
 }
 
+func TestWeCanIncrementScoreForPost(t *testing.T) {
+	setupTestingDB()
+	defer teardownTestingDB()
+
+	// create an author for post
+	CreateUser("example@example.com", "", "password")
+	author := User{}
+	author.FindByEmail("example@example.com")
+	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+
+	p := Post{}
+	if err := p.FindByURL("post-title"); err != nil {
+		t.Errorf("Find post by url: %v", err)
+		return
+	}
+	if err := p.IncrementScore(p.ID); err != nil {
+		t.Errorf("Increment score: %v", err)
+		return
+	}
+}
+
 func TestWeCanFindAPostByItsURL(t *testing.T) {
 	setupTestingDB()
 	defer teardownTestingDB()
