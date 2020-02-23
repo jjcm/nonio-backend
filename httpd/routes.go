@@ -35,7 +35,8 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posts/user/": handlers.GetPostsByAuthor,
 
 		// tag routes
-		"/tags": handlers.GetTags,
+		"/tags":          handlers.GetTags,
+		"/tags/popular/": handlers.GetPopularPosts,
 
 		// comment routes
 		"/comments/create": handlers.CommentOnPost,
@@ -45,11 +46,9 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		*/
 
 		// posttag routes
-		"/posttags/create":   handlers.CreatePostTag,
-		"/posttags/add-vote": handlers.AddPostTagVote,
-		/*
-			"/posttags/remove-vote": handlers.RemovePostTagVote,
-		*/
+		"/posttags/create":      handlers.CreatePostTag,
+		"/posttags/add-vote":    handlers.AddPostTagVote,
+		"/posttags/remove-vote": handlers.RemovePostTagVote,
 	}
 
 	return routes

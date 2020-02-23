@@ -31,14 +31,17 @@ func (v *PostTagVote) FindByUK(postID int, tagID int, userID int) error {
 	return nil
 }
 
+// DeleteByUK - delete a PostTagVote in the database by unique keys
+func (v *PostTagVote) DeleteByUKWithTx(tx Transaction, postID int, tagID int, userID int) error {
+	_, err := tx.Exec("delete from posts_tags_votes where post_id = ? and tag_id = ? and voter_id = ?", postID, tagID, userID)
+	return err
+}
+
 // CreatePostTagVote - create the PostTagVote with post and tag information
 func (v *PostTagVote) CreatePostTagVote() error {
 	// create a new PostTag association
 	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id) VALUES (?, ?, ?)", v.PostID, v.TagID, v.VoterID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // CreatePostTagVoteWithTx - create the PostTagVote with post and tag information
@@ -56,6 +59,17 @@ func (v *PostTagVote) GetVotesByPostUser(postID int, userID int) ([]PostTagVote,
 	votes := []PostTagVote{}
 
 	err := DBConn.Select(&votes, "select * from posts_tags_votes where post_id = ? and voter_id = ?", postID, userID)
+	if err == sql.ErrNoRows {
+		return votes, nil
+	}
+	return votes, err
+}
+
+// GetVotesByPostTag - query the rows from posts_tags_votes with post id and tag id
+func (v *PostTagVote) GetVotesByPostTag(postID int, tagID int) ([]PostTagVote, error) {
+	votes := []PostTagVote{}
+
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where post_id = ? and tag_id = ?", postID, tagID)
 	if err == sql.ErrNoRows {
 		return votes, nil
 	}
