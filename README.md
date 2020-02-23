@@ -39,6 +39,16 @@ goose mysql "root:password@tcp(127.0.0.1:3306)/socidb" up
 
 If all is well up to this point, you can build the binary. The included `build.sh` bash script will try and build the go code and place two different binary files into the `dist/` folder. There's one for linux, and one for OSX, so jump into that folder and run whichever one makes sense for you.
 
+## Deploymet of builds
+
+When your latest code is ready to be tested on the stanging server, we can build this code directly on the staging machine. While the team is small, this works pretty well. We will eventually want to automate this into a CI/CD pipeline, but until then here is what you can do:
+
+First ssh into the staging machine. Once you are there, navigate to the `/soci` folder and run `./release.sh`. You will likely need to run this with sudo privileges, as it not only builds the latest binary but also stops the systemd process, replaces the old binary with the new one, and starts up the service again. It also runs all migrations on the DB, so please make sure your migrations are all up to date and working properly with the tests before running this script.
+
+If you are having trouble with permissions, you may also want to add your user to the linux group `soci-build`. All files created in the /soci-build folder wil be owned by the group `soci-build` so as long as your user is in that group all git commands should work.
+
+This release script is pretty rudimentary, and assumes success on each build step, so there is definitly room for improvement here. Since this is a temporary hold while we are still pre alpha, it'll do the job.
+
 ## Example
 
 Start up the Go API (if you're on OSX, the example below needs to run the socid-osx binary), then jump into the example directory and start up a dev server (example below uses PHP 🤔) to see how this works. There's a very basic HTML file in there that uses vue.js to make a few AJAX requests.
