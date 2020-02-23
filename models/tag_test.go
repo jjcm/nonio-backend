@@ -50,7 +50,7 @@ func TestWeCanCreateAndRetrieveATag(t *testing.T) {
 	author.FindByEmail("example@example.com")
 
 	newTag := fake.Word()
-	err := CreateTag(newTag, author)
+	_, err := CreateTag(newTag, author)
 	if err != nil {
 		t.Errorf("You should be able to create a new tag with a given string")
 	}
@@ -75,12 +75,12 @@ func TestYouCantCreateATagWithTheNameOfAnExistingTag(t *testing.T) {
 	author.FindByEmail("example@example.com")
 
 	newTag := fake.Word()
-	err := CreateTag(newTag, author)
+	_, err := CreateTag(newTag, author)
 	if err != nil {
 		t.Errorf("The initial creation of a tag should have worked fine")
 	}
 	// try it again
-	err = CreateTag(newTag, author)
+	_, err = CreateTag(newTag, author)
 	if err == nil {
 		t.Errorf("This tag should already exist, so an error should have been thrown when trying to create it again")
 	}
