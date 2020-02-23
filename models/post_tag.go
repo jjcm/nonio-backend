@@ -31,8 +31,8 @@ func (p *PostTag) FindByID(id int) error {
 	return nil
 }
 
-// FindByPostTagIds - query the PostTag by post id and tag id
-func (p *PostTag) FindByPostTagIds(postId int, tagId int) error {
+// FindByUK - query the PostTag by unique key: post id and tag id
+func (p *PostTag) FindByUK(postId int, tagId int) error {
 	dbPostTag := PostTag{}
 	err := DBConn.Get(&dbPostTag, "select * from posts_tags where post_id = ? and tag_id = ?", postId, tagId)
 	if err != nil {
@@ -55,12 +55,33 @@ func (p *PostTag) IncrementScore(postID int, tagID int) error {
 	return nil
 }
 
+// IncrementScoreWithTx - increment the score by post id and tag id
+func (p *PostTag) IncrementScoreWithTx(tx Transaction, postID int, tagID int) error {
+	_, err := tx.Exec("update posts_tags set score=score+1 where post_id = ? and tag_id = ?", postID, tagID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // CreatePostTag - create the PostTag with post and tag information
 func (p *PostTag) CreatePostTag() error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 
 	// create a new PostTag association
 	_, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", p.PostID, p.TagID, now)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreatePostTagWithTx - create the PostTag with post and tag information
+func (p *PostTag) CreatePostTagWithTx(tx Transaction) error {
+	now := time.Now().Format("2006-01-02 15:04:05")
+
+	// create a new PostTag association
+	_, err := tx.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", p.PostID, p.TagID, now)
 	if err != nil {
 		return err
 	}

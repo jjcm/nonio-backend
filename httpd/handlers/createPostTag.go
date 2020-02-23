@@ -83,7 +83,7 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 
 	postTag := models.PostTag{}
 	// check if the PostTag is existed in database
-	if err := postTag.FindByPostTagIds(post.ID, tag.ID); err != nil {
+	if err := postTag.FindByUK(post.ID, tag.ID); err != nil {
 		sendSystemError(w, fmt.Errorf("Query post-tag: %v", err))
 		return
 	}
@@ -108,13 +108,15 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 
 	// do many database operations with transaction
 	if err = models.WithTransaction(func(tx models.Transaction) error {
+		postTag.PostID = post.ID
+		postTag.TagID = tag.ID
 		// insert the PostTag to database
-		if err := postTag.CreatePostTag(); err != nil {
+		if err := postTag.CreatePostTagWithTx(tx); err != nil {
 			return fmt.Errorf("Create PostTag: %v", err)
 		}
 
 		// insert the PostTagVote to database
-		if err := postTagVote.CreatePostTagVote(); err != nil {
+		if err := postTagVote.CreatePostTagVoteWithTx(tx); err != nil {
 			return fmt.Errorf("Create PostTagVote: %v", err)
 		}
 

@@ -2,7 +2,7 @@ package models
 
 import "testing"
 
-func TestWeCanFindAPostTagByItsID(t *testing.T) {
+func TestWeCanFindPostTagByID(t *testing.T) {
 	setupTestingDB()
 	defer teardownTestingDB()
 
@@ -23,7 +23,7 @@ func TestWeCanFindAPostTagByItsID(t *testing.T) {
 	}
 }
 
-func TestWeCanFindAPostTagByPostTagIds(t *testing.T) {
+func TestWeCanFindPostTagByUK(t *testing.T) {
 	setupTestingDB()
 	defer teardownTestingDB()
 
@@ -37,7 +37,7 @@ func TestWeCanFindAPostTagByPostTagIds(t *testing.T) {
 	}
 
 	p := &PostTag{}
-	p.FindByPostTagIds(1, 1)
+	p.FindByUK(1, 1)
 	if p.ID == 0 {
 		t.Errorf("We should have been able to find this PostTag by PostID and TagID")
 	}
@@ -53,5 +53,23 @@ func TestWeCanCreatePostTag(t *testing.T) {
 	}
 	if err := p.CreatePostTag(); err != nil {
 		t.Errorf("PostTag creation should have worked: %v", err)
+	}
+}
+
+func TestWeCanIncrementScoreForPostTag(t *testing.T) {
+	setupTestingDB()
+	defer teardownTestingDB()
+
+	// create the PostTag first
+	item := &PostTag{
+		PostID: 1,
+		TagID:  1,
+	}
+	if err := item.CreatePostTag(); err != nil {
+		t.Errorf("PostTag creation should have worked: %v", err)
+	}
+
+	if err := item.IncrementScore(item.PostID, item.TagID); err != nil {
+		t.Errorf("Increment score: %v", err)
 	}
 }

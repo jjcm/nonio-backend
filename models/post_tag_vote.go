@@ -13,7 +13,7 @@ type PostTagVote struct {
 	TagID     int    `db:"tag_id" json:"-"`
 	Voter     *User  `db:"-" json:"-"`
 	VoterName string `db:"-" json:"user"`
-	VoterID   int    `db:"user_id" json:"-"`
+	VoterID   int    `db:"voter_id" json:"-"`
 }
 
 // FindByUK - find a given PostTagVote in the database by unique keys
@@ -35,6 +35,16 @@ func (v *PostTagVote) FindByUK(postID int, tagID int, userID int) error {
 func (v *PostTagVote) CreatePostTagVote() error {
 	// create a new PostTag association
 	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id) VALUES (?, ?, ?)", v.PostID, v.TagID, v.VoterID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreatePostTagVoteWithTx - create the PostTagVote with post and tag information
+func (v *PostTagVote) CreatePostTagVoteWithTx(tx Transaction) error {
+	// create a new PostTag association
+	_, err := tx.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id) VALUES (?, ?, ?)", v.PostID, v.TagID, v.VoterID)
 	if err != nil {
 		return err
 	}

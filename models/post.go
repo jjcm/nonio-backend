@@ -100,6 +100,15 @@ func (p *Post) IncrementScore(id int) error {
 	return nil
 }
 
+// IncrementScoreWithTx - increment the score by post id
+func (p *Post) IncrementScoreWithTx(tx Transaction, id int) error {
+	_, err := tx.Exec("update posts set score=score+1 where id = ?", id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetCreatedAtTimestamp - get the created at timestamp in the predetermined format
 func (p *Post) GetCreatedAtTimestamp() int64 {
 	return p.CreatedAt.UnixNano() / int64(time.Millisecond)

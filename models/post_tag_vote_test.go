@@ -40,7 +40,7 @@ func TestWeCanCreatePostTagVote(t *testing.T) {
 	}
 }
 
-func TestWeCanGetVotesByPostUser(t *testing.T) {
+func TestWeCanGetPostTagVotesByPostUser(t *testing.T) {
 	setupTestingDB()
 	defer teardownTestingDB()
 

@@ -47,6 +47,18 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	postTag := models.PostTag{}
+	// check if the PostTag is existed in database
+	if err := postTag.FindByUK(post.ID, tag.ID); err != nil {
+		sendSystemError(w, fmt.Errorf("Query post-tag: %v", err))
+		return
+	}
+	// if the PostTag is not existed, return error
+	if postTag.ID == 0 {
+		sendSystemError(w, fmt.Errorf("PostTag is not existed"))
+		return
+	}
+
 	// find the PostTagVote by post id, tag id, user id
 	postTagVote := models.PostTagVote{}
 	if err := postTagVote.FindByUK(post.ID, tag.ID, user.ID); err != nil {
@@ -54,7 +66,7 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// if there is existed vote rows, just return directly
-	if postTagVote.PostID > 0 {
+	if postTagVote.ID > 0 {
 		sendSystemError(w, fmt.Errorf("PostTagVote is existed"))
 		return
 	}
@@ -84,20 +96,20 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	// do many database operations with transaction
 	if err = models.WithTransaction(func(tx models.Transaction) error {
 		// insert the PostTagVote to database
-		if err := postTagVote.CreatePostTagVote(); err != nil {
+		if err := postTagVote.CreatePostTagVoteWithTx(tx); err != nil {
 			return fmt.Errorf("Create PostTagVote: %v", err)
 		}
 
 		// increment the score for PostTag
 		postTag := models.PostTag{}
-		if err := postTag.IncrementScore(post.ID, tag.ID); err != nil {
+		if err := postTag.IncrementScoreWithTx(tx, post.ID, tag.ID); err != nil {
 			return fmt.Errorf("Increment PostTag's score: %v", err)
 		}
 
 		// check if it needs to increment the score of post
 		if needUpdatePost {
 			// increment the score of Post
-			if err := post.IncrementScore(post.ID); err != nil {
+			if err := post.IncrementScoreWithTx(tx, post.ID); err != nil {
 				return fmt.Errorf("Increment Post's score: %v", err)
 			}
 		}
