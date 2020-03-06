@@ -94,19 +94,19 @@ func (p *Post) FindByID(id int) error {
 // IncrementScore - increment the score by post id
 func (p *Post) IncrementScore(id int) error {
 	_, err := DBConn.Exec("update posts set score=score+1 where id = ?", id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // IncrementScoreWithTx - increment the score by post id
 func (p *Post) IncrementScoreWithTx(tx Transaction, id int) error {
 	_, err := tx.Exec("update posts set score=score+1 where id = ?", id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
+}
+
+// DecrementScoreWithTx - decrement the score by post id
+func (p *Post) DecrementScoreWithTx(tx Transaction, id int) error {
+	_, err := tx.Exec("update posts set score=score-1 where id = ?", id)
+	return err
 }
 
 // GetCreatedAtTimestamp - get the created at timestamp in the predetermined format
@@ -149,6 +149,18 @@ func GetPostsByScoreSince(cutoff time.Time, offset int) ([]Post, error) {
 	posts := []Post{}
 
 	err := DBConn.Select(&posts, "SELECT * FROM `posts` WHERE created_at > ? ORDER BY `score` DESC LIMIT 100 OFFSET ?", cutoff.Format("2006-01-02 15:04:05"), offset)
+
+	return posts, err
+}
+
+// GetPostsByPostTagScoreSince - get the popular posts from the database that have been create since
+// 24 hours before, and tag name, and score order, and time cutoff, limit 100
+func GetPostsByPostTagScoreSince(name string, cutoff time.Time) ([]Post, error) {
+	posts := []Post{}
+
+	since := cutoff.Format("2006-01-02 15:04:05")
+
+	err := DBConn.Select(&posts, "select * from posts where created_at > ? and id in (select t1.post_id from posts_tags t1 join tags t2 on t1.tag_id = t2.id and t2.name = ? order by t1.score desc) limit 100;", since, name)
 
 	return posts, err
 }

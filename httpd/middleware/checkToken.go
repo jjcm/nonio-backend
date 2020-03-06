@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -24,7 +25,15 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 
 		token := r.Header.Get("Authorization")
 		if strings.TrimSpace(token) == "" || strings.TrimSpace(token) == "Bearer" {
-			handlers.SendResponse(w, "Authorization required", http.StatusUnauthorized)
+			if os.Getenv("ALON") == "true" {
+				// local test code <TODO it needs to remove this piece of code in production>
+				user := os.Getenv("USER")
+				id, _ := strconv.Atoi(user)
+				ctx := context.WithValue(context.Background(), "user_id", int(id))
+				next(w, r.WithContext(ctx))
+			} else {
+				handlers.SendResponse(w, "Authorization required", http.StatusUnauthorized)
+			}
 			return
 		}
 

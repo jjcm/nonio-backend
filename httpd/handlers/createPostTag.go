@@ -62,7 +62,7 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the post creation route"), 405)
+		SendResponse(w, MakeError("You can only POST to the CreatePostTag route"), 405)
 		return
 	}
 
@@ -81,7 +81,7 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postTag := models.PostTag{}
+	postTag := &models.PostTag{}
 	// check if the PostTag is existed in database
 	if err := postTag.FindByUK(post.ID, tag.ID); err != nil {
 		sendSystemError(w, fmt.Errorf("Query post-tag: %v", err))
@@ -93,8 +93,20 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	postTagVote := &models.PostTagVote{}
+	// check if this is the first PostTagVote by user for the specific post
+	votes, err := postTagVote.GetVotesByPostUser(post.ID, user.ID)
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("Query votes: %v", err))
+		return
+	}
+	needUpdatePost := true
+	if len(votes) > 0 {
+		needUpdatePost = false
+	}
+
 	// prepare the PostTagVote for insertion
-	postTagVote := &models.PostTagVote{
+	postTagVote = &models.PostTagVote{
 		Post:      post,
 		PostID:    post.ID,
 		PostURL:   post.URL,
@@ -108,9 +120,9 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 
 	// do many database operations with transaction
 	if err = models.WithTransaction(func(tx models.Transaction) error {
+		// insert the PostTag to database
 		postTag.PostID = post.ID
 		postTag.TagID = tag.ID
-		// insert the PostTag to database
 		if err := postTag.CreatePostTagWithTx(tx); err != nil {
 			return fmt.Errorf("Create PostTag: %v", err)
 		}
@@ -118,6 +130,14 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		// insert the PostTagVote to database
 		if err := postTagVote.CreatePostTagVoteWithTx(tx); err != nil {
 			return fmt.Errorf("Create PostTagVote: %v", err)
+		}
+
+		// check if it needs to increment the score of post
+		if needUpdatePost {
+			// increment the score of Post
+			if err := post.IncrementScoreWithTx(tx, post.ID); err != nil {
+				return fmt.Errorf("Increment Post's score: %v", err)
+			}
 		}
 
 		return nil

@@ -44,7 +44,8 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		// TODO "/post/delete/": handlers.DeletePost,
 
 		// TAG ROUTES
-		"/tags": handlers.GetTags,
+		"/tags":          handlers.GetTags,
+		// DEPRECATE - MERGE IN WITH GETPOSTS "/tags/popular/": handlers.GetPopularPosts,
 
 		// COMMENT ROUTES
 		// change to /comment/create
@@ -57,7 +58,8 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posttags/create":   handlers.CreatePostTag,
 		//change this to /posttag/add-vote
 		"/posttags/add-vote": handlers.AddPostTagVote,
-		// TODO "/posttag/remove-vote": handlers.RemovePostTagVote,
+		//change this to /posttag/remove-vote
+		"/posttag/remove-vote": handlers.RemovePostTagVote,
 	}
 
 	return routes
