@@ -15,10 +15,16 @@ func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/login-social/callback":        handlers.LoginSocialCallback,
 		"/info":                         handlers.Info,
 		"/posts/":                       handlers.GetPostByURL,
-		//"/posts/url/":                 handlers.GetPostByURL,
+
+		//change this to /post/url-is-available
 		"/posts/url-is-available/":      handlers.CheckIfURLIsAvailable,
+
+		//change this to /user/username-is-available
 		"/users/username-is-available/": handlers.CheckIfUsernameIsAvailable,
+
 		"/comments/post/":               handlers.GetCommentsForPost,
+		// TODO "/comments/user/":               handlers.GetCommentsForUser,
+		// TODO "/comments/comment/":            handlers.GetCommentsForComment,
 	}
 
 	return routes
@@ -28,40 +34,30 @@ func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
 		"/protected": handlers.GetTokenDetails,
 
-		// post routes
-		"/posts/new":   handlers.GetNewestPosts,
-		"/post/create": handlers.CreatePost,
-		"/posts/top/":  handlers.GetTopPosts,
+		// POST ROUTES
 		"/posts":       handlers.GetPosts,
-		//"/posts/popular":       handlers.GetPosts,
-		"/posts/user/": handlers.GetPostsByAuthor,
+		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/new":   handlers.GetNewestPosts,
+		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/top/":  handlers.GetTopPosts,
+		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/user/": handlers.GetPostsByAuthor,
+		"/post/create/": handlers.CreatePost,
+		// TODO "/post/view/": handlers.ViewPost,
+		// TODO "/post/delete/": handlers.DeletePost,
 
-		// tag routes
+		// TAG ROUTES
 		"/tags": handlers.GetTags,
-		/*
-		"/tags/popular/": handlers.GetPostsByTag,
-		"/tags/top/day/": handlers.GetPostsByTag,
-		"/tags/top/week/": handlers.GetPostsByTag,
-		"/tags/top/month/": handlers.GetPostsByTag,
-		"/tags/top/year/": handlers.GetPostsByTag,
-		"/tags/top/all/": handlers.GetPostsByTag,
-		"/tags/new/": handlers.GetPostsByTag,
-		*/
 
-
-		// comment routes
+		// COMMENT ROUTES
+		// change to /comment/create
 		"/comments/create": handlers.CommentOnPost,
-		/*
-			"/comments/add-vote": handlers.AddCommentVote,
-			"/comments/remove-vote": handlers.RemoveCommentVote,
-		*/
+		// TODO "/comment/add-vote": handlers.AddCommentVote,
+		// TODO "/comment/remove-vote": handlers.RemoveCommentVote,
 
-		// posttag routes
+		// POSTTAG ROUTES
+		//change this to /posttag/create
 		"/posttags/create":   handlers.CreatePostTag,
+		//change this to /posttag/add-vote
 		"/posttags/add-vote": handlers.AddPostTagVote,
-		/*
-			"/posttags/remove-vote": handlers.RemovePostTagVote,
-		*/
+		// TODO "/posttag/remove-vote": handlers.RemovePostTagVote,
 	}
 
 	return routes
