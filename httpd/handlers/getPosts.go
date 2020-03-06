@@ -11,6 +11,18 @@ import (
 	"github.com/jjcm/soci-backend/models"
 )
 
+// fill the tags for those posts
+func fillPostTags(posts []models.Post) error {
+	for _, post := range posts {
+		tags, err := models.GetPostTags(post.ID)
+		if err != nil {
+			return err
+		}
+		post.Tags = tags
+	}
+	return nil
+}
+
 // GetPosts - get the posts from database with different url parameters
 func GetPosts(w http.ResponseWriter, r *http.Request) {
 	// parse the url parameters
@@ -75,6 +87,9 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// parse the tag name
+	formTag := strings.TrimSpace(r.FormValue("tag"))
+
 	// ?sort=popular|top|new
 	// Returns posts sorted by a particular algorithm.
 	// - popular DEFAULT
@@ -90,22 +105,17 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch sort {
 		case "popular":
-			// parse the tag name
-			formTag := strings.TrimSpace(r.FormValue("tag"))
-			if formTag == "" {
-				sendSystemError(w, errors.New("Tag is empty"))
-				return
-			}
-			// query the posts by tag name
-			posts, err = models.GetPostsByPostTagScoreSince(formTag, cutoff)
+			posts, err = models.GetPostsOrderByPostScore(cutoff, offset, formTag)
 
 		case "new":
-			// query the posts by the offset
 			posts, err = models.GetLatestPosts(offset)
 
 		case "top":
-			// query the posts by the cutoff and offset
-			posts, err = models.GetPostsByScoreSince(cutoff, offset)
+			if formTag != "" {
+				posts, err = models.GetPostsOrderByPostTagScore(cutoff, offset, formTag)
+			} else {
+				posts, err = models.GetPostsOrderByPostScore(cutoff, offset, formTag)
+			}
 
 		default:
 			sendSystemError(w, fmt.Errorf("Invalid field 'sort': %v", sort))
@@ -113,6 +123,12 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			sendSystemError(w, fmt.Errorf("Query posts by sort=%s: %v", sort, err))
+			return
+		}
+
+		// fill the tags for the posts
+		if err := fillPostTags(posts); err != nil {
+			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
 			return
 		}
 
@@ -124,17 +140,85 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ?offset=NUMBER
-	// Offsets the responses by a set number.
-	posts, err := models.GetPostsByScoreSince(cutoff, offset)
-	if err != nil {
-		sendSystemError(w, fmt.Errorf("Query posts by offset: %v", err))
+	// ?user=USER
+	// Only returns results posts that were made by a specific user.
+	formUser := strings.TrimSpace(r.FormValue("user"))
+	if formUser != "" {
+		author := models.User{}
+		// query the user by user name
+		if err := user.FindByUsername(formUser); err != nil {
+			sendSystemError(w, fmt.Errorf("Query user by name %s: %v", formUser, err))
+			return
+		}
+		if author.ID == 0 {
+			sendNotFound(w, errors.New("User's name: "+formUser))
+			return
+		}
+
+		// query the user's posts
+		posts, err := user.MyPosts(100, offset)
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("Query posts by user: %v", err))
+			return
+		}
+
+		// fill the tags for the posts
+		if err := fillPostTags(posts); err != nil {
+			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
+			return
+		}
+
+		output := map[string]interface{}{
+			"posts": posts,
+		}
+		SendResponse(w, output, 200)
 		return
 	}
 
-	output := map[string]interface{}{
-		"posts": posts,
+	// ?tag=TAG
+	// Only returns results that match a specific tag. Multiple tags can be listed by separating tags with a +. If more than one tag is listed, it will return posts that match any of the tags.
+	if formTag != "" {
+		posts, err := models.GetPostsOrderByPostScore(cutoff, offset, formTag)
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("Query posts by tags: %v", err))
+			return
+		}
+
+		// fill the tags for the posts
+		if err := fillPostTags(posts); err != nil {
+			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
+			return
+		}
+
+		output := map[string]interface{}{
+			"posts": posts,
+		}
+		SendResponse(w, output, 200)
+		return
 	}
-	SendResponse(w, output, 200)
+
+	// ?offset=NUMBER
+	// Offsets the responses by a set number.
+	if offset > 0 {
+		posts, err := models.GetPostsOrderByPostScore(cutoff, offset, "")
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("Query posts by offset: %v", err))
+			return
+		}
+
+		// fill the tags for the posts
+		if err := fillPostTags(posts); err != nil {
+			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
+			return
+		}
+
+		output := map[string]interface{}{
+			"posts": posts,
+		}
+		SendResponse(w, output, 200)
+		return
+	}
+
+	sendSystemError(w, fmt.Errorf("invalid parameter for the request"))
 	return
 }

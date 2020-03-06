@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/danilopolani/gocialite v1.0.2 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/jjcm/soci-backend v0.0.0-20200223183852-1b9a2b9d1216
+	github.com/jjcm/soci-backend v0.0.0-20200306083006-ea417f82e35d
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/urfave/cli v1.22.2

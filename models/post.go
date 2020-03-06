@@ -143,24 +143,41 @@ func (p *Post) getPostTags() error {
 	return nil
 }
 
-// GetPostsByScoreSince - get posts from the database that have been created since
-// the provided cutoff time, and offset the results
-func GetPostsByScoreSince(cutoff time.Time, offset int) ([]Post, error) {
-	posts := []Post{}
+// GetPostTags - get the tags with post id
+func GetPostTags(id int) ([]PostTag, error) {
+	tags := []PostTag{}
 
-	err := DBConn.Select(&posts, "SELECT * FROM `posts` WHERE created_at > ? ORDER BY `score` DESC LIMIT 100 OFFSET ?", cutoff.Format("2006-01-02 15:04:05"), offset)
+	err := DBConn.Select(&tags, "SELECT * FROM posts_tags where post_id = ?)", id)
 
-	return posts, err
+	return tags, err
 }
 
-// GetPostsByPostTagScoreSince - get the popular posts from the database that have been create since
-// 24 hours before, and tag name, and score order, and time cutoff, limit 100
-func GetPostsByPostTagScoreSince(name string, cutoff time.Time) ([]Post, error) {
+// GetPostsOrderByPostScore - get posts from the database order by posts score
+func GetPostsOrderByPostScore(cutoff time.Time, offset int, name string) ([]Post, error) {
 	posts := []Post{}
 
 	since := cutoff.Format("2006-01-02 15:04:05")
 
-	err := DBConn.Select(&posts, "select * from posts where created_at > ? and id in (select t1.post_id from posts_tags t1 join tags t2 on t1.tag_id = t2.id and t2.name = ? order by t1.score desc) limit 100;", since, name)
+	tags := strings.Replace(strings.TrimSuffix(name, "+"), "+", ",", -1)
+
+	var err error
+	if tags == "" {
+		err = DBConn.Select(&posts, "select * from posts where created_at > ? ORDER BY `score` DESC LIMIT 100 OFFSET ?", since, offset)
+	} else {
+		err = DBConn.Select(&posts, "select * from posts where created_at > ? and id in (select t1.post_id from posts_tags t1 join tags t2 on t1.tag_id = t2.id and t2.name in (?)) ORDER BY `score` DESC LIMIT 100 OFFSET ?", since, tags, offset)
+	}
+	return posts, err
+}
+
+// GetPostsOrderByPostTagScore - get posts from the database order by posts-tags score
+func GetPostsOrderByPostTagScore(cutoff time.Time, offset int, name string) ([]Post, error) {
+	posts := []Post{}
+
+	since := cutoff.Format("2006-01-02 15:04:05")
+
+	tags := strings.Replace(strings.TrimSuffix(name, "+"), "+", ",", -1)
+
+	err := DBConn.Select(&posts, "select * from posts where created_at > ? and id in (select t1.post_id from posts_tags t1 join tags t2 on t1.tag_id = t2.id and t2.name in (?) order by t1.score desc) limit 100 offset ?", since, tags, offset)
 
 	return posts, err
 }
