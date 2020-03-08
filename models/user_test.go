@@ -7,7 +7,6 @@ import (
 
 func TestCanCreateAUser(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	err := CreateUser("user@example.com", "", "password")
 	if err != nil {
@@ -17,7 +16,6 @@ func TestCanCreateAUser(t *testing.T) {
 
 func TestAUsersPasswordCanBeChecked(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	err := CreateUser("user@example.com", "", "password")
 	if err != nil {
@@ -38,7 +36,6 @@ func TestAUsersPasswordCanBeChecked(t *testing.T) {
 
 func TestAUserCantBeCreatedIfTheEmailAlreadyExists(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	err := CreateUser("user@example.com", "", "anything")
 	if err != nil {
@@ -54,7 +51,6 @@ func TestAUserCantBeCreatedIfTheEmailAlreadyExists(t *testing.T) {
 
 func TestFindingAUserByTheirEmailAddress(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	u := User{}
 	err := u.FindByEmail("")
@@ -72,7 +68,6 @@ func TestFindingAUserByTheirEmailAddress(t *testing.T) {
 
 func TestFindingAUserByTheirUsername(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	u := User{}
 	err := u.FindByUsername("")
@@ -97,7 +92,6 @@ func TestFindingAUserByTheirUsername(t *testing.T) {
 
 func TestFindingAUserByTheirPrimaryKeyID(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	u := User{}
 	err := u.FindByID(1)
@@ -115,7 +109,6 @@ func TestFindingAUserByTheirPrimaryKeyID(t *testing.T) {
 
 func TestWeCanTrackTheUsersLastLogin(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	CreateUser("user@example.com", "", "whatever")
 
@@ -134,7 +127,6 @@ func TestWeCanTrackTheUsersLastLogin(t *testing.T) {
 
 func TestWeCanCheckIfAUsernameIsAvailable(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	isAvaiable, _ := UsernameIsAvailable("anything")
 	if !isAvaiable {
@@ -186,7 +178,6 @@ func TestWeCanGetTheUsersPreferredDisplayName(t *testing.T) {
 
 func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	CreateUser("example@example.com", "", "password")
 	author := User{}

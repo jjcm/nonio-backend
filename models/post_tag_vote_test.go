@@ -4,7 +4,6 @@ import "testing"
 
 func TestWeCanFindPostTagVoteByUK(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create the PostTagVote first
 	item := &PostTagVote{
@@ -27,7 +26,6 @@ func TestWeCanFindPostTagVoteByUK(t *testing.T) {
 
 func TestWeCanCreatePostTagVote(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create the PostTagVote first
 	item := &PostTagVote{
@@ -42,7 +40,6 @@ func TestWeCanCreatePostTagVote(t *testing.T) {
 
 func TestWeCanGetPostTagVotesByPostUser(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create the PostTagVote first
 	item := &PostTagVote{

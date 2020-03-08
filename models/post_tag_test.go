@@ -4,7 +4,6 @@ import "testing"
 
 func TestWeCanFindPostTagByID(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create the PostTag first
 	item := &PostTag{
@@ -19,13 +18,12 @@ func TestWeCanFindPostTagByID(t *testing.T) {
 	p.FindByID(1)
 
 	if p.ID == 0 {
-		t.Errorf("We should have been able to find this PostTag by it's ID")
+		t.Errorf("We should have been able to find this PostTag by it's ID. Post ID: %v", p.ID)
 	}
 }
 
 func TestWeCanFindPostTagByUK(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create the PostTag first
 	item := &PostTag{
@@ -45,7 +43,6 @@ func TestWeCanFindPostTagByUK(t *testing.T) {
 
 func TestWeCanCreatePostTag(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	p := &PostTag{
 		PostID: 1,
@@ -58,7 +55,6 @@ func TestWeCanCreatePostTag(t *testing.T) {
 
 func TestWeCanIncrementScoreForPostTag(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create the PostTag first
 	item := &PostTag{
