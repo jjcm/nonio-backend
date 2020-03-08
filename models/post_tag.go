@@ -22,7 +22,7 @@ type PostTag struct {
 // FindByID - find a given PostTag in the database by its primary key
 func (p *PostTag) FindByID(id int) error {
 	dbPostTag := PostTag{}
-	err := DBConn.Get(&dbPostTag, "SELECT * FROM tags WHERE id = ?", id)
+	err := DBConn.Get(&dbPostTag, "SELECT * FROM posts_tags WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
