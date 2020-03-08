@@ -135,7 +135,7 @@ func (p *Post) AddTag(t Tag) error {
 // get the post tags
 func (p *Post) getPostTags() error {
 	postTags := []PostTag{}
-	err := DBConn.Select(&postTags, "SELECT * FROM posts_tags where post_id = ?)", p.ID)
+	err := DBConn.Select(&postTags, "SELECT * FROM posts_tags where post_id = ?", p.ID)
 	if err != nil {
 		return err
 	}
