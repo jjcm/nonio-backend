@@ -11,6 +11,17 @@ import (
 
 // GetPosts - get all the posts in the system
 func GetPosts(w http.ResponseWriter, r *http.Request) {
+	// this code is what will help us set up the correct SQL Query
+	posts, err := models.GetPostsFromQueryParams(r.URL.Query())
+
+	output := map[string]interface{}{
+		"posts": posts,
+	}
+	SendResponse(w, output, 200)
+	return
+
+	// CODE BELOW THIS LINE KEPT FOR REFERRENCE
+
 	// check duration of 24 hours vs. last login
 	user := models.User{}
 	user.FindByID(r.Context().Value("user_id").(int))
@@ -34,14 +45,14 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	posts, err := models.GetPostsByScoreSince(cutoff, offset)
+	posts, err = models.GetPostsByScoreSince(cutoff, offset)
 	if err != nil {
 		sendSystemError(w, err)
 		return
 	}
 
-	output := map[string]interface{}{
+	o := map[string]interface{}{
 		"posts": posts,
 	}
-	SendResponse(w, output, 200)
+	SendResponse(w, o, 200)
 }

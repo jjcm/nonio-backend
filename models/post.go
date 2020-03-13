@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -171,6 +172,27 @@ func GetLatestPosts(offset int) ([]Post, error) {
 	posts := []Post{}
 
 	err := DBConn.Select(&posts, "SELECT * FROM `posts` ORDER BY `created_at` DESC, `id` DESC LIMIT 100 OFFSET ?", offset)
+
+	return posts, err
+}
+
+// GetPostsFromQueryParams takes in an http.request that can then be parsed to
+// select the correct posts from the database
+// This can eventually replace every other GetPostsByWhatever() funcs
+func GetPostsFromQueryParams(queryParams url.Values) ([]Post, error) {
+	posts := []Post{}
+
+	// here we can take in the url.Values and turn that into a postQueryBuilder,
+	// then validate it
+	qb := postQueryBuilder{}
+	err := qb.validate(queryParams)
+	if err != nil {
+		return posts, err
+	}
+
+	sql, args := qb.selectSQL(queryParams)
+
+	err = DBConn.Select(&posts, sql, args...)
 
 	return posts, err
 }
