@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // CommentOnPost will read in the JSON payload to add a comment to a given post

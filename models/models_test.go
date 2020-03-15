@@ -5,8 +5,9 @@ import (
 	"os"
 	"os/exec"
 
+	bs "soci-backend/bootstrap"
+
 	_ "github.com/go-sql-driver/mysql"
-	bs "github.com/jjcm/soci-backend/bootstrap"
 )
 
 func setupTestingDB() error {
@@ -37,7 +38,7 @@ func setupTestingDB() error {
 	Log = c.Logger // so we don't choke on any log calls
 
 	cmd := exec.Command("/home/lapubell/programming/go/bin/goose", "mysql", os.Getenv("DB_USER")+":"+os.Getenv("DB_PASSWORD")+"@/"+testingDBName, "up")
-	cmd.Dir = "/home/lapubell/programming/go/src/github.com/jjcm/soci-backend/migrations"
+	cmd.Dir = "/home/lapubell/programming/go/src/soci-backend/migrations"
 	var output bytes.Buffer
 	cmd.Stderr = &output
 	cmd.Run()

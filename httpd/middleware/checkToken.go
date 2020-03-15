@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"soci-backend/httpd/handlers"
+	"soci-backend/models"
+
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/jjcm/soci-backend/httpd/handlers"
-	"github.com/jjcm/soci-backend/models"
 )
 
 // CheckToken this acts as a middleware, but I'm not really using any middleware packages

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // GetPostByURL find a specific post in the database and send back a JSON

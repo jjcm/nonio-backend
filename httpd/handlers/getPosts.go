@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // fill the tags for those posts

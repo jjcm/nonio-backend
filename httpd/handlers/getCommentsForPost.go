@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // GetCommentsForPost will return all comments for a specific post

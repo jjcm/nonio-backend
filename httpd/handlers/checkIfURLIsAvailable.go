@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // CheckIfURLIsAvailable - return a boolean value to see if a given URL is

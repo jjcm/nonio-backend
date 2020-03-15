@@ -3,15 +3,17 @@ package main
 import (
 	"net/http"
 
-	"github.com/jjcm/soci-backend/httpd/middleware"
+	"soci-backend/httpd"
+	"soci-backend/httpd/middleware"
+
 	"github.com/urfave/cli"
 )
 
 func runApp(c *cli.Context) error {
-	for path, handler := range openRoutes() {
+	for path, handler := range httpd.OpenRoutes() {
 		http.HandleFunc(path, handler)
 	}
-	for path, handler := range protectedRoutes() {
+	for path, handler := range httpd.ProtectedRoutes() {
 		http.HandleFunc(path, middleware.CheckToken(handler))
 	}
 	log("Starting web api at port " + sociConfig.AppPort)
