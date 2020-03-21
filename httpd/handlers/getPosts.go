@@ -12,7 +12,7 @@ import (
 )
 
 // fill the tags for those posts
-func fillPostTags(posts []models.Post) error {
+func fillPostTags(posts []*models.Post) error {
 	for _, post := range posts {
 		tags, err := models.GetPostTags(post.ID)
 		if err != nil {
@@ -25,44 +25,24 @@ func fillPostTags(posts []models.Post) error {
 
 // GetPosts - get the posts from database with different url parameters
 func GetPosts(w http.ResponseWriter, r *http.Request) {
+	params := &models.PostQueryParams{}
 	// parse the url parameters
 	r.ParseForm()
 
-	// get the user id from context
-	userID := r.Context().Value("user_id").(int)
-	// query the user by user id
-	user := &models.User{}
-	if err := user.FindByID(userID); err != nil {
-		sendSystemError(w, fmt.Errorf("Query user: %v", err))
-		return
-	}
-
-	offset := 0
-	// check for offset
+	// ?offset=NUMBER
+	// Offsets the responses by a set number.
 	formOffset := strings.TrimSpace(r.FormValue("offset"))
 	if formOffset != "" {
-		var err error
-		offset, err = strconv.Atoi(formOffset)
+		offset, err := strconv.Atoi(formOffset)
 		if err != nil {
 			sendSystemError(w, fmt.Errorf("String to int: %v", err))
 			return
 		}
+		params.Offset = offset
 	}
 
 	// ?time=all|day|week|month|year
 	// Only returns posts that were created within a specific time period.
-	// - all DEFAULT
-	//   No time constraints.
-	// - day
-	//   Only returns posts created in the last day.
-	// - week
-	//   Only returns posts created in the last week.
-	// - month
-	//   Only returns posts created in the last month.
-	// - year
-	//   Only returns posts created in the last year.
-	//
-	// parse the time value
 	var cutoff time.Time
 	switch formTime := strings.TrimSpace(r.FormValue("time")); formTime {
 	case "day":
@@ -73,71 +53,54 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		cutoff = time.Now().AddDate(0, -1, 0)
 	case "year":
 		cutoff = time.Now().AddDate(-1, 0, 0)
-	case "all":
+	default: // default time
 		cutoff = time.Now().AddDate(-50, 0, 0)
-	case "": // if it's empty, default cutoff
+	}
+	params.Since = cutoff.Format("2006-01-02 15:04:05")
+
+	// ?tag=TAG
+	// Only returns results that match a specific tag. Multiple tags can be listed by separating tags with a +
+	formTag := strings.TrimSpace(r.FormValue("tags"))
+	// query the post ids from 'posts_tags' by 'tags', sorted by 'score' default
+	if formTag != "" {
+		tags := strings.Replace(strings.Trim(formTag, "+"), "+", ",", -1)
+
+		pt := &models.PostTag{}
+		ids, err := pt.GetPostsByTags(tags)
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("Query posts by tags %s: %v", tags, err))
+			return
+		}
+		params.PostIDs = ids
+	}
+
+	// ?sort=popular|top|new
+	// Returns posts sorted by a particular algorithm.
+	formSort := strings.TrimSpace(r.FormValue("sort"))
+	switch formSort {
+	case "popular":
+		//  "popular": the time range is variable depending on the time of last login
+		params.SortedByScore = true
+
+		// get the user id from context
+		userID := r.Context().Value("user_id").(int)
+		// query the user by user id
+		user := &models.User{}
+		if err := user.FindByID(userID); err != nil {
+			sendSystemError(w, fmt.Errorf("Query user: %v", err))
+			return
+		}
+
 		// check duration of 24 hours vs last login
 		cutoff = user.LastLogin
 		oneDayAgo := time.Now().AddDate(0, 0, -1)
 		if user.LastLogin.After(oneDayAgo) {
 			cutoff = oneDayAgo
 		}
-	default:
-		sendSystemError(w, fmt.Errorf("Invalid field 'time': %v", formTime))
-		return
-	}
+		params.Since = cutoff.Format("2006-01-02 15:04:05")
 
-	// parse the tag name
-	formTag := strings.TrimSpace(r.FormValue("tag"))
-
-	// ?sort=popular|top|new
-	// Returns posts sorted by a particular algorithm.
-	// - popular DEFAULT
-	//   Posts are sorted by score, within a time span between now and the requesting user's last login, or 24 hours, whichever is longer.
-	// - new
-	//   Posts are sorted by date. Newest first.
-	// - top
-	//   Posts are sorted by score. Highest first.
-	sort := strings.TrimSpace(r.FormValue("sort"))
-	if sort != "" {
-		var posts []models.Post
-
-		var err error
-		switch sort {
-		case "popular":
-			posts, err = models.GetPostsOrderByPostScore(cutoff, offset, formTag)
-
-		case "new":
-			posts, err = models.GetLatestPosts(offset)
-
-		case "top":
-			if formTag != "" {
-				posts, err = models.GetPostsOrderByPostTagScore(cutoff, offset, formTag)
-			} else {
-				posts, err = models.GetPostsOrderByPostScore(cutoff, offset, formTag)
-			}
-
-		default:
-			sendSystemError(w, fmt.Errorf("Invalid field 'sort': %v", sort))
-			return
-		}
-		if err != nil {
-			sendSystemError(w, fmt.Errorf("Query posts by sort=%s: %v", sort, err))
-			return
-		}
-
-		// fill the tags for the posts
-		if err := fillPostTags(posts); err != nil {
-			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
-			return
-		}
-
-		// send the result back to the clients
-		output := map[string]interface{}{
-			"posts": posts,
-		}
-		SendResponse(w, output, 200)
-		return
+	case "top":
+		params.SortedByScore = true
 	}
 
 	// ?user=USER
@@ -146,7 +109,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	if formUser != "" {
 		author := models.User{}
 		// query the user by user name
-		if err := user.FindByUsername(formUser); err != nil {
+		if err := author.FindByUsername(formUser); err != nil {
 			sendSystemError(w, fmt.Errorf("Query user by name %s: %v", formUser, err))
 			return
 		}
@@ -154,71 +117,25 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 			sendNotFound(w, errors.New("User's name: "+formUser))
 			return
 		}
+		params.UserID = author.ID
+	}
 
-		// query the user's posts
-		posts, err := user.MyPosts(100, offset)
-		if err != nil {
-			sendSystemError(w, fmt.Errorf("Query posts by user: %v", err))
-			return
-		}
-
-		// fill the tags for the posts
-		if err := fillPostTags(posts); err != nil {
-			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
-			return
-		}
-
-		output := map[string]interface{}{
-			"posts": posts,
-		}
-		SendResponse(w, output, 200)
+	// query the posts by the url parameters
+	posts, err := models.GetPostsByParams(params)
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("Query posts by parameters: %v", err))
 		return
 	}
 
-	// ?tag=TAG
-	// Only returns results that match a specific tag. Multiple tags can be listed by separating tags with a +. If more than one tag is listed, it will return posts that match any of the tags.
-	if formTag != "" {
-		posts, err := models.GetPostsOrderByPostScore(cutoff, offset, formTag)
-		if err != nil {
-			sendSystemError(w, fmt.Errorf("Query posts by tags: %v", err))
-			return
-		}
-
-		// fill the tags for the posts
-		if err := fillPostTags(posts); err != nil {
-			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
-			return
-		}
-
-		output := map[string]interface{}{
-			"posts": posts,
-		}
-		SendResponse(w, output, 200)
+	// fill the tags for the posts
+	if err := fillPostTags(posts); err != nil {
+		sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
 		return
 	}
 
-	// ?offset=NUMBER
-	// Offsets the responses by a set number.
-	if offset > 0 {
-		posts, err := models.GetPostsOrderByPostScore(cutoff, offset, "")
-		if err != nil {
-			sendSystemError(w, fmt.Errorf("Query posts by offset: %v", err))
-			return
-		}
-
-		// fill the tags for the posts
-		if err := fillPostTags(posts); err != nil {
-			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
-			return
-		}
-
-		output := map[string]interface{}{
-			"posts": posts,
-		}
-		SendResponse(w, output, 200)
-		return
+	output := map[string]interface{}{
+		"posts": posts,
 	}
-
-	sendSystemError(w, fmt.Errorf("invalid parameter for the request"))
+	SendResponse(w, output, 200)
 	return
 }

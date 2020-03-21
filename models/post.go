@@ -24,6 +24,15 @@ type Post struct {
 	Tags      []PostTag `db:"-"`
 }
 
+// PostQueryParams - structure represents the parameters for querying posts
+type PostQueryParams struct {
+	PostIDs       []int
+	Since         string
+	Offset        int
+	UserID        int
+	SortedByScore bool
+}
+
 // MarshalJSON custom JSON builder for Post structs
 func (p *Post) MarshalJSON() ([]byte, error) {
 	// build tag array for JS if the tag list is currently empty
@@ -147,49 +156,70 @@ func (p *Post) getPostTags() error {
 func GetPostTags(id int) ([]PostTag, error) {
 	tags := []PostTag{}
 
-	err := DBConn.Select(&tags, "SELECT * FROM posts_tags where post_id = ?)", id)
+	err := DBConn.Select(&tags, "SELECT * FROM posts_tags where post_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+
+	// query the tag name with id
+	for i, item := range tags {
+		tag := Tag{}
+		if err = tag.FindByID(item.TagID); err != nil {
+			return nil, err
+		}
+		tags[i].TagName = tag.Name
+	}
 
 	return tags, err
 }
 
-// GetPostsOrderByPostScore - get posts from the database order by posts score
-func GetPostsOrderByPostScore(cutoff time.Time, offset int, name string) ([]Post, error) {
-	posts := []Post{}
+func intSlice2Str(vals []int) string {
+	var s []string
 
-	since := cutoff.Format("2006-01-02 15:04:05")
-
-	tags := strings.Replace(strings.TrimSuffix(name, "+"), "+", ",", -1)
-
-	var err error
-	if tags == "" {
-		err = DBConn.Select(&posts, "select * from posts where created_at > ? ORDER BY `score` DESC LIMIT 100 OFFSET ?", since, offset)
-	} else {
-		err = DBConn.Select(&posts, "select * from posts where created_at > ? and id in (select t1.post_id from posts_tags t1 join tags t2 on t1.tag_id = t2.id and t2.name in (?)) ORDER BY `score` DESC LIMIT 100 OFFSET ?", since, tags, offset)
+	for _, v := range vals {
+		s = append(s, strconv.Itoa(v))
 	}
-	return posts, err
+	return strings.TrimSuffix(strings.Join(s, ","), ",")
 }
 
-// GetPostsOrderByPostTagScore - get posts from the database order by posts-tags score
-func GetPostsOrderByPostTagScore(cutoff time.Time, offset int, name string) ([]Post, error) {
-	posts := []Post{}
+// GetPostsByParams - get the posts by parameters
+func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
+	args := []interface{}{}
 
-	since := cutoff.Format("2006-01-02 15:04:05")
+	query := "select * from posts where created_at > ?"
+	// time range
+	args = append(args, params.Since)
 
-	tags := strings.Replace(strings.TrimSuffix(name, "+"), "+", ",", -1)
+	// special user
+	if params.UserID > 0 {
+		query = query + " and user_id = ?"
+		args = append(args, params.UserID)
+	}
 
-	err := DBConn.Select(&posts, "select * from posts where created_at > ? and id in (select t1.post_id from posts_tags t1 join tags t2 on t1.tag_id = t2.id and t2.name in (?) order by t1.score desc) limit 100 offset ?", since, tags, offset)
+	// tags
+	if len(params.PostIDs) > 0 {
+		query = query + " and id in (?)"
+		args = append(args, intSlice2Str(params.PostIDs))
+	}
 
-	return posts, err
-}
+	// orders
+	if params.SortedByScore {
+		query = query + " order by score desc"
+	} else {
+		query = query + " order by created_at desc"
+	}
 
-// GetLatestPosts - get 100 posts ordered by creation date (newest first) and
-// offset by passed in value
-func GetLatestPosts(offset int) ([]Post, error) {
-	posts := []Post{}
+	// offset
+	query = query + " limit 100 offset ?"
+	args = append(args, params.Offset)
 
-	err := DBConn.Select(&posts, "SELECT * FROM `posts` ORDER BY `created_at` DESC, `id` DESC LIMIT 100 OFFSET ?", offset)
+	posts := []*Post{}
+	// exec the query string
+	if err := DBConn.Select(&posts, query, args...); err != nil {
+		return nil, err
+	}
 
-	return posts, err
+	return posts, nil
 }
 
 // Comments will return comments associated with the current post

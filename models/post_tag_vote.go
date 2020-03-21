@@ -31,7 +31,7 @@ func (v *PostTagVote) FindByUK(postID int, tagID int, userID int) error {
 	return nil
 }
 
-// DeleteByUK - delete a PostTagVote in the database by unique keys
+// DeleteByUKWithTx - delete a PostTagVote in the database by unique keys
 func (v *PostTagVote) DeleteByUKWithTx(tx Transaction, postID int, tagID int, userID int) error {
 	_, err := tx.Exec("delete from posts_tags_votes where post_id = ? and tag_id = ? and voter_id = ?", postID, tagID, userID)
 	return err
