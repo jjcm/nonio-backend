@@ -120,6 +120,11 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		params.UserID = author.ID
 	}
 
+	// if the tag list is not empty, sort by the score of the posttag
+	if len(params.PostIDs) > 0 {
+		params.SortedByScore = false
+	}
+
 	// query the posts by the url parameters
 	posts, err := models.GetPostsByParams(params)
 	if err != nil {
