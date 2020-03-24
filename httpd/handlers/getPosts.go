@@ -74,14 +74,18 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		params.PostIDs = ids
 	}
 
+	// sort by the post score default
+	params.SortedByScore = true
+	// if the tag list is not empty, sort by the score of the posttag
+	if len(params.PostIDs) > 0 {
+		params.SortedByScore = false
+	}
+
 	// ?sort=popular|top|new
 	// Returns posts sorted by a particular algorithm.
 	formSort := strings.TrimSpace(r.FormValue("sort"))
 	switch formSort {
 	case "popular":
-		//  "popular": the time range is variable depending on the time of last login
-		params.SortedByScore = true
-
 		// get the user id from context
 		userID := r.Context().Value("user_id").(int)
 		// query the user by user id
@@ -99,8 +103,9 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		}
 		params.Since = cutoff.Format("2006-01-02 15:04:05")
 
-	case "top":
-		params.SortedByScore = true
+	case "new":
+		// sort by the create time
+		params.SortedByScore = false
 	}
 
 	// ?user=USER
@@ -118,11 +123,6 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		params.UserID = author.ID
-	}
-
-	// if the tag list is not empty, sort by the score of the posttag
-	if len(params.PostIDs) > 0 {
-		params.SortedByScore = false
 	}
 
 	// query the posts by the url parameters
