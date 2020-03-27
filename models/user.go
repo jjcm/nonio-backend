@@ -122,7 +122,7 @@ func (u *User) CreatePost(title, url, content, postType string) (Post, error) {
 }
 
 // CommentOnPost will try and create a comment in the database
-func (u *User) CommentOnPost(post Post, parent *Comment, commentType, text, content string) (Comment, error) {
+func (u *User) CommentOnPost(post Post, parent *Comment, commentType, content string) (Comment, error) {
 	c := Comment{}
 	now := time.Now().Format("2006-01-02 15:04:05")
 
@@ -135,7 +135,7 @@ func (u *User) CommentOnPost(post Post, parent *Comment, commentType, text, cont
 		commentParentID = parent.ID
 	}
 
-	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, type, content, text, parent_id) VALUES (?, ?, ?, ?, ?, ?, ?)", u.ID, post.ID, now, commentType, content, text, commentParentID)
+	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, type, content, parent_id) VALUES (?, ?, ?, ?, ?, ?)", u.ID, post.ID, now, commentType, content, commentParentID)
 	if err != nil {
 		return c, err
 	}
@@ -164,7 +164,7 @@ func (u *User) update() error {
 }
 
 // CreateUser try and create a new user
-func CreateUser(email, username, password string) error {
+func createUser(email, username, password string) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	hashedPassword, err := hashPassword(password)
 	_, err = DBConn.Exec("INSERT INTO users (email, username, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", email, username, hashedPassword, now, now)
@@ -172,6 +172,18 @@ func CreateUser(email, username, password string) error {
 		return err
 	}
 	return nil
+}
+
+// UserFactory will create and return an instance of a user
+func UserFactory(email, username, password string) (User, error) {
+	u := User{}
+	err := createUser(email, username, password)
+	if err != nil {
+		return u, err
+	}
+	err = u.FindByEmail(email)
+
+	return u, err
 }
 
 func hashPassword(password string) (string, error) {
