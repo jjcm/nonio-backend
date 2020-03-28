@@ -44,15 +44,27 @@ func GetTags(offset int, limit int) ([]Tag, error) {
 	return tags, nil
 }
 
-// CreateTag - create a tag in the database by a given word
-func CreateTag(tag string, author User) (int64, error) {
+// createTag - create a tag in the database by a given word
+func createTag(tag string, author User) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 
-	res, err := DBConn.Exec("INSERT INTO tags (name, user_id, created_at) VALUES (?, ?, ?)", tag, author.ID, now)
+	_, err := DBConn.Exec("INSERT INTO tags (name, user_id, created_at) VALUES (?, ?, ?)", tag, author.ID, now)
 	if err != nil {
-		return -1, err
+		return err
 	}
-	return res.LastInsertId()
+	return nil
+}
+
+// TagFactory will create and return an instance of a tag
+func TagFactory(tag string, author User) (Tag, error) {
+	t := Tag{}
+	err := createTag(tag, author)
+	if err != nil {
+		return t, err
+	}
+	err = t.FindByTagName(tag)
+
+	return t, err
 }
 
 // FindByID - find a given tag in the database by its primary key

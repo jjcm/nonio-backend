@@ -18,7 +18,7 @@ func setupTestingDB() error {
 	os.Setenv("DB_HOST", "localhost")
 	os.Setenv("DB_PORT", "3306")
 	os.Setenv("DB_USER", "root")
-	os.Setenv("DB_PASSWORD", "genius")
+	os.Setenv("DB_PASSWORD", "")
 
 	c, err := bs.InitConfig()
 	if err != nil {

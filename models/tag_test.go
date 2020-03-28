@@ -21,7 +21,7 @@ func TestCanGetTags(t *testing.T) {
 	limit := 500
 	index := 0
 	for index < limit {
-		_, err := CreateTag(fake.Words(), author)
+		_, err := TagFactory(fake.Words(), author)
 		// i expect the faker library to return a bunch of duplicates, but I want 500 unique words so we will only increment the index counter if they are all unique
 		if err == nil {
 			index++
@@ -44,7 +44,7 @@ func TestWeCanCreateAndRetrieveATag(t *testing.T) {
 	author, _ := UserFactory("example@example.com", "", "password")
 
 	newTag := fake.Word()
-	_, err := CreateTag(newTag, author)
+	_, err := TagFactory(newTag, author)
 	if err != nil {
 		t.Errorf("You should be able to create a new tag with a given string")
 	}
@@ -66,12 +66,12 @@ func TestYouCantCreateATagWithTheNameOfAnExistingTag(t *testing.T) {
 	author, _ := UserFactory("example@example.com", "", "password")
 
 	newTag := fake.Word()
-	_, err := CreateTag(newTag, author)
+	_, err := TagFactory(newTag, author)
 	if err != nil {
 		t.Errorf("The initial creation of a tag should have worked fine")
 	}
 	// try it again
-	_, err = CreateTag(newTag, author)
+	_, err = TagFactory(newTag, author)
 	if err == nil {
 		t.Errorf("This tag should already exist, so an error should have been thrown when trying to create it again")
 	}

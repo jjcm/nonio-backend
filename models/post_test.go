@@ -100,12 +100,10 @@ func TestWeTagAPost(t *testing.T) {
 	p := Post{}
 	p.FindByURL("post-title")
 
-	tagID, err := CreateTag("Tag!", author)
+	tag, err := TagFactory("Tag!", author)
 	if err != nil {
-		t.Errorf("Error creating tag. Error: %v ID: %v", err.Error(), tagID)
+		t.Errorf("Error creating tag. Error: %v ID: %v", err.Error(), tag.ID)
 	}
-	tag := Tag{}
-	tag.FindByTagName("Tag!")
 
 	err = p.AddTag(tag)
 	if err != nil {
@@ -126,9 +124,7 @@ func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 	p := Post{}
 	p.FindByURL("post-title")
 
-	CreateTag("Tag!", author)
-	tag := Tag{}
-	tag.FindByTagName("Tag!")
+	tag, _ := TagFactory("Tag!", author)
 
 	err := p.AddTag(tag)
 	if err != nil {
@@ -195,12 +191,9 @@ func TestIfAPostIsCreatedWithAnEmptyTypeItGetsSetToTheDefaultTypeImage(t *testin
 
 func TestWeCanQueryPost(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
-	CreateUser("example@example.com", "", "password")
-	author := User{}
-	author.FindByEmail("example@example.com")
+	author, _ := UserFactory("example@example.com", "", "password")
 
 	// create some posts
 	author.CreatePost("Post thats arty", "url-for-arty-post", "lorem ipsum", "image")
@@ -208,22 +201,11 @@ func TestWeCanQueryPost(t *testing.T) {
 	author.CreatePost("Post thats wtf", "url-for-wtf-post", "lorem ipsum", "image")
 
 	// create a set of tags
-	CreateTag("funny", author)
-	CreateTag("art", author)
-	CreateTag("wtf", author)
+	funnyTag, _ := TagFactory("funny", author)
+	artTag, _ := TagFactory("art", author)
+	wtfTag, _ := TagFactory("wtf", author)
 
-	// create some posttags
-	CreatePostTagFromObjects()
-	p := &PostTag{
-		PostID: 1,
-		TagID:  1,
-	}
-
-
-	if err != nil {
-		t.Errorf("Post creation should have worked. Error recieved: %v", err)
-	}
-	if p.Type != "image" {
-		t.Errorf("The post type should be the default `Image`. Type is: %v", p.Type)
-	}
+	funnyTag = funnyTag
+	artTag = artTag
+	wtfTag = wtfTag
 }
