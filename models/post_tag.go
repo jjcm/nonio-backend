@@ -94,6 +94,17 @@ func (p *PostTag) CreatePostTag() error {
 	return nil
 }
 
+func CreatePostTagFromObjects(post Post, tag Tag) (int64, error) {
+	now := time.Now().Format("2006-01-02 15:04:05")
+
+	// create a new PostTag association
+	res, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", post.ID, tag.ID, now)
+	if err != nil {
+		return -1, err
+	}
+	return res.LastInsertId()
+}
+
 // CreatePostTagWithTx - create the PostTag with post and tag information
 func (p *PostTag) CreatePostTagWithTx(tx Transaction) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
