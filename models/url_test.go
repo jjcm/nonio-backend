@@ -4,7 +4,6 @@ import "testing"
 
 func TestWeCanCheckIfAUrlIsAvailable(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	isAvaiable, _ := URLIsAvailable("anything")
 	if !isAvaiable {

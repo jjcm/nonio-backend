@@ -7,7 +7,6 @@ import (
 
 func TestWeCanCreateAPost(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "", "password")
@@ -27,7 +26,6 @@ func TestWeCanCreateAPost(t *testing.T) {
 
 func TestWeCanIncrementScoreForPost(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "", "password")
@@ -48,7 +46,6 @@ func TestWeCanIncrementScoreForPost(t *testing.T) {
 
 func TestWeCanFindAPostByItsURL(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "", "password")
@@ -66,26 +63,26 @@ func TestWeCanFindAPostByItsURL(t *testing.T) {
 
 func TestWeCanFindAPostByItsID(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
-	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+	post, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+	if err != nil {
+		t.Errorf("Error when creating post: %s", err.Error())
+	}
 
 	p := Post{}
 	p.FindByID(1)
 
-	if p.ID == 0 {
-		t.Errorf("We should have been able to find this post by it's ID")
+	if p.ID != post.ID {
+		t.Errorf("We should have been able to find this post by it's ID. Expected: 1, Actual: %d", p.ID)
 	}
 }
 
 func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
-
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "userName", "password")
@@ -105,7 +102,6 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 
 func TestWeTagAPost(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "", "password")
@@ -116,11 +112,14 @@ func TestWeTagAPost(t *testing.T) {
 	p := Post{}
 	p.FindByURL("post-title")
 
-	CreateTag("Tag!", author)
+	tagID, err := CreateTag("Tag!", author)
+	if err != nil {
+		t.Errorf("Error creating tag. Error: %v ID: %v", err.Error(), tagID)
+	}
 	tag := Tag{}
 	tag.FindByTagName("Tag!")
 
-	err := p.AddTag(tag)
+	err = p.AddTag(tag)
 	if err != nil {
 		t.Errorf("We should be able to tag this freshly created post. Error: %v", err.Error())
 	}
@@ -131,7 +130,6 @@ func TestWeTagAPost(t *testing.T) {
 
 func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "", "password")
@@ -165,7 +163,6 @@ func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 
 func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "", "password")
@@ -200,7 +197,6 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 
 func TestIfAPostIsCreatedWithAnEmptyTypeItGetsSetToTheDefaultTypeImage(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create an author for post
 	CreateUser("example@example.com", "", "password")

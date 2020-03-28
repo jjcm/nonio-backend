@@ -8,7 +8,6 @@ import (
 
 func TestCanGetTags(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	tags, _ := GetTags(0, 100)
 	if len(tags) != 0 {
@@ -42,7 +41,6 @@ func TestCanGetTags(t *testing.T) {
 
 func TestWeCanCreateAndRetrieveATag(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create our author
 	CreateUser("example@example.com", "", "password")
@@ -67,7 +65,6 @@ func TestWeCanCreateAndRetrieveATag(t *testing.T) {
 
 func TestYouCantCreateATagWithTheNameOfAnExistingTag(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// create our author
 	CreateUser("example@example.com", "", "password")

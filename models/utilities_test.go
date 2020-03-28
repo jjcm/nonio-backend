@@ -28,7 +28,6 @@ func TestWeCanCreateAWebFriendlyAliasFromAGivenString(t *testing.T) {
 
 func TestWeCanGetTheParentIDsFromAListOfComments(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	var comments []Comment
 	// check the default output

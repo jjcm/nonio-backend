@@ -3,9 +3,8 @@ package models
 import "testing"
 
 func TestWeCanCreateComments(t *testing.T) {
-	// setup
 	setupTestingDB()
-	defer teardownTestingDB()
+
 	CreateUser("example@example.com", "", "password")
 	author := User{}
 	author.FindByEmail("example@example.com")
@@ -24,7 +23,6 @@ func TestWeCanCreateComments(t *testing.T) {
 
 func TestWeCanStructureCommentsCorrectly(t *testing.T) {
 	setupTestingDB()
-	defer teardownTestingDB()
 
 	// setup users
 	CreateUser("person@example.com", "friendlyPerson", "password")
