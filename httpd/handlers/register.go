@@ -56,7 +56,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Log.Info("now creating new user")
-	err = models.CreateUser(payload.Email, payload.Username, payload.Password)
+	_, err = models.UserFactory(payload.Email, payload.Username, payload.Password)
 	if err != nil {
 		// err is nil, meaning there was not a problem looking up this user, so one was found
 		SendResponse(w, MakeError("Error registering user: "+err.Error()), 500)

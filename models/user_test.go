@@ -8,7 +8,7 @@ import (
 func TestCanCreateAUser(t *testing.T) {
 	setupTestingDB()
 
-	err := CreateUser("user@example.com", "", "password")
+	err := createUser("user@example.com", "", "password")
 	if err != nil {
 		t.Errorf("Creating a user should not have errors. Error: " + err.Error())
 	}
@@ -17,12 +17,10 @@ func TestCanCreateAUser(t *testing.T) {
 func TestAUsersPasswordCanBeChecked(t *testing.T) {
 	setupTestingDB()
 
-	err := CreateUser("user@example.com", "", "password")
+	user, err := UserFactory("example@example.com", "", "password")
 	if err != nil {
 		panic(err)
 	}
-	user := User{}
-	user.FindByEmail("user@example.com")
 
 	err = user.Login("password")
 	if err != nil {
@@ -37,13 +35,13 @@ func TestAUsersPasswordCanBeChecked(t *testing.T) {
 func TestAUserCantBeCreatedIfTheEmailAlreadyExists(t *testing.T) {
 	setupTestingDB()
 
-	err := CreateUser("user@example.com", "", "anything")
+	err := createUser("user@example.com", "", "anything")
 	if err != nil {
 		t.Errorf("Initial creation of a user should work fine")
 	}
 
 	// now let's try and create another user with the same email address
-	err = CreateUser("user@example.com", "", "anything")
+	err = createUser("user@example.com", "", "anything")
 	if err == nil {
 		t.Errorf("An error should have been thrown when we tried to create a user with an existing email address")
 	}
@@ -59,7 +57,7 @@ func TestFindingAUserByTheirEmailAddress(t *testing.T) {
 	}
 
 	// now let's create a user and search with an invalid email address, we are expecting an error
-	CreateUser("user@example.com", "", "anything")
+	createUser("user@example.com", "", "anything")
 	err = u.FindByEmail("wrong@address.com")
 	if err == nil {
 		t.Errorf("The email address 'wrong@address.com' should not exist in the database so an error should have been thrown")
@@ -76,7 +74,7 @@ func TestFindingAUserByTheirUsername(t *testing.T) {
 	}
 
 	// now let's create a user and search with an invalid username, we are expecting an error
-	CreateUser("user@example.com", "radUser123", "anything")
+	createUser("user@example.com", "radUser123", "anything")
 	err = u.FindByUsername("radUser")
 	if err == nil {
 		t.Errorf("The username 'radUser' should not exist in the database so an error should have been thrown")
@@ -100,7 +98,7 @@ func TestFindingAUserByTheirPrimaryKeyID(t *testing.T) {
 	}
 
 	// this should be the very first user, so I should be able to find them by the ID 1
-	CreateUser("user@example.com", "", "whatever")
+	createUser("user@example.com", "", "whatever")
 	err = u.FindByID(1)
 	if err != nil {
 		t.Errorf("No error should have been thrown while looking up the newly created user")
@@ -110,10 +108,8 @@ func TestFindingAUserByTheirPrimaryKeyID(t *testing.T) {
 func TestWeCanTrackTheUsersLastLogin(t *testing.T) {
 	setupTestingDB()
 
-	CreateUser("user@example.com", "", "whatever")
+	u, _ := UserFactory("user@example.com", "", "whatever")
 
-	u := User{}
-	u.FindByID(1)
 	if !u.LastLogin.IsZero() {
 		t.Errorf("A freshly created user should have a last login value of 0")
 	}
@@ -134,7 +130,7 @@ func TestWeCanCheckIfAUsernameIsAvailable(t *testing.T) {
 	}
 
 	// create our user with a username of "anything"
-	CreateUser("user@example.com", "anything", "password")
+	createUser("user@example.com", "anything", "password")
 
 	// now the username "anything" shouldn't be available
 	isAvaiable, _ = UsernameIsAvailable("anything")
@@ -179,9 +175,7 @@ func TestWeCanGetTheUsersPreferredDisplayName(t *testing.T) {
 func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 	setupTestingDB()
 
-	CreateUser("example@example.com", "", "password")
-	author := User{}
-	author.FindByEmail("example@example.com")
+	author, _ := UserFactory("example@example.com", "", "password")
 	// the author shouldn't have any posts at this point
 	posts, err := author.MyPosts(-1, 0)
 	if len(posts) != 0 {
