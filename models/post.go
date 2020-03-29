@@ -26,11 +26,13 @@ type Post struct {
 
 // PostQueryParams - structure represents the parameters for querying posts
 type PostQueryParams struct {
-	PostIDs       []int
-	Since         string
-	Offset        int
-	UserID        int
+	TagIDs []int
+	Since  string
+	Offset int
+	UserID int
+	// let's deprecate SortedByScore in the params, I think for code sanity these params should match what we have in the URL
 	SortedByScore bool
+	Sort          string
 }
 
 // MarshalJSON custom JSON builder for Post structs
@@ -197,9 +199,9 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	}
 
 	// tags
-	if len(params.PostIDs) > 0 {
+	if len(params.TagIDs) > 0 {
 		query = query + " and id in (?)"
-		args = append(args, intSlice2Str(params.PostIDs))
+		args = append(args, intSlice2Str(params.TagIDs))
 	}
 
 	// orders

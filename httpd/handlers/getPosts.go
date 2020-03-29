@@ -71,13 +71,13 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, fmt.Errorf("Query posts by tags %s: %v", tags, err))
 			return
 		}
-		params.PostIDs = ids
+		params.TagIDs = ids
 	}
 
 	// sort by the post score default
 	params.SortedByScore = true
 	// if the tag list is not empty, sort by the score of the posttag
-	if len(params.PostIDs) > 0 {
+	if len(params.TagIDs) > 0 {
 		params.SortedByScore = false
 	}
 

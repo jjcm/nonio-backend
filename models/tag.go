@@ -33,6 +33,15 @@ func (t *Tag) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// ToJSON - get a string representation of this Tag in JSON
+func (t *Tag) ToJSON() string {
+	jsonData, err := json.Marshal(t)
+	if err != nil {
+		return err.Error()
+	}
+	return string(jsonData)
+}
+
 // GetTags - get tags out of the database offset by an integer
 func GetTags(offset int, limit int) ([]Tag, error) {
 	tags := []Tag{}
