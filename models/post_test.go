@@ -208,4 +208,6 @@ func TestWeCanQueryPost(t *testing.T) {
 	funnyTag = funnyTag
 	artTag = artTag
 	wtfTag = wtfTag
+
+	t.Log(funnyTag.Name)
 }

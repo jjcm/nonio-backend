@@ -82,8 +82,8 @@ func (p *PostTag) DeleteByUKWithTx(tx Transaction, postID int, tagID int) error 
 	return err
 }
 
-// CreatePostTag - create the PostTag with post and tag information
-func (p *PostTag) CreatePostTag() error {
+// createPostTag - create the PostTag with post and tag information
+func (p *PostTag) createPostTag() error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 
 	// create a new PostTag association
@@ -94,15 +94,20 @@ func (p *PostTag) CreatePostTag() error {
 	return nil
 }
 
-func CreatePostTagFromObjects(post Post, tag Tag) (int64, error) {
-	now := time.Now().Format("2006-01-02 15:04:05")
+// PostTagFactory will create and return an instance of a PostTag
+func PostTagFactory(postID int, tagID int) (PostTag, error) {
+	pt := PostTag{}
+	pt.PostID = postID
+	pt.TagID = tagID
 
-	// create a new PostTag association
-	res, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", post.ID, tag.ID, now)
+	err := pt.createPostTag()
 	if err != nil {
-		return -1, err
+		return pt, err
 	}
-	return res.LastInsertId()
+
+	err = pt.FindByUK(postID, tagID)
+
+	return pt, err
 }
 
 // CreatePostTagWithTx - create the PostTag with post and tag information
