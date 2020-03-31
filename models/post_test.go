@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestWeCanCreateAPost(t *testing.T) {
@@ -229,6 +230,12 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	// create some posts
 	author1.CreatePost("Post thats arty", "url1", "lorem ipsum", "image")
+
+	// add a light delay. We'll use this in the "since" test later.
+	time.Sleep(1 * time.Second)
+	inBetweenTime := time.Now().Format("2006-01-02 15:04:05")
+	time.Sleep(1 * time.Second)
+
 	author2.CreatePost("Post thats both", "url2", "lorem ipsum", "image")
 	author1.CreatePost("Post thats funny", "url3", "lorem ipsum", "image")
 
@@ -346,6 +353,33 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) > 0 && posts[0].ID != 2 {
 		t.Errorf("Querying with a top sort failed. Expected the first post to have an ID of 2. Got %v instead", posts[0].ID)
+	}
+	postQueryParams.Sort = ""
+
+	// Test querying with an offset
+	postQueryParams.Offset = 1
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying with an offset failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) != 2 {
+		t.Errorf("Querying with an offset failed. Expected 2 posts. Got %v instead", len(posts))
+	}
+	postQueryParams.Offset = 0
+
+	// Test querying with an offset
+	postQueryParams.Since = inBetweenTime
+	time.Sleep(1 * time.Second)
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying posts since 1 second ago failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) != 2 {
+		t.Errorf("Querying posts since 1 second ago failed. Expected 2 posts. Got %v instead", len(posts))
 	}
 
 }
