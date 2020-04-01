@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -17,6 +19,16 @@ type PostTag struct {
 	Score     int           `db:"score" json:"score"`
 	CreatedAt time.Time     `db:"created_at" json:"-"`
 	Votes     []PostTagVote `db:"-" json:"-"`
+}
+
+// ToJSON - prints out the json representation of the PostTag
+func (p *PostTag) ToJSON() string {
+	fmt.Print(p.TagID)
+	jsonData, err := json.Marshal(p)
+	if err != nil {
+		return err.Error()
+	}
+	return string(jsonData)
 }
 
 // FindByID - find a given PostTag in the database by its primary key

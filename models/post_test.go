@@ -40,6 +40,11 @@ func TestWeCanIncrementScoreForPost(t *testing.T) {
 		t.Errorf("Increment score: %v", err)
 		return
 	}
+	p.FindByURL("post-title")
+	if p.Score != 1 {
+		t.Errorf("Expected Score of 1. Got %v instead", p.Score)
+	}
+
 }
 
 func TestWeCanFindAPostByItsURL(t *testing.T) {
@@ -224,6 +229,8 @@ func TestWeCanQueryPost(t *testing.T) {
 		]
 	*/
 
+	p := Post{}
+
 	// create two authors for posts
 	author1, _ := UserFactory("example@example.com", "user1", "password")
 	author2, _ := UserFactory("example2@example.com", "user2", "password")
@@ -237,32 +244,38 @@ func TestWeCanQueryPost(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	author2.CreatePost("Post thats both", "url2", "lorem ipsum", "image")
+	time.Sleep(1 * time.Second)
 	author1.CreatePost("Post thats funny", "url3", "lorem ipsum", "image")
 
 	// create a set of tags
 	artTag, _ := TagFactory("art", author1)
 	funnyTag, _ := TagFactory("funny", author2)
-
-	fmt.Println(artTag.ToJSON())
+	fmt.Printf(artTag.ToJSON())
 
 	// Create PostTag for the arty post
 	artyPostTag, _ := PostTagFactory(1, artTag.ID)
-	for i := 0; i < 7; i++ {
+	p.IncrementScore(1)
+	for i := 1; i < 7; i++ {
 		artyPostTag.IncrementScore(1, artTag.ID)
+		p.IncrementScore(1)
 	}
 
 	// Create PostTag for the funny post
 	funnyPostTag, _ := PostTagFactory(3, funnyTag.ID)
-	for i := 0; i < 6; i++ {
+	p.IncrementScore(3)
+	for i := 1; i < 6; i++ {
 		funnyPostTag.IncrementScore(3, funnyTag.ID)
+		p.IncrementScore(3)
 	}
 
 	// Create PostTags for the both post
 	artyPostTag2, _ := PostTagFactory(2, artTag.ID)
 	funnyPostTag2, _ := PostTagFactory(2, funnyTag.ID)
-	for i := 0; i < 5; i++ {
+	p.IncrementScore(2)
+	for i := 1; i < 5; i++ {
 		artyPostTag2.IncrementScore(2, artTag.ID)
 		funnyPostTag2.IncrementScore(2, funnyTag.ID)
+		p.IncrementScore(2)
 	}
 
 	// Test querying for posts
@@ -276,6 +289,9 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) != 3 {
 		t.Errorf("Default query failed. Expected 3 posts, got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 
 	// Test querying with a tag
@@ -288,8 +304,10 @@ func TestWeCanQueryPost(t *testing.T) {
 	}
 
 	if len(posts) != 2 {
-		t.Log(posts[0].ToJSON())
 		t.Errorf("Querying with a tag failed. Expected 2 posts, got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 
 	// Test querying with two tags
@@ -303,6 +321,9 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) != 2 {
 		t.Errorf("Querying with two tags failed. Expected 2 posts, got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 	postQueryParams.TagIDs = []int{}
 
@@ -316,6 +337,9 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) != 1 {
 		t.Errorf("Querying with a user failed. Expected 1 post, got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 	postQueryParams.UserID = 0
 
@@ -329,6 +353,9 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) > 0 && posts[0].ID != 3 {
 		t.Errorf("Querying with a new sort failed. Expected the first post to have an ID of 3. Got %v instead", posts[0].ID)
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 
 	// Test querying with a popular sort
@@ -341,6 +368,9 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) > 0 && posts[0].ID != 2 {
 		t.Errorf("Querying with a popular sort failed. Expected the first post to have an ID of 2. Got %v instead", posts[0].ID)
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 
 	// Test querying with a top sort
@@ -353,6 +383,9 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) > 0 && posts[0].ID != 2 {
 		t.Errorf("Querying with a top sort failed. Expected the first post to have an ID of 2. Got %v instead", posts[0].ID)
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 	postQueryParams.Sort = ""
 
@@ -366,6 +399,9 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) != 2 {
 		t.Errorf("Querying with an offset failed. Expected 2 posts. Got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 	postQueryParams.Offset = 0
 
@@ -380,6 +416,9 @@ func TestWeCanQueryPost(t *testing.T) {
 
 	if len(posts) != 2 {
 		t.Errorf("Querying posts since 1 second ago failed. Expected 2 posts. Got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
 	}
 
 }
