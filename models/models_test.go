@@ -19,13 +19,8 @@ func setupTestingDB() error {
 	os.Setenv("OAUTH_SECRET", "12345")
 	os.Setenv("DB_HOST", "localhost")
 	os.Setenv("DB_PORT", "3306")
-<<<<<<< HEAD
-	os.Setenv("DB_USER", "root")
-	os.Setenv("DB_PASSWORD", "")
-=======
 	os.Setenv("DB_USER", "dbtestuser")
 	os.Setenv("DB_PASSWORD", "password")
->>>>>>> alonlongTests
 
 	c, err := bs.InitConfig()
 	if err != nil {
