@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // PostTagCreationRequest this is the shape of the JSON request that is needed to
@@ -36,14 +36,12 @@ func findUserPostTag(userID int, postURL string, tagName string) (*models.User, 
 	}
 	// if there is no rows about the tag name, insert a new one
 	if tag.ID == 0 {
-		id, err := models.CreateTag(tagName, user)
+		tag, err := models.TagFactory(tagName, user)
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("Create tag: %v", err)
 		}
-		// update the Tag structure
-		tag.ID = int(id)
-		tag.Author = user
-		tag.Name = tagName
+
+		tag = tag
 	}
 
 	return &user, &post, &tag, nil

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // RegisterPayload This is the shape of the JSON payload that will be sent to

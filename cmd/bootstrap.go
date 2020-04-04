@@ -1,10 +1,10 @@
 package main
 
 import (
-	bs "github.com/jjcm/soci-backend/bootstrap"
-	"github.com/jjcm/soci-backend/httpd/handlers"
-	"github.com/jjcm/soci-backend/httpd/middleware"
-	"github.com/jjcm/soci-backend/models"
+	bs "soci-backend/bootstrap"
+	"soci-backend/httpd/handlers"
+	"soci-backend/httpd/middleware"
+	"soci-backend/models"
 )
 
 var sociConfig bs.Config

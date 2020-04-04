@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // PostTagVoteAdditionRequest this is the shape of the JSON request that is needed to

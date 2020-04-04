@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // PostCreationRequest this is the shape of the JSON request that is needed to

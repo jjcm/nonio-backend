@@ -6,6 +6,7 @@ func TestWeCanCreateComments(t *testing.T) {
 	setupTestingDB()
 
 	author, _ := UserFactory("example@example.com", "", "password")
+
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 
 	// create comment

@@ -16,7 +16,7 @@ type Transaction interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
-// A Txfn is a function that will be called with an initialized `Transaction` object
+// TxFn is a function that will be called with an initialized `Transaction` object
 // that can be used for executing statements and queries against a database.
 type TxFn func(Transaction) error
 

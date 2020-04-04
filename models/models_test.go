@@ -2,11 +2,14 @@ package models
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
+	"strings"
+
+	bs "soci-backend/bootstrap"
 
 	_ "github.com/go-sql-driver/mysql"
-	bs "github.com/jjcm/soci-backend/bootstrap"
 )
 
 func setupTestingDB() error {
@@ -16,17 +19,24 @@ func setupTestingDB() error {
 	os.Setenv("OAUTH_SECRET", "12345")
 	os.Setenv("DB_HOST", "localhost")
 	os.Setenv("DB_PORT", "3306")
+<<<<<<< HEAD
 	os.Setenv("DB_USER", "root")
 	os.Setenv("DB_PASSWORD", "")
+=======
+	os.Setenv("DB_USER", "dbtestuser")
+	os.Setenv("DB_PASSWORD", "password")
+>>>>>>> alonlongTests
 
 	c, err := bs.InitConfig()
 	if err != nil {
+		fmt.Println("bootstrap died")
 		return err
 	}
 
 	os.Setenv("DB_DATABASE", testingDBName)
 	c, err = bs.InitConfig()
 	if err != nil {
+		fmt.Println("db connection died")
 		panic(err)
 	}
 	DBConn = c.DBConn
@@ -35,8 +45,17 @@ func setupTestingDB() error {
 	// get the database back to square 1
 	resetTestingDB()
 
-	cmd := exec.Command("/home/lapubell/programming/go/bin/goose", "mysql", os.Getenv("DB_USER")+":"+os.Getenv("DB_PASSWORD")+"@/"+testingDBName, "up")
-	cmd.Dir = "/home/lapubell/programming/go/src/github.com/jjcm/soci-backend/migrations"
+	goPath := os.Getenv("GOPATH")
+	command := goPath + "/bin/goose"
+	cmd := exec.Command(command, "mysql", os.Getenv("DB_USER")+":"+os.Getenv("DB_PASSWORD")+"@/"+testingDBName, "up")
+
+	workingDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
+	workingDir = strings.Replace(workingDir, "models", "migrations", -1)
+	cmd.Dir = workingDir
+
 	var output bytes.Buffer
 	cmd.Stderr = &output
 	err = cmd.Run()

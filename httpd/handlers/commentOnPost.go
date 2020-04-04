@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/jjcm/soci-backend/models"
+	"soci-backend/models"
 )
 
 // CommentOnPost will read in the JSON payload to add a comment to a given post
@@ -13,7 +13,6 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 	type requestPayload struct {
 		PostURL  string `json:"post"`
 		Content  string `json:"content"`
-		Text     string `json:"text"`
 		Type     string `json:"type"`
 		ParentID *int   `json:"parent"`
 	}
@@ -33,8 +32,8 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
 	// before we even check for the existance of the related items, let's verify this comment payload is even valid
-	if payload.Text == "" {
-		sendSystemError(w, errors.New("Can not send us an empty comment. `text` key is required"))
+	if payload.Content == "" {
+		sendSystemError(w, errors.New("Can not send us an empty comment. `content` key is required"))
 	}
 	if payload.Type == "" {
 		payload.Type = "text" // sensible default
@@ -58,7 +57,7 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 		parentComment.FindByID(*(payload.ParentID))
 	}
 
-	comment, err := u.CommentOnPost(post, &parentComment, payload.Type, payload.Text, payload.Content)
+	comment, err := u.CommentOnPost(post, &parentComment, payload.Type, payload.Content)
 	if err != nil {
 		sendSystemError(w, err)
 		return

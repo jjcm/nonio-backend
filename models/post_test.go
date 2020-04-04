@@ -3,6 +3,7 @@ package models
 import (
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestWeCanCreateAPost(t *testing.T) {
@@ -38,6 +39,11 @@ func TestWeCanIncrementScoreForPost(t *testing.T) {
 		t.Errorf("Increment score: %v", err)
 		return
 	}
+	p.FindByURL("post-title")
+	if p.Score != 1 {
+		t.Errorf("Expected Score of 1. Got %v instead", p.Score)
+	}
+
 }
 
 func TestWeCanFindAPostByItsURL(t *testing.T) {
@@ -100,12 +106,10 @@ func TestWeTagAPost(t *testing.T) {
 	p := Post{}
 	p.FindByURL("post-title")
 
-	tagID, err := CreateTag("Tag!", author)
+	tag, err := TagFactory("Tag!", author)
 	if err != nil {
-		t.Errorf("Error creating tag. Error: %v ID: %v", err.Error(), tagID)
+		t.Errorf("Error creating tag. Error: %v ID: %v", err.Error(), tag.ID)
 	}
-	tag := Tag{}
-	tag.FindByTagName("Tag!")
 
 	err = p.AddTag(tag)
 	if err != nil {
@@ -126,9 +130,7 @@ func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 	p := Post{}
 	p.FindByURL("post-title")
 
-	CreateTag("Tag!", author)
-	tag := Tag{}
-	tag.FindByTagName("Tag!")
+	tag, _ := TagFactory("Tag!", author)
 
 	err := p.AddTag(tag)
 	if err != nil {
@@ -191,4 +193,237 @@ func TestIfAPostIsCreatedWithAnEmptyTypeItGetsSetToTheDefaultTypeImage(t *testin
 	if p.Type != "image" {
 		t.Errorf("The post type should be the default `Image`. Type is: %v", p.Type)
 	}
+}
+
+func TestWeCanQueryPost(t *testing.T) {
+	setupTestingDB()
+
+	/*
+		This is going to test a myriad of the /posts calls. We're also going to set up the database with two posts, and two tags.
+		Each post will have two PostTags, with one primary tag that relates to it the most. Here's what we're aiming for:
+
+		[
+			{
+				title: "Post thats arty",
+				score: 7,
+				tags: [
+					{ name: "arty", score: 7 },
+				]
+			},
+			{
+				title: "Post thats funny",
+				score: 6,
+				tags: [
+					{ name: "funny" score: 6 }
+				]
+			},
+			{
+				title: "Post thats both",
+				score: 10,
+				tags: [
+					{ name: "arty" score: 5 }
+					{ name: "funny" score: 5 }
+				]
+			}
+		]
+	*/
+
+	p := Post{}
+
+	// create two authors for posts
+	author1, _ := UserFactory("example@example.com", "user1", "password")
+	author2, _ := UserFactory("example2@example.com", "user2", "password")
+
+	// create some posts
+	author1.CreatePost("Post thats arty", "url1", "lorem ipsum", "image")
+
+	// add a light delay. We'll use this in the "since" test later.
+	time.Sleep(1 * time.Second)
+	inBetweenTime := time.Now().Format("2006-01-02 15:04:05")
+	time.Sleep(1 * time.Second)
+
+	author2.CreatePost("Post thats both", "url2", "lorem ipsum", "image")
+	time.Sleep(1 * time.Second)
+	author1.CreatePost("Post thats funny", "url3", "lorem ipsum", "image")
+
+	// create a set of tags
+	artTag, _ := TagFactory("art", author1)
+	funnyTag, _ := TagFactory("funny", author2)
+
+	// Create PostTag for the arty post
+	artyPostTag, _ := PostTagFactory(1, artTag.ID)
+
+	testPostTag := PostTag{}
+	testPostTag.FindByID(1)
+
+	testTag := Tag{}
+	testTag.FindByID(1)
+
+	p.IncrementScore(1)
+	for i := 1; i < 7; i++ {
+		artyPostTag.IncrementScore(1, artTag.ID)
+		p.IncrementScore(1)
+	}
+
+	// Create PostTag for the funny post
+	funnyPostTag, _ := PostTagFactory(3, funnyTag.ID)
+	p.IncrementScore(3)
+	for i := 1; i < 6; i++ {
+		funnyPostTag.IncrementScore(3, funnyTag.ID)
+		p.IncrementScore(3)
+	}
+
+	// Create PostTags for the both post
+	artyPostTag2, _ := PostTagFactory(2, artTag.ID)
+	funnyPostTag2, _ := PostTagFactory(2, funnyTag.ID)
+	p.IncrementScore(2)
+	for i := 1; i < 5; i++ {
+		artyPostTag2.IncrementScore(2, artTag.ID)
+		funnyPostTag2.IncrementScore(2, funnyTag.ID)
+		p.IncrementScore(2)
+	}
+
+	// Test querying for posts
+	postQueryParams := PostQueryParams{}
+	var params *PostQueryParams = &postQueryParams
+	posts, err := GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Default query failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) != 3 {
+		t.Errorf("Default query failed. Expected 3 posts, got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+
+	// Test querying with a tag
+	tags := []int{funnyTag.ID}
+	postQueryParams.TagIDs = tags
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying with a tag failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) != 2 {
+		t.Errorf("Querying with a tag failed. Expected 2 posts, got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+
+	// Test querying with two tags
+	tags = []int{funnyTag.ID, artTag.ID}
+	postQueryParams.TagIDs = tags
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying with two tags failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) != 2 {
+		t.Errorf("Querying with two tags failed. Expected 2 posts, got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+	postQueryParams.TagIDs = []int{}
+
+	// Test querying with a user
+	postQueryParams.UserID = author2.ID
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying with a user failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) != 1 {
+		t.Errorf("Querying with a user failed. Expected 1 post, got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+	postQueryParams.UserID = 0
+
+	// Test querying with a new sort
+	postQueryParams.Sort = "new"
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying with a new sort failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) > 0 && posts[0].ID != 3 {
+		t.Errorf("Querying with a new sort failed. Expected the first post to have an ID of 3. Got %v instead", posts[0].ID)
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+
+	// Test querying with a popular sort
+	postQueryParams.Sort = "popular"
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying with a popular sort failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) > 0 && posts[0].ID != 2 {
+		t.Errorf("Querying with a popular sort failed. Expected the first post to have an ID of 2. Got %v instead", posts[0].ID)
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+
+	// Test querying with a top sort
+	postQueryParams.Sort = "top"
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying with a top sort failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) > 0 && posts[0].ID != 2 {
+		t.Errorf("Querying with a top sort failed. Expected the first post to have an ID of 2. Got %v instead", posts[0].ID)
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+	postQueryParams.Sort = ""
+
+	// Test querying with an offset
+	postQueryParams.Offset = 1
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying with an offset failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) != 2 {
+		t.Errorf("Querying with an offset failed. Expected 2 posts. Got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+	postQueryParams.Offset = 0
+
+	// Test querying with an offset
+	postQueryParams.Since = inBetweenTime
+	time.Sleep(1 * time.Second)
+	posts, err = GetPostsByParams(params)
+
+	if err != nil {
+		t.Errorf("Querying posts since 1 second ago failed. Error querying posts via params: %v", err)
+	}
+
+	if len(posts) != 2 {
+		t.Errorf("Querying posts since 1 second ago failed. Expected 2 posts. Got %v instead", len(posts))
+		for i := 0; i < len(posts); i++ {
+			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
+		}
+	}
+
 }

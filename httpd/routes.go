@@ -1,12 +1,12 @@
-package main
+package httpd
 
 import (
 	"net/http"
 
-	"github.com/jjcm/soci-backend/httpd/handlers"
+	"soci-backend/httpd/handlers"
 )
 
-func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
+func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
 		"/":                             handlers.Home,
 		"/register":                     handlers.Register,
@@ -30,7 +30,7 @@ func openRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	return routes
 }
 
-func protectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
+func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
 		"/protected": handlers.GetTokenDetails,
 

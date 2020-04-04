@@ -2,15 +2,23 @@ package models
 
 import "testing"
 
+func TestPostTagFactory(t *testing.T) {
+	setupTestingDB()
+
+	_, err := PostTagFactory(1, 1)
+
+	if err != nil {
+		t.Errorf("PostTag creation via Factory should have worked: %v", err)
+	}
+}
+
 func TestWeCanFindPostTagByID(t *testing.T) {
 	setupTestingDB()
 
 	// create the PostTag first
-	item := &PostTag{
-		PostID: 1,
-		TagID:  1,
-	}
-	if err := item.CreatePostTag(); err != nil {
+	_, err := PostTagFactory(1, 1)
+
+	if err != nil {
 		t.Errorf("PostTag creation should have worked: %v", err)
 	}
 
@@ -26,11 +34,9 @@ func TestWeCanFindPostTagByUK(t *testing.T) {
 	setupTestingDB()
 
 	// create the PostTag first
-	item := &PostTag{
-		PostID: 1,
-		TagID:  1,
-	}
-	if err := item.CreatePostTag(); err != nil {
+	_, err := PostTagFactory(1, 1)
+
+	if err != nil {
 		t.Errorf("PostTag creation should have worked: %v", err)
 	}
 
@@ -48,7 +54,7 @@ func TestWeCanCreatePostTag(t *testing.T) {
 		PostID: 1,
 		TagID:  1,
 	}
-	if err := p.CreatePostTag(); err != nil {
+	if err := p.createPostTag(); err != nil {
 		t.Errorf("PostTag creation should have worked: %v", err)
 	}
 }
@@ -57,11 +63,9 @@ func TestWeCanIncrementScoreForPostTag(t *testing.T) {
 	setupTestingDB()
 
 	// create the PostTag first
-	item := &PostTag{
-		PostID: 1,
-		TagID:  1,
-	}
-	if err := item.CreatePostTag(); err != nil {
+	item, err := PostTagFactory(1, 1)
+
+	if err != nil {
 		t.Errorf("PostTag creation should have worked: %v", err)
 	}
 
