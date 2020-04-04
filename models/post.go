@@ -26,6 +26,7 @@ type Post struct {
 
 // PostQueryParams - structure represents the parameters for querying posts
 type PostQueryParams struct {
+	// @jjcm - let's actually change this to just be a single TagID, to simplify things for now. Change to `TagID int`
 	TagIDs []int
 	Since  string
 	Offset int
