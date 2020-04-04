@@ -25,9 +25,11 @@ type PostTag struct {
 func (p *PostTag) MarshalJSON() ([]byte, error) {
 
 	// populate tag if it currently isn't hydrated
-	tag := Tag{}
-	tag.FindByID(p.TagID)
-	p.Tag = &tag
+	if p.Tag == nil {
+		tag := Tag{}
+		tag.FindByID(p.TagID)
+		p.Tag = &tag
+	}
 
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
