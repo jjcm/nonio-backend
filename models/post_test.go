@@ -279,6 +279,7 @@ func TestWeCanQueryPost(t *testing.T) {
 	p.IncrementScore(2)
 	for i := 1; i < 5; i++ {
 		artyPostTag2.IncrementScore(2, artTag.ID)
+		p.IncrementScore(2)
 		funnyPostTag2.IncrementScore(2, funnyTag.ID)
 		p.IncrementScore(2)
 	}
