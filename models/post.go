@@ -11,6 +11,7 @@ import (
 // Post - struct representation of a single post
 type Post struct {
 	ID        int       `db:"id" json:"-"`
+	TagID     int       `db:"tag_id" json:"-"`
 	Title     string    `db:"title" json:"title"`
 	URL       string    `db:"url" json:"url"`
 	Author    User      `db:"-" json:"user"`
@@ -26,14 +27,11 @@ type Post struct {
 
 // PostQueryParams - structure represents the parameters for querying posts
 type PostQueryParams struct {
-	// @jjcm - let's actually change this to just be a single TagID, to simplify things for now. Change to `TagID int`
-	TagIDs []int
+	TagID  int
 	Since  string
 	Offset int
 	UserID int
-	// @jjcm - let's deprecate SortedByScore in the params, I think for code sanity these params should match what we have in the URL
-	SortedByScore bool
-	Sort          string
+	Sort   string
 }
 
 // MarshalJSON custom JSON builder for Post structs
@@ -190,23 +188,26 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	args := []interface{}{}
 
 	query := "select * from posts where created_at > ?"
+
+	// tags
+	fmt.Printf("tag ID: %v\n", params.TagID)
+	if params.TagID > 0 {
+		fmt.Printf("tag filter detected: %v\n", params.TagID)
+		query = "select post_id as id, title, url, user_id, content, type, posts_tags.score as score, posts_tags.created_at as created_at from posts join posts_tags where posts.id = posts_tags.post_id and posts_tags.tag_id = ?"
+		args = append(args, params.TagID)
+	}
+
 	// time range
 	args = append(args, params.Since)
 
-	// special user
+	// user
 	if params.UserID > 0 {
 		query = query + " and user_id = ?"
 		args = append(args, params.UserID)
 	}
 
-	// tags
-	if len(params.TagIDs) > 0 {
-		query = query + " and id in (?)"
-		args = append(args, intSlice2Str(params.TagIDs))
-	}
-
-	// orders
-	if params.SortedByScore {
+	// sort
+	if params.Sort != "new" {
 		query = query + " order by score desc"
 	} else {
 		query = query + " order by created_at desc"
@@ -215,6 +216,15 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	// offset
 	query = query + " limit 100 offset ?"
 	args = append(args, params.Offset)
+
+	// tags
+	fmt.Printf("tag ID: %v\n", params.TagID)
+	if params.TagID > 0 {
+		fmt.Printf("tag filter detected: %v\n", params.TagID)
+		query = "select post_id as id, title, url, user_id, content, type, posts_tags.score as score, posts_tags.created_at as created_at from posts join posts_tags where posts.id = posts_tags.post_id and posts_tags.tag_id = ?"
+		nargs := []interface{}{}
+		args = append(nargs, params.TagID)
+	}
 
 	posts := []*Post{}
 	// exec the query string

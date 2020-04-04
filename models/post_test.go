@@ -279,6 +279,7 @@ func TestWeCanQueryPost(t *testing.T) {
 	p.IncrementScore(2)
 	for i := 1; i < 5; i++ {
 		artyPostTag2.IncrementScore(2, artTag.ID)
+		p.IncrementScore(2)
 		funnyPostTag2.IncrementScore(2, funnyTag.ID)
 		p.IncrementScore(2)
 	}
@@ -300,8 +301,7 @@ func TestWeCanQueryPost(t *testing.T) {
 	}
 
 	// Test querying with a tag
-	tags := []int{funnyTag.ID}
-	postQueryParams.TagIDs = tags
+	postQueryParams.TagID = funnyTag.ID
 	posts, err = GetPostsByParams(params)
 
 	if err != nil {
@@ -314,23 +314,7 @@ func TestWeCanQueryPost(t *testing.T) {
 			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
 		}
 	}
-
-	// Test querying with two tags
-	tags = []int{funnyTag.ID, artTag.ID}
-	postQueryParams.TagIDs = tags
-	posts, err = GetPostsByParams(params)
-
-	if err != nil {
-		t.Errorf("Querying with two tags failed. Error querying posts via params: %v", err)
-	}
-
-	if len(posts) != 2 {
-		t.Errorf("Querying with two tags failed. Expected 2 posts, got %v instead", len(posts))
-		for i := 0; i < len(posts); i++ {
-			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
-		}
-	}
-	postQueryParams.TagIDs = []int{}
+	postQueryParams.TagID = 0
 
 	// Test querying with a user
 	postQueryParams.UserID = author2.ID

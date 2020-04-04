@@ -59,35 +59,26 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	params.Since = cutoff.Format("2006-01-02 15:04:05")
 
 	// ?tag=TAG
-	// Only returns results that match a specific tag. Multiple tags can be listed by separating tags with a +
+	// Only returns results that match a specific tag.
 	formTag := strings.TrimSpace(r.FormValue("tags"))
-	// query the post ids from 'posts_tags' by 'tags', sorted by 'score' default
+	tagID := 0
 	if formTag != "" {
-		tags := strings.Replace(strings.Trim(formTag, "+"), "+", ",", -1)
-
-		pt := &models.PostTag{}
-		// @jjcm - the problem with this approach is that the GetPostsByTags function ignores the other params.
-		// It always sorts by score and it ignores ?offset and ?time.
-		ids, err := pt.GetPostsByTags(tags)
-		if err != nil {
-			sendSystemError(w, fmt.Errorf("Query posts by tags %s: %v", tags, err))
+		tag := Tag{}
+		if err := tag.FindByTagName(formTag); err != nil {
+			sendSystemError(w, fmt.Errorf("Query tag: %v", err))
+		}
+		if tag.ID == 0 {
+			sendNotFound(w, errors.New("Tag does not exist: "+formTag))
 			return
 		}
-		params.TagIDs = ids
+		tagID = tag.TagID
 	}
-
-	// sort by the post score default
-	params.SortedByScore = true
-	// if the tag list is not empty, sort by the score of the posttag
-	if len(params.TagIDs) > 0 {
-		params.SortedByScore = false
-	}
+	params.TagID = tagID
 
 	// ?sort=popular|top|new
 	// Returns posts sorted by a particular algorithm.
 	formSort := strings.TrimSpace(r.FormValue("sort"))
-	switch formSort {
-	case "popular":
+	if formSort == "popular" {
 		// get the user id from context
 		userID := r.Context().Value("user_id").(int)
 		// query the user by user id
@@ -104,11 +95,9 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 			cutoff = oneDayAgo
 		}
 		params.Since = cutoff.Format("2006-01-02 15:04:05")
-
-	case "new":
-		// sort by the create time
-		params.SortedByScore = false
 	}
+
+	params.Sort = formSort
 
 	// ?user=USER
 	// Only returns results posts that were made by a specific user.
@@ -134,11 +123,14 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fill the tags for the posts
-	if err := fillPostTags(posts); err != nil {
-		sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
-		return
-	}
+	// TODO - is this needed if the json is marshalled correctly?
+	/*
+		// fill the tags for the posts
+		if err := fillPostTags(posts); err != nil {
+			sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
+			return
+		}
+	*/
 
 	output := map[string]interface{}{
 		"posts": posts,
