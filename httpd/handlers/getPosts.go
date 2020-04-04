@@ -66,6 +66,8 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		tags := strings.Replace(strings.Trim(formTag, "+"), "+", ",", -1)
 
 		pt := &models.PostTag{}
+		// @jjcm - the problem with this approach is that the GetPostsByTags function ignores the other params.
+		// It always sorts by score and it ignores ?offset and ?time.
 		ids, err := pt.GetPostsByTags(tags)
 		if err != nil {
 			sendSystemError(w, fmt.Errorf("Query posts by tags %s: %v", tags, err))

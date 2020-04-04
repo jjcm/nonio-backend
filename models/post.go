@@ -30,7 +30,7 @@ type PostQueryParams struct {
 	Since  string
 	Offset int
 	UserID int
-	// let's deprecate SortedByScore in the params, I think for code sanity these params should match what we have in the URL
+	// @jjcm - let's deprecate SortedByScore in the params, I think for code sanity these params should match what we have in the URL
 	SortedByScore bool
 	Sort          string
 }
