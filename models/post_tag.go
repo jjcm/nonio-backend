@@ -11,14 +11,36 @@ import (
 type PostTag struct {
 	ID        int           `db:"id" json:"-"`
 	Post      *Post         `db:"-" json:"-"`
-	PostID    int           `db:"post_id" json:"-"`
-	PostURL   string        `db:"-" json:"-"`
+	PostID    int           `db:"post_id" json:"postID"`
+	PostURL   string        `db:"-" json:"post"`
 	Tag       *Tag          `db:"-" json:"-"`
 	TagName   string        `db:"-" json:"tag"`
-	TagID     int           `db:"tag_id" json:"-"`
+	TagID     int           `db:"tag_id" json:"tagID"`
 	Score     int           `db:"score" json:"score"`
 	CreatedAt time.Time     `db:"created_at" json:"-"`
 	Votes     []PostTagVote `db:"-" json:"-"`
+}
+
+// MarshalJSON custom JSON builder for Post structs
+func (p *PostTag) MarshalJSON() ([]byte, error) {
+
+	// populate tag if it currently isn't hydrated
+	tag := Tag{}
+	tag.FindByID(p.TagID)
+	p.Tag = &tag
+
+	// return the custom JSON for this post
+	return json.Marshal(&struct {
+		PostID  int    `json:"postID"`
+		TagName string `json:"tag"`
+		TagID   int    `json:"tagID"`
+		Score   int    `json:"score"`
+	}{
+		PostID:  p.PostID,
+		TagName: p.Tag.Name,
+		TagID:   p.TagID,
+		Score:   p.Score,
+	})
 }
 
 // ToJSON - prints out the json representation of the PostTag

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -250,10 +249,16 @@ func TestWeCanQueryPost(t *testing.T) {
 	// create a set of tags
 	artTag, _ := TagFactory("art", author1)
 	funnyTag, _ := TagFactory("funny", author2)
-	fmt.Printf(artTag.ToJSON())
 
 	// Create PostTag for the arty post
 	artyPostTag, _ := PostTagFactory(1, artTag.ID)
+
+	testPostTag := PostTag{}
+	testPostTag.FindByID(1)
+
+	testTag := Tag{}
+	testTag.FindByID(1)
+
 	p.IncrementScore(1)
 	for i := 1; i < 7; i++ {
 		artyPostTag.IncrementScore(1, artTag.ID)
