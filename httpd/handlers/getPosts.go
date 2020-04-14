@@ -60,7 +60,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 
 	// ?tag=TAG
 	// Only returns results that match a specific tag. Multiple tags can be listed by separating tags with a +
-	formTag := strings.TrimSpace(r.FormValue("tags"))
+	formTag := strings.TrimSpace(r.FormValue("tag"))
 	// query the post ids from 'posts_tags' by 'tags', sorted by 'score' default
 	if formTag != "" {
 		tags := strings.Replace(strings.Trim(formTag, "+"), "+", ",", -1)
