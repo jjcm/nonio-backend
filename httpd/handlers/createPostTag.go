@@ -36,12 +36,12 @@ func findUserPostTag(userID int, postURL string, tagName string) (*models.User, 
 	}
 	// if there is no rows about the tag name, insert a new one
 	if tag.ID == 0 {
-		tag, err := models.TagFactory(tagName, user)
+		tempTag, err := models.TagFactory(tagName, user)
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("Create tag: %v", err)
 		}
 
-		tag = tag
+		tag = tempTag
 	}
 
 	return &user, &post, &tag, nil
@@ -82,12 +82,12 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	postTag := &models.PostTag{}
 	// check if the PostTag is existed in database
 	if err := postTag.FindByUK(post.ID, tag.ID); err != nil {
-		sendSystemError(w, fmt.Errorf("Query post-tag: %v", err))
+		sendSystemError(w, fmt.Errorf("Query PostTag: %v", err))
 		return
 	}
 	// if the PostTag is existed, return error
 	if postTag.PostID > 0 {
-		sendSystemError(w, fmt.Errorf("PostTag is existed"))
+		sendSystemError(w, fmt.Errorf("PostTag exists"))
 		return
 	}
 
