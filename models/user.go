@@ -248,3 +248,17 @@ func (u *User) MyPosts(limit, offset int) ([]Post, error) {
 
 	return posts, nil
 }
+
+// MyVotes will return every posttag the user has voted on.
+func (u *User) MyVotes() ([]PostTagVote, error) {
+	votes := []PostTagVote{}
+
+	// run the correct sql query
+	var query = "SELECT * FROM posts_tags_votes WHERE user_id = ?"
+	err := DBConn.Select(&votes, query, u.ID)
+	if err != nil {
+		return votes, err
+	}
+
+	return votes, nil
+}
