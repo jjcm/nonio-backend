@@ -10,7 +10,7 @@ import (
 
 // Post - struct representation of a single post
 type Post struct {
-	ID        int       `db:"id" json:"-"`
+	ID        int       `db:"id" json:"ID"`
 	Title     string    `db:"title" json:"title"`
 	URL       string    `db:"url" json:"url"`
 	Author    User      `db:"-" json:"user"`
