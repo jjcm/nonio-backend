@@ -6,13 +6,13 @@ import "database/sql"
 type PostTagVote struct {
 	ID        int    `db:"id" json:"-"`
 	Post      *Post  `db:"-" json:"-"`
-	PostID    int    `db:"post_id" json:"-"`
-	PostURL   string `db:"-" json:"post"`
+	PostID    int    `db:"post_id" json:"postID"`
+	PostURL   string `db:"-" json:"-"`
 	Tag       *Tag   `db:"-" json:"-"`
-	TagName   string `db:"-" json:"tag"`
-	TagID     int    `db:"tag_id" json:"-"`
+	TagName   string `db:"-" json:"-"`
+	TagID     int    `db:"tag_id" json:"tagID"`
 	Voter     *User  `db:"-" json:"-"`
-	VoterName string `db:"-" json:"user"`
+	VoterName string `db:"-" json:"-"`
 	VoterID   int    `db:"voter_id" json:"-"`
 }
 
