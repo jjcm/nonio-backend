@@ -254,7 +254,7 @@ func (u *User) MyVotes() ([]PostTagVote, error) {
 	votes := []PostTagVote{}
 
 	// run the correct sql query
-	var query = "SELECT * FROM posts_tags_votes WHERE user_id = ?"
+	var query = "SELECT * FROM posts_tags_votes WHERE voter_id = ?"
 	err := DBConn.Select(&votes, query, u.ID)
 	if err != nil {
 		return votes, err
