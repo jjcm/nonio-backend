@@ -50,6 +50,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
+		ID        int       `json:"ID"`
 		Title     string    `json:"title"`
 		UserName  string    `json:"user"`
 		TimeStamp int64     `json:"time"`
@@ -59,6 +60,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		Score     int       `json:"score"`
 		Tags      []PostTag `json:"tags"`
 	}{
+		ID:        p.ID,
 		Title:     p.Title,
 		UserName:  p.Author.GetDisplayName(),
 		TimeStamp: p.CreatedAt.UnixNano() / int64(time.Millisecond),
