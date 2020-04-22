@@ -9,7 +9,7 @@ import (
 func tokenCreator(email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email":     email,
-		"expiresAt": time.Now().Add(time.Minute * 10).Unix(), // tokens are valid for 10 minutes?
+		"expiresAt": time.Now().Add(time.Hour * 100).Unix(), // tokens are valid for 10 minutes?
 	})
 	tokenString, err := token.SignedString(HmacSampleSecret)
 	if err != nil {
