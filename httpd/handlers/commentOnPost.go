@@ -57,7 +57,7 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 		parentComment.FindByID(*(payload.ParentID))
 	}
 
-	comment, err := u.CommentOnPost(post, &parentComment, payload.Type, payload.Content)
+	comment, err := u.CommentOnPost(post, &parentComment, payload.Type, payload.Text)
 	if err != nil {
 		sendSystemError(w, err)
 		return
