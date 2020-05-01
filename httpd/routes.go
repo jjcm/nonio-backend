@@ -59,7 +59,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		//change this to /posttag/create
 		"/posttags/create": handlers.CreatePostTag,
 		//change this to /posttag/add-vote
-		"/posttags/add-vote": handlers.AddPostTagVote,
+		"/posttag/add-vote": handlers.AddPostTagVote,
 		//change this to /posttag/remove-vote
 		"/posttag/remove-vote": handlers.RemovePostTagVote,
 
