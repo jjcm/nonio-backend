@@ -41,7 +41,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/new":   handlers.GetNewestPosts,
 		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/top/":  handlers.GetTopPosts,
 		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/user/": handlers.GetPostsByAuthor,
-		"/post/create/": handlers.CreatePost,
+		"/post/create": handlers.CreatePost,
 		// TODO "/post/view/": handlers.ViewPost,
 		// TODO "/post/delete/": handlers.DeletePost,
 
