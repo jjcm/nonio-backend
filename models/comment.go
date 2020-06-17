@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 )
@@ -22,6 +23,8 @@ type Comment struct {
 	UpVotes   []Vote    `db:"-" json:"upvotes"`
 	DownVotes []Vote    `db:"-" json:"downvotes"`
 	Children  []Comment `db:"-" json:"children"`
+	// LineageScore           int       `db:"lineage_score" json:"lineage_score"`
+	// DescendentCommentCount int       `db:"descendent_comment_count" json:"descendent_comment_count"`
 }
 
 // MarshalJSON custom JSON builder for Comment structs
@@ -64,13 +67,33 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 // FindByID - find a given comment in the database by its primary key
 func (c *Comment) FindByID(id int) error {
 	dbComment := Comment{}
-	err := DBConn.Get(&dbComment, "SELECT * FROM comments WHERE id = ?", id)
-	if err != nil {
+	if err := DBConn.Get(&dbComment, "SELECT * FROM comments WHERE id = ?", id); err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
 		return err
 	}
 
 	*c = dbComment
 	return nil
+}
+
+// IncrementLineageScoreWithTx - increment the lineage score by comment id
+func (c *Comment) IncrementLineageScoreWithTx(tx Transaction, id int) error {
+	_, err := tx.Exec("update comments set lineage_score=lineage_score+1 where id = ?", id)
+	return err
+}
+
+// DecrementLineageScoreWithTx - decrement the lineage score by comment id
+func (c *Comment) DecrementLineageScoreWithTx(tx Transaction, id int) error {
+	_, err := tx.Exec("update comments set lineage_score=lineage_score-1 where id = ?", id)
+	return err
+}
+
+// IncrementDescendentComment - increment the descendent comment count
+func (c *Comment) IncrementDescendentComment(id int) error {
+	_, err := DBConn.Exec("update comments set descendent_comment_count=descendent_comment_count+1 where id = ?", id)
+	return err
 }
 
 // StructureComments will take in an un sorted list of comments and put them in
