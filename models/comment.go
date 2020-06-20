@@ -31,7 +31,7 @@ type Comment struct {
 func GetCommentsByPost(id int) ([]*Comment, error) {
 	comments := []*Comment{}
 
-	if err := DBConn.Select(&comments, "SELECT * FROM comment where post_id = ? order by lineage_score desc limit 100", id); err != nil {
+	if err := DBConn.Select(&comments, "SELECT * FROM comments where post_id = ? order by lineage_score desc limit 100", id); err != nil {
 		return nil, err
 	}
 
@@ -50,28 +50,32 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
-		ID        int       `json:"id"`
-		Date      int64     `json:"date"`
-		Post      string    `json:"post"`
-		Type      string    `json:"type"`
-		Content   string    `json:"content"`
-		Text      string    `json:"text"`
-		User      string    `json:"user"`
-		UpVotes   int       `json:"upvotes"`
-		DownVotes int       `json:"downvotes"`
-		Parent    int       `json:"parent"`
-		Children  []Comment `json:"children"`
+		ID                     int       `json:"id"`
+		Date                   int64     `json:"date"`
+		Post                   string    `json:"post"`
+		Type                   string    `json:"type"`
+		Content                string    `json:"content"`
+		Text                   string    `json:"text"`
+		User                   string    `json:"user"`
+		UpVotes                int       `json:"upvotes"`
+		DownVotes              int       `json:"downvotes"`
+		Parent                 int       `json:"parent"`
+		Children               []Comment `json:"children"`
+		LineageScore           int       `json:"lineage_score"`
+		DescendentCommentCount int       `json:"descendent_comment_count"`
 	}{
-		ID:        c.ID,
-		Date:      c.CreatedAt.UnixNano() / int64(time.Millisecond),
-		Post:      c.Post.URL,
-		Type:      c.Type,
-		Content:   c.Content,
-		Text:      c.Text,
-		User:      c.Author.GetDisplayName(),
-		UpVotes:   len(c.UpVotes),
-		DownVotes: len(c.DownVotes),
-		Parent:    c.ParentID,
+		ID:                     c.ID,
+		Date:                   c.CreatedAt.UnixNano() / int64(time.Millisecond),
+		Post:                   c.Post.URL,
+		Type:                   c.Type,
+		Content:                c.Content,
+		Text:                   c.Text,
+		User:                   c.Author.GetDisplayName(),
+		UpVotes:                len(c.UpVotes),
+		DownVotes:              len(c.DownVotes),
+		Parent:                 c.ParentID,
+		LineageScore:           c.LineageScore,
+		DescendentCommentCount: c.DescendentCommentCount,
 	})
 }
 
@@ -105,15 +109,4 @@ func (c *Comment) DecrementLineageScoreWithTx(tx Transaction, id int) error {
 func (c *Comment) IncrementDescendentComment(id int) error {
 	_, err := DBConn.Exec("update comments set descendent_comment_count=descendent_comment_count+1 where id = ?", id)
 	return err
-}
-
-// StructureComments will take in an un sorted list of comments and put them in
-// the correct structure for frontend display
-// TODO: this function isn't very efficient. Good enough for a proof of concept,
-// but this is quite a bottle neck.
-func StructureComments(comments []Comment) []Comment {
-	// for _, var := range var {
-
-	// }
-	return comments
 }
