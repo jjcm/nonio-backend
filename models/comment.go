@@ -8,23 +8,34 @@ import (
 
 // Comment - struct representation of a single comment
 type Comment struct {
-	ID        int       `db:"id" json:"-"`
-	Post      Post      `db:"-" json:"-"`
-	PostID    int       `db:"post_id" json:"-"`
-	PostURL   string    `db:"-" json:"post"`
-	CreatedAt time.Time `db:"created_at" json:"date"`
-	Type      string    `db:"type" json:"type"`
-	Content   string    `db:"content" json:"content"`
-	Text      string    `db:"text" json:"text"`
-	ParentID  int       `db:"parent_id" json:"-"`
-	User      string    `db:"-" json:"user"`
-	Author    User      `db:"-" json:"-"`
-	AuthorID  int       `db:"author_id" json:"-"`
-	UpVotes   []Vote    `db:"-" json:"upvotes"`
-	DownVotes []Vote    `db:"-" json:"downvotes"`
-	Children  []Comment `db:"-" json:"children"`
-	// LineageScore           int       `db:"lineage_score" json:"lineage_score"`
-	// DescendentCommentCount int       `db:"descendent_comment_count" json:"descendent_comment_count"`
+	ID                     int       `db:"id" json:"-"`
+	Post                   Post      `db:"-" json:"-"`
+	PostID                 int       `db:"post_id" json:"-"`
+	PostURL                string    `db:"-" json:"post"`
+	CreatedAt              time.Time `db:"created_at" json:"date"`
+	Type                   string    `db:"type" json:"type"`
+	Content                string    `db:"content" json:"content"`
+	Text                   string    `db:"text" json:"text"`
+	ParentID               int       `db:"parent_id" json:"-"`
+	User                   string    `db:"-" json:"user"`
+	Author                 User      `db:"-" json:"-"`
+	AuthorID               int       `db:"author_id" json:"-"`
+	UpVotes                []Vote    `db:"-" json:"upvotes"`
+	DownVotes              []Vote    `db:"-" json:"downvotes"`
+	Children               []Comment `db:"-" json:"children"`
+	LineageScore           int       `db:"lineage_score" json:"lineage_score"`
+	DescendentCommentCount int       `db:"descendent_comment_count" json:"descendent_comment_count"`
+}
+
+// GetCommentsByPost returns the comments for one post order by lineage score
+func GetCommentsByPost(id int) ([]*Comment, error) {
+	comments := []*Comment{}
+
+	if err := DBConn.Select(&comments, "SELECT * FROM comment where post_id = ? order by lineage_score desc limit 100", id); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
 }
 
 // MarshalJSON custom JSON builder for Comment structs
