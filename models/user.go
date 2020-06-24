@@ -122,7 +122,7 @@ func (u *User) CreatePost(title, url, content, postType string) (Post, error) {
 }
 
 // CommentOnPost will try and create a comment in the database
-func (u *User) CommentOnPost(post Post, parent *Comment, commentType, content string) (Comment, error) {
+func (u *User) CommentOnPost(post Post, parent *Comment, content string) (Comment, error) {
 	c := Comment{}
 	now := time.Now().Format("2006-01-02 15:04:05")
 
@@ -135,7 +135,7 @@ func (u *User) CommentOnPost(post Post, parent *Comment, commentType, content st
 		commentParentID = parent.ID
 	}
 
-	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, type, content, parent_id) VALUES (?, ?, ?, ?, ?, ?)", u.ID, post.ID, now, commentType, content, commentParentID)
+	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, content, parent_id) VALUES (?, ?, ?, ?, ?, ?)", u.ID, post.ID, now, content, commentParentID)
 	if err != nil {
 		return c, err
 	}

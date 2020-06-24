@@ -14,7 +14,6 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 	type requestPayload struct {
 		PostURL  string `json:"post"`
 		Content  string `json:"content"`
-		Type     string `json:"type"`
 		ParentID *int   `json:"parent"`
 	}
 	// any non GET handlers need to attach CORS headers. I always forget about that
@@ -36,9 +35,6 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 	if payload.Content == "" {
 		sendSystemError(w, errors.New("Can not send us an empty comment. `content` key is required"))
 	}
-	if payload.Type == "" {
-		payload.Type = "text" // sensible default
-	}
 
 	// first, find the post we are commenting on
 	post := models.Post{}
@@ -58,7 +54,7 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 		parentComment.FindByID(*(payload.ParentID))
 	}
 
-	comment, err := u.CommentOnPost(post, &parentComment, payload.Type, payload.Content)
+	comment, err := u.CommentOnPost(post, &parentComment, payload.Content)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("Create comment: %v", err))
 		return
