@@ -1,6 +1,8 @@
 package models
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestWeCanCreateComments(t *testing.T) {
 	setupTestingDB()
@@ -10,7 +12,7 @@ func TestWeCanCreateComments(t *testing.T) {
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 
 	// create comment
-	comment, err := author.CommentOnPost(post, nil, "text", "This is a dumb post")
+	comment, err := author.CommentOnPost(post, nil, "This is a dumb post")
 
 	if err != nil {
 		t.Errorf("We should have been able to create a comment. Error recieved: %s", err)
@@ -30,11 +32,11 @@ func TestWeCanStructureCommentsCorrectly(t *testing.T) {
 
 	// create a post and a typical comment thread
 	post, _ := person.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
-	nastyComment, _ := troll.CommentOnPost(post, nil, "text", "WOW, this post is dumb!")
-	reply, _ := person.CommentOnPost(post, &nastyComment, "text", "Hay, I worked really hard on this")
-	nastyAgain, _ := troll.CommentOnPost(post, &reply, "text", "Don't you mean \"Hey\"? You must be as dumb as the post you created.")
-	moderatorComment, _ := moderator.CommentOnPost(post, nil, "text", "Hey troll, play nice or go somewhere else. We may shut down commenting if you keep this up.")
-	trollIsAskingForIt, _ := troll.CommentOnPost(post, &moderatorComment, "text", "You're dumb too!")
+	nastyComment, _ := troll.CommentOnPost(post, nil, "WOW, this post is dumb!")
+	reply, _ := person.CommentOnPost(post, &nastyComment, "Hay, I worked really hard on this")
+	nastyAgain, _ := troll.CommentOnPost(post, &reply, "Don't you mean \"Hey\"? You must be as dumb as the post you created.")
+	moderatorComment, _ := moderator.CommentOnPost(post, nil, "Hey troll, play nice or go somewhere else. We may shut down commenting if you keep this up.")
+	trollIsAskingForIt, _ := troll.CommentOnPost(post, &moderatorComment, "You're dumb too!")
 
 	// at this point, we should have 5 comments on the post and the tree should look like this:
 	// Post Comments:

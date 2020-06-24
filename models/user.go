@@ -135,7 +135,7 @@ func (u *User) CommentOnPost(post Post, parent *Comment, content string) (Commen
 		commentParentID = parent.ID
 	}
 
-	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, content, parent_id) VALUES (?, ?, ?, ?, ?, ?)", u.ID, post.ID, now, content, commentParentID)
+	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, content, parent_id) VALUES (?, ?, ?, ?, ?)", u.ID, post.ID, now, content, commentParentID)
 	if err != nil {
 		return c, err
 	}
