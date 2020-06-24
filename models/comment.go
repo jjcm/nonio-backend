@@ -13,7 +13,6 @@ type Comment struct {
 	PostID                 int       `db:"post_id" json:"-"`
 	PostURL                string    `db:"-" json:"post"`
 	CreatedAt              time.Time `db:"created_at" json:"date"`
-	Type                   string    `db:"type" json:"type"`
 	Content                string    `db:"content" json:"content"`
 	ParentID               int       `db:"parent_id" json:"-"`
 	User                   string    `db:"-" json:"user"`
@@ -52,7 +51,6 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 		ID                     int       `json:"id"`
 		Date                   int64     `json:"date"`
 		Post                   string    `json:"post"`
-		Type                   string    `json:"type"`
 		Content                string    `json:"content"`
 		User                   string    `json:"user"`
 		UpVotes                int       `json:"upvotes"`
@@ -65,7 +63,6 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 		ID:                     c.ID,
 		Date:                   c.CreatedAt.UnixNano() / int64(time.Millisecond),
 		Post:                   c.Post.URL,
-		Type:                   c.Type,
 		Content:                c.Content,
 		User:                   c.Author.GetDisplayName(),
 		UpVotes:                len(c.UpVotes),
