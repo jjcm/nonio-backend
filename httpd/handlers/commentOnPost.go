@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"soci-backend/models"
@@ -59,8 +60,16 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 
 	comment, err := u.CommentOnPost(post, &parentComment, payload.Type, payload.Content)
 	if err != nil {
-		sendSystemError(w, err)
+		sendSystemError(w, fmt.Errorf("Create comment: %v", err))
 		return
+	}
+
+	// if the parent comment is not nil, increment the descendentCommentCount
+	if parentComment.ID > 0 {
+		if err := parentComment.IncrementDescendentComment(parentComment.ID); err != nil {
+			sendSystemError(w, fmt.Errorf("Increment descendent comment: %v", err))
+			return
+		}
 	}
 
 	// status 201 for "created"

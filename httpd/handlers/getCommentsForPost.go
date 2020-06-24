@@ -18,15 +18,15 @@ func GetCommentsForPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// spec say to get comments 5 levels deep to not get too far into a recursive mess
-	comments, err := p.Comments(5)
+	// query the comments for the post order by lineage score
+	comments, err := models.GetCommentsByPost(p.ID)
 	if err != nil {
 		sendSystemError(w, err)
 		return
 	}
 
 	output := map[string]interface{}{
-		"comments": models.StructureComments(comments),
+		"comments": comments,
 	}
 	SendResponse(w, output, 200)
 }

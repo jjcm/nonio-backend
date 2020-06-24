@@ -50,9 +50,9 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		// DEPRECATE - MERGE IN WITH GETPOSTS "/tags/popular/": handlers.GetPopularPosts,
 
 		// COMMENT ROUTES
-		"/comment/create": handlers.CommentOnPost,
-		// TODO "/comment/add-vote": handlers.AddCommentVote,
-		// TODO "/comment/remove-vote": handlers.RemoveCommentVote,
+		"/comment/create":      handlers.CommentOnPost,
+		"/comment/add-vote":    handlers.AddCommentVote,
+		"/comment/remove-vote": handlers.RemoveCommentVote,
 
 		// POSTTAG ROUTES
 		"/posttag/create":      handlers.CreatePostTag,
