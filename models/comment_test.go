@@ -22,37 +22,24 @@ func TestWeCanCreateComments(t *testing.T) {
 	}
 }
 
-func TestWeCanStructureCommentsCorrectly(t *testing.T) {
+func TestWeCanGetCommentsForAPost(t *testing.T) {
 	setupTestingDB()
 
-	// setup users
-	person, _ := UserFactory("person@example.com", "friendlyPerson", "password")
-	troll, _ := UserFactory("troll@example.com", "uglyTroll", "password")
-	moderator, _ := UserFactory("moderator@example.com", "uglyTroll", "password")
+	author, _ := UserFactory("example@example.com", "", "password")
 
-	// create a post and a typical comment thread
-	post, _ := person.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
-	nastyComment, _ := troll.CommentOnPost(post, nil, "WOW, this post is dumb!")
-	reply, _ := person.CommentOnPost(post, &nastyComment, "Hay, I worked really hard on this")
-	nastyAgain, _ := troll.CommentOnPost(post, &reply, "Don't you mean \"Hey\"? You must be as dumb as the post you created.")
-	moderatorComment, _ := moderator.CommentOnPost(post, nil, "Hey troll, play nice or go somewhere else. We may shut down commenting if you keep this up.")
-	trollIsAskingForIt, _ := troll.CommentOnPost(post, &moderatorComment, "You're dumb too!")
+	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
 
-	// at this point, we should have 5 comments on the post and the tree should look like this:
-	// Post Comments:
-	//   - nastyComment
-	//     - reply
-	//       - nastyAgain
-	//   - moderatorComment
-	//     - trollIsAskingForIt
-	expectedParentChildRelations := map[int]Comment{
-		moderatorComment.ID: trollIsAskingForIt,
-		nastyComment.ID:     reply,
-		reply.ID:            nastyAgain,
+	// create comment
+	comment, _ := author.CommentOnPost(post, nil, "This is a dumb post")
+	author.CommentOnPost(post, &comment, "This is a reply")
+
+	comments, err := GetCommentsByPost(post.ID)
+
+	if err != nil {
+		t.Errorf("We should have been able to get comments. Error recieved: %s", err)
 	}
-	for id, c := range expectedParentChildRelations {
-		if c.ParentID != id {
-			t.Errorf("Expected comment relation failed. ParentID: %v, Child's ParentID: %v", id, c.ParentID)
-		}
+	if len(comments) != 2 {
+		t.Errorf("Should have found two comments. Instead recieved: %v", len(comments))
+
 	}
 }
