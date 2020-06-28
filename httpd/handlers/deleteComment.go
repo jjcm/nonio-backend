@@ -50,14 +50,13 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := u.DeleteComment(comment)
+	err := u.DeleteComment(&comment)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("Delete comment: %v", err))
 		return
 	}
 
 	// status 201 for "created"
-	SendResponse(w, &comment, 201)
 	w.Header().Set("Access-Control-Allow-Origin", "*") // this should be locked down before launch
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(201)
