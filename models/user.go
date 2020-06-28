@@ -148,6 +148,20 @@ func (u *User) CommentOnPost(post Post, parent *Comment, content string) (Commen
 	return c, err
 }
 
+// DeleteComment removes it from the db
+func (u *User) DeleteComment(comment *Comment) error {
+	if u.ID == 0 || comment.ID == 0 {
+		return errors.New("Can't delete a comment for an invalid user or comment")
+	}
+
+	_, err := DBConn.Exec("DELETE FROM comments WHERE (id) VALUES (?)", comment.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Login a user if their password matches the stored hash
 func (u *User) Login(password string) error {
 	if !checkPasswordHash(password, u.Password) {

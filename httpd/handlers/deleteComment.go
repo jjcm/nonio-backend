@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"soci-backend/models"
@@ -11,7 +12,9 @@ import (
 // DeleteComment will delete the comment matching the ID submitted
 func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	type requestPayload struct {
-		ID *int `json:"id"`
+		ID   *int   `json:"id"`
+		IDD  int    `json:"idd"`
+		IDDD string `json:"iddd"`
 	}
 	// any non GET handlers need to attach CORS headers. I always forget about that
 	CorsAdjustments(&w)
@@ -31,24 +34,32 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	// before we even check for the existance of the related items, let's verify this comment payload is even valid
 	if payload.ID == nil {
 		sendSystemError(w, errors.New("Deleting a comment requires the `id` of the comment to be present"))
+		return
 	}
 
 	// second, find the user that is trying to write the post
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	// are we commenting on a comment, or directly on the post itself?
+	// make sure the comment we're deleting exists
 	comment := models.Comment{}
 	comment.FindByID(*(payload.ID))
 
-	/*
-		comment, err := u.CommentOnPost(post, &parentComment, payload.Content)
-		if err != nil {
-			sendSystemError(w, fmt.Errorf("Create comment: %v", err))
-			return
-		}
-	*/
+	if comment.AuthorID != u.ID {
+		SendResponse(w, MakeError("You can only delete comments you own"), 401)
+		return
+	}
+
+	err := u.DeleteComment(comment)
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("Delete comment: %v", err))
+		return
+	}
 
 	// status 201 for "created"
 	SendResponse(w, &comment, 201)
+	w.Header().Set("Access-Control-Allow-Origin", "*") // this should be locked down before launch
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(201)
+	w.Write([]byte("true"))
 }
