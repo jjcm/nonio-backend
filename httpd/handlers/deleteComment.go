@@ -46,7 +46,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	comment.FindByID(*(payload.ID))
 
 	if comment.AuthorID != u.ID {
-		SendResponse(w, MakeError(fmt.Sprintf("You can only delete comments you own: %v, %v", comment.AuthorID, u.ID)), 401)
+		SendResponse(w, MakeError("You can only delete comments you own"), 401)
 		return
 	}
 
