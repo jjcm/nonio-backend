@@ -154,7 +154,7 @@ func (u *User) DeleteComment(comment *Comment) error {
 		return errors.New("Can't delete a comment for an invalid user or comment")
 	}
 
-	_, err := DBConn.Exec("DELETE FROM comments WHERE (id) VALUES (?)", comment.ID)
+	_, err := DBConn.Exec("DELETE FROM comments WHERE id = ?", comment.ID)
 	if err != nil {
 		return err
 	}
