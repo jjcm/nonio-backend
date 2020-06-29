@@ -159,7 +159,7 @@ func (u *User) AbandonComment(comment *Comment) error {
 		return errors.New("Can't abandon a comment for an invalid user or comment")
 	}
 
-	_, err := DBConn.Exec("UPDATE comments SET author_id = 0 WHERE id = ?", comment.ID)
+	_, err := DBConn.Exec("UPDATE comments SET author_id = NULL WHERE id = ?", comment.ID)
 	if err != nil {
 		return err
 	}
