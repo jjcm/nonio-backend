@@ -48,17 +48,16 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
-		ID                     int       `json:"id"`
-		Date                   int64     `json:"date"`
-		Post                   string    `json:"post"`
-		Content                string    `json:"content"`
-		User                   string    `json:"user"`
-		UpVotes                int       `json:"upvotes"`
-		DownVotes              int       `json:"downvotes"`
-		Parent                 int       `json:"parent"`
-		Children               []Comment `json:"children"`
-		LineageScore           int       `json:"lineage_score"`
-		DescendentCommentCount int       `json:"descendent_comment_count"`
+		ID                     int    `json:"id"`
+		Date                   int64  `json:"date"`
+		Post                   string `json:"post"`
+		Content                string `json:"content"`
+		User                   string `json:"user"`
+		UpVotes                int    `json:"upvotes"`
+		DownVotes              int    `json:"downvotes"`
+		Parent                 int    `json:"parent"`
+		LineageScore           int    `json:"lineage_score"`
+		DescendentCommentCount int    `json:"descendent_comment_count"`
 	}{
 		ID:                     c.ID,
 		Date:                   c.CreatedAt.UnixNano() / int64(time.Millisecond),
