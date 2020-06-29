@@ -52,6 +52,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		// COMMENT ROUTES
 		"/comment/create":      handlers.CommentOnPost,
 		"/comment/delete":      handlers.DeleteComment,
+		"/comment/abandon":     handlers.AbandonComment,
 		"/comment/add-vote":    handlers.AddCommentVote,
 		"/comment/remove-vote": handlers.RemoveCommentVote,
 
