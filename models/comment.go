@@ -20,7 +20,6 @@ type Comment struct {
 	AuthorID               int       `db:"author_id" json:"-"`
 	UpVotes                []Vote    `db:"-" json:"upvotes"`
 	DownVotes              []Vote    `db:"-" json:"downvotes"`
-	Children               []Comment `db:"-" json:"children"`
 	LineageScore           int       `db:"lineage_score" json:"lineage_score"`
 	DescendentCommentCount int       `db:"descendent_comment_count" json:"descendent_comment_count"`
 }
