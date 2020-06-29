@@ -59,3 +59,19 @@ func TestWeCanDeleteComments(t *testing.T) {
 		t.Errorf("We should have been able to delete a comment. Error recieved: %s", err)
 	}
 }
+
+func TestWeCanAbandonComments(t *testing.T) {
+	setupTestingDB()
+
+	author, _ := UserFactory("example@example.com", "", "password")
+
+	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+
+	// create comment
+	comment, _ := author.CommentOnPost(post, nil, "This is a dumb post")
+	err := author.AbandonComment(&comment)
+
+	if err != nil {
+		t.Errorf("We should have been able to delete a comment. Error recieved: %s", err)
+	}
+}
