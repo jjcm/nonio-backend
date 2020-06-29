@@ -54,6 +54,11 @@ func (u *User) FindByUsername(email string) error {
 // FindByID find a user by searching the DB
 func (u *User) FindByID(id int) error {
 	dbUser := User{}
+	if id == 0 {
+		dbUser.Username = "Anonymous coward"
+		*u = dbUser
+		return nil
+	}
 	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE id = ?", id)
 	if err != nil {
 		return err
