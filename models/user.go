@@ -148,6 +148,20 @@ func (u *User) CommentOnPost(post Post, parent *Comment, content string) (Commen
 	return c, err
 }
 
+// AbandonComment removes the user from the comment, but leaves the content
+func (u *User) AbandonComment(comment *Comment) error {
+	if u.ID == 0 || comment.ID == 0 {
+		return errors.New("Can't abandon a comment for an invalid user or comment")
+	}
+
+	_, err := DBConn.Exec("UPDATE comments SET author_id = 0 WHERE id = ?", comment.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DeleteComment removes it from the db
 func (u *User) DeleteComment(comment *Comment) error {
 	if u.ID == 0 || comment.ID == 0 {

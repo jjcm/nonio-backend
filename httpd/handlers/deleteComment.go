@@ -12,9 +12,7 @@ import (
 // DeleteComment will delete the comment matching the ID submitted
 func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	type requestPayload struct {
-		ID   *int   `json:"id"`
-		IDD  int    `json:"idd"`
-		IDDD string `json:"iddd"`
+		ID *int `json:"id"`
 	}
 	// any non GET handlers need to attach CORS headers. I always forget about that
 	CorsAdjustments(&w)
@@ -24,7 +22,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the registration route"), 405)
+		SendResponse(w, MakeError("You can only POST to the delete comment route"), 405)
 		return
 	}
 
@@ -45,6 +43,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	comment := models.Comment{}
 	comment.FindByID(*(payload.ID))
 
+	// make sure the owner of the comment is the user who's making the request
 	if comment.AuthorID != u.ID {
 		SendResponse(w, MakeError("You can only delete comments you own"), 401)
 		return
