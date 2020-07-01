@@ -72,6 +72,13 @@ func TestWeCanAbandonComments(t *testing.T) {
 	err := author.AbandonComment(&comment)
 
 	if err != nil {
-		t.Errorf("We should have been able to delete a comment. Error recieved: %s", err)
+		t.Errorf("We should have been able to abandon a comment. Error recieved: %s", err)
 	}
+
+	// make sure we can get comments for our post still
+	_, err2 := GetCommentsByPost(post.ID)
+	if err2 != nil {
+		t.Errorf("We should have been able to get comments for a post. Error recieved: %s", err)
+	}
+
 }

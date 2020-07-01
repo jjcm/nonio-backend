@@ -3,32 +3,35 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
 // Comment - struct representation of a single comment
 type Comment struct {
-	ID                     int       `db:"id" json:"-"`
-	Post                   Post      `db:"-" json:"-"`
-	PostID                 int       `db:"post_id" json:"-"`
-	PostURL                string    `db:"-" json:"post"`
-	CreatedAt              time.Time `db:"created_at" json:"date"`
-	Content                string    `db:"content" json:"content"`
-	ParentID               int       `db:"parent_id" json:"-"`
-	User                   string    `db:"-" json:"user"`
-	Author                 User      `db:"-" json:"-"`
-	AuthorID               int       `db:"author_id" json:"-"`
-	UpVotes                []Vote    `db:"-" json:"upvotes"`
-	DownVotes              []Vote    `db:"-" json:"downvotes"`
-	LineageScore           int       `db:"lineage_score" json:"lineage_score"`
-	DescendentCommentCount int       `db:"descendent_comment_count" json:"descendent_comment_count"`
+	ID                     int           `db:"id" json:"-"`
+	Post                   Post          `db:"-" json:"-"`
+	PostID                 int           `db:"post_id" json:"-"`
+	PostURL                string        `db:"-" json:"post"`
+	CreatedAt              time.Time     `db:"created_at" json:"date"`
+	Content                string        `db:"content" json:"content"`
+	ParentID               int           `db:"parent_id" json:"-"`
+	User                   string        `db:"-" json:"user"`
+	Author                 User          `db:"-" json:"-"`
+	AuthorID               sql.NullInt32 `db:"author_id" json:"-"`
+	UpVotes                []Vote        `db:"-" json:"upvotes"`
+	DownVotes              []Vote        `db:"-" json:"downvotes"`
+	LineageScore           int           `db:"lineage_score" json:"lineage_score"`
+	DescendentCommentCount int           `db:"descendent_comment_count" json:"descendent_comment_count"`
 }
 
 // GetCommentsByPost returns the comments for one post order by lineage score
 func GetCommentsByPost(id int) ([]*Comment, error) {
 	comments := []*Comment{}
 
+	fmt.Println("doin the selectyboi")
 	if err := DBConn.Select(&comments, "SELECT * FROM comments where post_id = ? order by lineage_score desc limit 100", id); err != nil {
+		fmt.Println("this turned out bad")
 		return nil, err
 	}
 
@@ -39,7 +42,13 @@ func GetCommentsByPost(id int) ([]*Comment, error) {
 func (c *Comment) MarshalJSON() ([]byte, error) {
 	// populate user if it currently isn't hydrated
 	if c.Author.ID == 0 {
-		c.Author.FindByID(c.AuthorID)
+		if c.AuthorID.Valid {
+			c.Author.FindByID(int(c.AuthorID.Int32))
+		} else {
+			anonymous := User{}
+			anonymous.Username = "Anonymous coward"
+			c.Author = anonymous
+		}
 	}
 	if c.Post.ID == 0 {
 		c.Post.FindByID(c.PostID)
