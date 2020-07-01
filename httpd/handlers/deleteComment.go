@@ -44,7 +44,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 	comment.FindByID(*(payload.ID))
 
 	// make sure the owner of the comment is the user who's making the request
-	if comment.AuthorID != u.ID {
+	if int(comment.AuthorID.Int32) != u.ID {
 		SendResponse(w, MakeError("You can only delete comments you own"), 401)
 		return
 	}
