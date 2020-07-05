@@ -8,7 +8,7 @@ import "net/http"
 func GetTokenDetails(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
 		"email":    r.Context().Value("user_email").(string),
-		"username": r.Context().Value("user_username").(string),
+		"username": r.Context().Value("user_email").(string),
 		"id":       r.Context().Value("user_id").(int),
 	}
 	SendResponse(w, data, 200)
