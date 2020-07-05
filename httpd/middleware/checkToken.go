@@ -80,8 +80,6 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), "user_email", user.Email)
 		ctx = context.WithValue(ctx, "user_id", user.ID)
 		ctx = context.WithValue(ctx, "user_username", user.Username)
-		ctx = context.WithValue(ctx, "user_name", user.Name)
-		ctx = context.WithValue(ctx, "user_last_login", user.LastLogin)
 		next(w, r.WithContext(ctx))
 	}
 }
