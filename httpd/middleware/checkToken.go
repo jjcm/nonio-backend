@@ -79,6 +79,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		}
 		ctx := context.WithValue(r.Context(), "user_email", user.Email)
 		ctx = context.WithValue(ctx, "user_id", user.ID)
+		ctx = context.WithValue(ctx, "user_username", user.Username)
 		next(w, r.WithContext(ctx))
 	}
 }
