@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -17,6 +18,15 @@ type Subscription struct {
 
 // MarshalJSON custom JSON builder for Tag structs
 func (s *Subscription) MarshalJSON() ([]byte, error) {
+	// hydrate the user
+	if s.User.ID == 0 {
+		s.User.FindByID(s.UserID)
+	}
+
+	// hydrate the tag
+	if s.Tag.ID == 0 {
+		s.Tag.FindByID(s.TagID)
+	}
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
 		Tag  string `json:"tag"`
@@ -44,14 +54,16 @@ func createSubscription(tag Tag, user User) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("no issues creating")
 	return nil
 }
 
-// SubscriptionFactory will create and return an instance of a tag
+// SubscriptionFactory will create and return an instance of a subscription
 func SubscriptionFactory(tag Tag, user User) (Subscription, error) {
 	s := Subscription{}
 	err := createSubscription(tag, user)
 	if err != nil {
+		fmt.Println("error creating the sub")
 		return s, err
 	}
 	err = s.FindSubscription(tag, user)
@@ -59,7 +71,7 @@ func SubscriptionFactory(tag Tag, user User) (Subscription, error) {
 	return s, err
 }
 
-// FindSubscription - find a given tag in the database by its primary key
+// FindSubscription - find a given tag in the database by the tag/user pairing
 func (s *Subscription) FindSubscription(tag Tag, user User) error {
 	dbSubscription := Subscription{}
 	err := DBConn.Get(&dbSubscription, "SELECT * FROM subscriptions WHERE tag_id = ? AND user_id = ?", tag.ID, user.ID)

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -16,8 +17,8 @@ func TestWeCanCreateASubscription(t *testing.T) {
 	if err != nil {
 		t.Errorf("Subscription creation should have worked. Error recieved: %v", err)
 	}
-	if subscription.TagName != "Funny" {
-		t.Errorf("The tag name should have been 'funny'.")
+	if subscription.TagID != tag.ID {
+		t.Errorf("The tag should have been hydrated.")
 	}
 	if subscription.User.ID != user.ID {
 		t.Errorf("The user associated with this subscription should be hydrated automatically")

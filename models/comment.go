@@ -29,7 +29,6 @@ type Comment struct {
 func GetCommentsByPost(id int) ([]*Comment, error) {
 	comments := []*Comment{}
 
-	fmt.Println("doin the selectyboi")
 	if err := DBConn.Select(&comments, "SELECT * FROM comments where post_id = ? order by lineage_score desc limit 100", id); err != nil {
 		fmt.Println("this turned out bad")
 		return nil, err
