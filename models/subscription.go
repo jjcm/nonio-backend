@@ -23,7 +23,7 @@ func (s *Subscription) MarshalJSON() ([]byte, error) {
 		s.User.FindByID(s.UserID)
 	}
 
-	// hydrate the tag
+	// hydrate the tags
 	if s.Tag.ID == 0 {
 		s.Tag.FindByID(s.TagID)
 	}
