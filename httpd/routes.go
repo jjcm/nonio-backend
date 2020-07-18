@@ -61,6 +61,10 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posttag/add-vote":    handlers.AddPostTagVote,
 		"/posttag/remove-vote": handlers.RemovePostTagVote,
 
+		// SUBSCRIPTION ROUTES
+		"/subscriptions"				handlers.GetSubscriptions,
+		"/subscription/create"	handlers.CreateSubscription,
+		"/subscription/delete"	handlers.DeleteSubscription,
 		// VOTES ROUTES
 		"/votes": handlers.GetVotes,
 	}

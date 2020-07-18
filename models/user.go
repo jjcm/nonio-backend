@@ -295,3 +295,17 @@ func (u *User) MyVotes() ([]PostTagVote, error) {
 
 	return votes, nil
 }
+
+// MySubscriptions will return the user's tag subscriptions
+func (u *User) MySubscriptions() ([]Subscription, error) {
+	subscriptions := []Subscription{}
+
+	// run the correct sql query
+	var query = "SELECT * FROM subscriptions WHERE user_id = ?"
+	err := DBConn.Select(&subscriptions, query, u.ID)
+	if err != nil {
+		return subscriptions, err
+	}
+
+	return subscriptions, nil
+}
