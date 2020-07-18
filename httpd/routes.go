@@ -37,17 +37,12 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/protected": handlers.GetTokenDetails,
 
 		// POST ROUTES
-		"/posts": handlers.GetPosts,
-		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/new":   handlers.GetNewestPosts,
-		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/top/":  handlers.GetTopPosts,
-		// DEPRECATE - MERGE IN WITH GETPOSTS "/posts/user/": handlers.GetPostsByAuthor,
+		"/posts":       handlers.GetPosts,
 		"/post/create": handlers.CreatePost,
-		// TODO "/post/view/": handlers.ViewPost,
 		// TODO "/post/delete/": handlers.DeletePost,
 
 		// TAG ROUTES
 		"/tags": handlers.GetTags,
-		// DEPRECATE - MERGE IN WITH GETPOSTS "/tags/popular/": handlers.GetPopularPosts,
 
 		// COMMENT ROUTES
 		"/comment/create":      handlers.CommentOnPost,
@@ -62,9 +57,10 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posttag/remove-vote": handlers.RemovePostTagVote,
 
 		// SUBSCRIPTION ROUTES
-		"/subscriptions"				handlers.GetSubscriptions,
-		"/subscription/create"	handlers.CreateSubscription,
-		"/subscription/delete"	handlers.DeleteSubscription,
+		"/subscriptions":       handlers.GetSubscriptions,
+		"/subscription/create": handlers.CreateSubscription,
+		"/subscription/delete": handlers.DeleteSubscription,
+
 		// VOTES ROUTES
 		"/votes": handlers.GetVotes,
 	}
