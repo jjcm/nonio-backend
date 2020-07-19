@@ -11,7 +11,7 @@ func GetSubscriptions(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	subscriptions, err := u.MyVotes()
+	subscriptions, err := u.MySubscriptions()
 	if err != nil {
 		SendResponse(w, MakeError(err.Error()), 500)
 		return
@@ -20,5 +20,5 @@ func GetSubscriptions(w http.ResponseWriter, r *http.Request) {
 	output := map[string]interface{}{
 		"subscriptions": subscriptions,
 	}
-	SendResponse(w, output, 200)
+	SendResponse(w, subscriptions[0], 200)
 }
