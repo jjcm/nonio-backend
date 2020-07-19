@@ -10,10 +10,10 @@ type Subscription struct {
 	ID        int       `db:"id" json:"-"`
 	Tag       *Tag      `db:"-" json:"-"`
 	TagName   string    `db:"-" json:"tag"`
-	TagID     int       `db:"tag_id" json:"tagID"`
-	User      User      `db:"-" json:"user"`
+	TagID     int       `db:"tag_id" json:"-"`
+	User      User      `db:"-" json:"-"`
 	UserID    int       `db:"user_id" json:"-"`
-	CreatedAt time.Time `db:"created_at" json:"createdAt"`
+	CreatedAt time.Time `db:"created_at" json:"-"`
 }
 
 // MarshalJSON custom JSON builder for Tag structs
