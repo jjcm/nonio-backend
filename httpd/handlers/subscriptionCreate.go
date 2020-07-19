@@ -42,13 +42,9 @@ func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	tag.FindByTagName(request.TagName)
 
 	subscription := models.Subscription{}
-	// check if the Subscription exists in the db
-	if err := subscription.FindSubscription(tag.ID, user.ID); err != nil {
-		sendSystemError(w, fmt.Errorf("Query subscription: %v", err))
-		return
-	}
 
 	// if the Subscription already exists, then just return true
+	subscription.FindSubscription(tag.ID, user.ID)
 	if subscription.ID > 0 {
 		SendResponse(w, subscription, 200)
 		return
