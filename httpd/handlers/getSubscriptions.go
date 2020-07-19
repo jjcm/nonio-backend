@@ -16,9 +16,5 @@ func GetSubscriptions(w http.ResponseWriter, r *http.Request) {
 		SendResponse(w, MakeError(err.Error()), 500)
 		return
 	}
-
-	output := map[string]interface{}{
-		"subscriptions": subscriptions,
-	}
 	SendResponse(w, subscriptions[0], 200)
 }
