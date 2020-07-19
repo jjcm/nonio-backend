@@ -55,5 +55,5 @@ func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	SendResponse(w, subscription, 200)
+	SendResponse(w, true, 200)
 }
