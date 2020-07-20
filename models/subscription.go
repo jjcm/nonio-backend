@@ -8,8 +8,8 @@ import (
 // Subscription - code representation of a users subscription to a tag
 type Subscription struct {
 	ID        int       `db:"id" json:"-"`
-	Tag       *Tag      `db:"-" json:"-"`
-	TagName   string    `db:"-" json:"tag"`
+	Tag       Tag       `db:"-" json:"tag"`
+	TagName   string    `db:"-" json:"tagName"`
 	TagID     int       `db:"tag_id" json:"-"`
 	User      User      `db:"-" json:"-"`
 	UserID    int       `db:"user_id" json:"-"`
@@ -18,22 +18,16 @@ type Subscription struct {
 
 // MarshalJSON custom JSON builder for Tag structs
 func (s *Subscription) MarshalJSON() ([]byte, error) {
-	// hydrate the user
-	if s.User.ID == 0 {
-		s.User.FindByID(s.UserID)
-	}
-
-	// hydrate the tags
+	// hydrate the tag
 	if s.Tag.ID == 0 {
 		s.Tag.FindByID(s.TagID)
 	}
+
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
-		Tag  string `json:"tag"`
-		User string `json:"user"`
+		Tag string `json:"tagName"`
 	}{
-		Tag:  s.Tag.Name,
-		User: s.User.GetDisplayName(),
+		Tag: s.Tag.Name,
 	})
 }
 
