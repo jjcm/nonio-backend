@@ -25,7 +25,7 @@ func (s *Subscription) MarshalJSON() ([]byte, error) {
 
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
-		Tag string `json:"tagName"`
+		Tag string `json:"tag"`
 	}{
 		Tag: s.Tag.Name,
 	})
