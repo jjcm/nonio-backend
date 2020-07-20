@@ -301,8 +301,8 @@ func (u *User) MySubscriptions() ([]Subscription, error) {
 	subscriptions := []Subscription{}
 
 	// run the correct sql query
-	var query = "SELECT * FROM subscriptions"
-	err := DBConn.Select(&subscriptions, query)
+	var query = "SELECT * FROM subscriptions WHERE user_id = ?"
+	err := DBConn.Select(&subscriptions, query, u.ID)
 	if err != nil {
 		return subscriptions, err
 	}
