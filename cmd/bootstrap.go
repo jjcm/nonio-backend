@@ -4,6 +4,7 @@ import (
 	bs "soci-backend/bootstrap"
 	"soci-backend/httpd/handlers"
 	"soci-backend/httpd/middleware"
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -26,7 +27,7 @@ func bootstrap() {
 	// let's now hydrate a few things in the handlers package
 	handlers.DBConn = sociConfig.DBConn
 	handlers.Log = sociConfig.Logger
-	handlers.HmacSampleSecret = sociConfig.HMACKey
+	utils.HmacSampleSecret = sociConfig.HMACKey
 
 	// let's now hydrate a few things in the middleware package
 	middleware.Log = sociConfig.Logger

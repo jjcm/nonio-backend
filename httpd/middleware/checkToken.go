@@ -45,7 +45,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 			}
 
 			// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-			return handlers.HmacSampleSecret, nil
+			return utils.HmacSampleSecret, nil
 		})
 
 		claims, ok := goodies.Claims.(jwt.MapClaims)

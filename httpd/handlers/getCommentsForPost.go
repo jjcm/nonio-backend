@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"strings"
 
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
 // GetCommentsForPost will return all comments for a specific post
 func GetCommentsForPost(w http.ResponseWriter, r *http.Request) {
-	postSlug := strings.ToLower(parseRouteParameter(r.URL.Path, "/comments/post/"))
+	postSlug := strings.ToLower(utils.ParseRouteParameter(r.URL.Path, "/comments/post/"))
 	p := models.Post{}
 	p.FindByURL(postSlug)
 	if p.ID == 0 {
