@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -20,7 +21,7 @@ type PostCreationRequest struct {
 // the user associated with the passed auth token can create a new post
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the post creation route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the post creation route"), 405)
 		return
 	}
 

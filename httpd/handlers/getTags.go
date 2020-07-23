@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -10,7 +10,7 @@ import (
 func GetTags(w http.ResponseWriter, r *http.Request) {
 	tags, err := models.GetTags(0, 100)
 	if err != nil {
-		SendResponse(w, MakeError(err.Error()), 500)
+		SendResponse(w, utils.MakeError(err.Error()), 500)
 		return
 	}
 

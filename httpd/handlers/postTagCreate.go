@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -51,7 +52,7 @@ func findUserPostTag(userID int, postURL string, tagName string) (*models.User, 
 // the user associated with the passed auth token can create a new post-tag
 func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the CreatePostTag route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the CreatePostTag route"), 405)
 		return
 	}
 

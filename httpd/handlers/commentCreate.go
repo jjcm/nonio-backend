@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -17,7 +17,7 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 		ParentID *int   `json:"parent"`
 	}
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the registration route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the registration route"), 405)
 		return
 	}
 

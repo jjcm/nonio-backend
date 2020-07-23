@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"gopkg.in/danilopolani/gocialite.v1"
+	"soci-backend/httpd/utils"
 )
 
 var gocial = gocialite.NewDispatcher()
@@ -63,9 +64,9 @@ func LoginSocialCallback(w http.ResponseWriter, r *http.Request) {
 	// TODO: should we create the user if they don't exist? if so, we could set
 	// the password field to some weird hardcoded thing like "SOCIALAUTH" as
 	// they won't have a real password if they log in this way.
-	token, err := tokenCreator(user.Email)
+	token, err := utils.TokenCreator(user.Email)
 	if err != nil {
-		SendResponse(w, MakeError("There was an error signing your JWT token: "+err.Error()), 500)
+		SendResponse(w, utils.MakeError("There was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 

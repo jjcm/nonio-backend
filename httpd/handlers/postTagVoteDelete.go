@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -19,7 +20,7 @@ type PostTagVoteRemoveRequest struct {
 // the user associated with the passed auth token can create a new post-tag
 func RemovePostTagVote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to RemovePostTagVote route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to RemovePostTagVote route"), 405)
 		return
 	}
 

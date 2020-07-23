@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
 // Login try and log a user in, if successful generate a JWT token and return that
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the login route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the login route"), 405)
 		return
 	}
 
@@ -18,7 +19,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&requestUser)
 	if requestUser.Email == "" {
-		SendResponse(w, MakeError("both password and email are required"), 400)
+		SendResponse(w, utils.MakeError("both password and email are required"), 400)
 		return
 	}
 
@@ -35,9 +36,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := tokenCreator(u.Email)
+	token, err := utils.TokenCreator(u.Email)
 	if err != nil {
-		SendResponse(w, MakeError("There was an error signing your JWT token: "+err.Error()), 500)
+		SendResponse(w, utils.MakeError("There was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 

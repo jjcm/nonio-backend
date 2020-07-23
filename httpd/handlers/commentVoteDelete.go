@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -35,7 +36,7 @@ func decrementLineageScore(tx models.Transaction, id int) (parent int, err error
 // RemoveCommentVote - protected http handler
 func RemoveCommentVote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to RemoveCommentVote route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to RemoveCommentVote route"), 405)
 		return
 	}
 

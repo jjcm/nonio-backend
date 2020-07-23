@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -35,7 +36,7 @@ func incrementLineageScore(tx models.Transaction, id int) (parent int, err error
 // AddCommentVote - protected http handler
 func AddCommentVote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to AddCommentVote route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to AddCommentVote route"), 405)
 		return
 	}
 

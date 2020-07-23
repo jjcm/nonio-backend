@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -15,7 +16,7 @@ type SubscriptionAdditionRequest struct {
 // CreateSubscription adds a sub for a tag
 func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the AddSubscription route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the AddSubscription route"), 405)
 		return
 	}
 

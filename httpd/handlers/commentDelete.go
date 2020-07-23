@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -15,7 +15,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 		ID *int `json:"id"`
 	}
 	if r.Method != "POST" {
-		SendResponse(w, MakeError("You can only POST to the delete comment route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the delete comment route"), 405)
 		return
 	}
 
@@ -38,7 +38,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
 
 	// make sure the owner of the comment is the user who's making the request
 	if int(comment.AuthorID.Int32) != u.ID {
-		SendResponse(w, MakeError("You can only delete comments you own"), 401)
+		SendResponse(w, utils.MakeError("You can only delete comments you own"), 401)
 		return
 	}
 

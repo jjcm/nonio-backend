@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -13,7 +14,7 @@ func GetSubscriptions(w http.ResponseWriter, r *http.Request) {
 
 	subscriptions, err := u.MySubscriptions()
 	if err != nil {
-		SendResponse(w, MakeError(err.Error()), 500)
+		SendResponse(w, utils.MakeError(err.Error()), 500)
 		return
 	}
 
