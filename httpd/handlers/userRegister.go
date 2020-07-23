@@ -17,15 +17,6 @@ type RegisterPayload struct {
 
 // Register Save a new user in the DB
 func Register(w http.ResponseWriter, r *http.Request) {
-	// any non GET handlers need to attach CORS headers. I always forget about that
-	CorsAdjustments(&w)
-
-	// silly AJAX prflight, here's where we can put in the CORS requirements
-	if r.Method == "OPTIONS" {
-		SendResponse(w, "", 200)
-		return
-	}
-
 	if r.Method != "POST" {
 		SendResponse(w, MakeError("You can only POST to the registration route"), 405)
 		return

@@ -18,15 +18,6 @@ type PostTagVoteAdditionRequest struct {
 // AddPostTagVote - protected http handler
 // the user associated with the passed auth token can create a new post-tag
 func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
-	// any non GET handlers need to attach CORS headers. I always forget about that
-	CorsAdjustments(&w)
-
-	// silly AJAX prflight, here's where we can put in the CORS requirements
-	if r.Method == "OPTIONS" {
-		SendResponse(w, "", 200)
-		return
-	}
-
 	if r.Method != "POST" {
 		SendResponse(w, MakeError("You can only POST to AddPostTagVote route"), 405)
 		return

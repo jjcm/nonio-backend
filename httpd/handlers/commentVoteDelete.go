@@ -34,15 +34,6 @@ func decrementLineageScore(tx models.Transaction, id int) (parent int, err error
 
 // RemoveCommentVote - protected http handler
 func RemoveCommentVote(w http.ResponseWriter, r *http.Request) {
-	// any non GET handlers need to attach CORS headers. I always forget about that
-	CorsAdjustments(&w)
-
-	// silly AJAX prflight, here's where we can put in the CORS requirements
-	if r.Method == "OPTIONS" {
-		SendResponse(w, "", 200)
-		return
-	}
-
 	if r.Method != "POST" {
 		SendResponse(w, MakeError("You can only POST to RemoveCommentVote route"), 405)
 		return

@@ -15,15 +15,6 @@ type SubscriptionDeletionRequest struct {
 
 // DeleteSubscription removes a sub for a tag
 func DeleteSubscription(w http.ResponseWriter, r *http.Request) {
-	// any non GET handlers need to attach CORS headers
-	CorsAdjustments(&w)
-
-	// silly AJAX prflight, here's where we can put in the CORS requirements
-	if r.Method == "OPTIONS" {
-		SendResponse(w, "", 200)
-		return
-	}
-
 	if r.Method != "POST" {
 		SendResponse(w, MakeError("You can only POST to the AddSubscription route"), 405)
 		return

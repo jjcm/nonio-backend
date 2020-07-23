@@ -18,12 +18,6 @@ import (
 // CheckToken this acts as a middleware, but I'm not really using any middleware packages
 func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "OPTIONS" {
-			handlers.CorsAdjustments(&w)
-			handlers.SendResponse(w, "", 200)
-			return
-		}
-
 		token := r.Header.Get("Authorization")
 		if strings.TrimSpace(token) == "" || strings.TrimSpace(token) == "Bearer" {
 			if os.Getenv("ALON") == "true" {

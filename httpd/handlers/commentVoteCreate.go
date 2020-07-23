@@ -34,15 +34,6 @@ func incrementLineageScore(tx models.Transaction, id int) (parent int, err error
 
 // AddCommentVote - protected http handler
 func AddCommentVote(w http.ResponseWriter, r *http.Request) {
-	// any non GET handlers need to attach CORS headers. I always forget about that
-	CorsAdjustments(&w)
-
-	// silly AJAX prflight, here's where we can put in the CORS requirements
-	if r.Method == "OPTIONS" {
-		SendResponse(w, "", 200)
-		return
-	}
-
 	if r.Method != "POST" {
 		SendResponse(w, MakeError("You can only POST to AddCommentVote route"), 405)
 		return

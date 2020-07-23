@@ -9,15 +9,6 @@ import (
 
 // Login try and log a user in, if successful generate a JWT token and return that
 func Login(w http.ResponseWriter, r *http.Request) {
-	// any non GET handlers need to attach CORS headers. I always forget about that
-	CorsAdjustments(&w)
-
-	// silly AJAX prflight, here's where we can put in the CORS requirements
-	if r.Method == "OPTIONS" {
-		SendResponse(w, "", 200)
-		return
-	}
-
 	if r.Method != "POST" {
 		SendResponse(w, MakeError("You can only POST to the login route"), 405)
 		return
