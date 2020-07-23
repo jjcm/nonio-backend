@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"soci-backend/httpd/handlers"
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -49,7 +50,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 
 		claims, ok := goodies.Claims.(jwt.MapClaims)
 		if !ok || !goodies.Valid || err != nil {
-			handlers.SendResponse(w, handlers.MakeError("Error working with your token"), 500)
+			handlers.SendResponse(w, utils.MakeError("Error working with your token"), 500)
 			return
 		}
 
@@ -59,7 +60,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		ts := time.Unix(i, 0)
 		now := time.Now()
 		if now.After(ts) {
-			handlers.SendResponse(w, handlers.MakeError("Your token is expired"), http.StatusUnauthorized)
+			handlers.SendResponse(w, utils.MakeError("Your token is expired"), http.StatusUnauthorized)
 			return
 		}
 		secondsRemaining := int(ts.Sub(now).Seconds())
@@ -68,7 +69,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		user := models.User{}
 		user.FindByEmail(claims["email"].(string))
 		if user.ID == 0 {
-			handlers.SendResponse(w, handlers.MakeError("Your user is no longer valid"), http.StatusUnauthorized)
+			handlers.SendResponse(w, utils.MakeError("Your user is no longer valid"), http.StatusUnauthorized)
 			return
 		}
 		ctx := context.WithValue(r.Context(), "user_email", user.Email)
