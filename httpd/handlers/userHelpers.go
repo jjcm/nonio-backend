@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
@@ -25,4 +26,31 @@ func CheckIfUsernameIsAvailable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendResponse(w, isAvailable, 200)
+}
+
+// ChangePassword changes the password of the user as long as the checks on the new/old passwords go through
+func ChangePassword(w http.ResponseWriter, r *http.Request) {
+	type requestPayload struct {
+		oldPassword     string `json:"oldPassword"`
+		newPassword     string `json:"newPassword"`
+		confirmPassword string `json:"confirmPassword"`
+	}
+	if r.Method != "POST" {
+		SendResponse(w, utils.MakeError("You can only POST to the password change route"), 405)
+		return
+	}
+
+	var payload requestPayload
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&payload)
+
+	// get the user from context
+	user := models.User{}
+	user.FindByID(r.Context().Value("user_id").(int))
+
+	err := user.ChangePassword(payload.oldPassword, payload.newPassword, payload.confirmPassword)
+	if err != nil {
+		sendSystemError(w, err)
+	}
+
 }

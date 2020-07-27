@@ -229,6 +229,30 @@ func checkPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
+// ChangePassword changes the password of the user, assuming correct args
+func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPassword string) error {
+	// Check if both the new password and its confirmation password matches
+	if newPassword != confirmPassword {
+		return errors.New("New password and confirmation do not match")
+	}
+
+	// Make sure the old password isn't incorrect
+	if !checkPasswordHash(oldPassword, u.Password) {
+		return errors.New("Old password is incorrect")
+	}
+
+	// Generate a hash from the new password
+	hashedPassword, err := hashPassword(newPassword)
+	if err != nil {
+		return errors.New("Error hashing password")
+	}
+
+	// If the checks look good, change the password
+	_, err = DBConn.Exec("UPDATE users set password = ? where ID = ?", hashedPassword, u.ID)
+
+	return err
+}
+
 // UsernameIsAvailable - check the database to see if a certian username is
 // already taken
 func UsernameIsAvailable(username string) (bool, error) {
