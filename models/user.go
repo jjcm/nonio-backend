@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"math"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -236,6 +238,12 @@ func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPas
 		return errors.New("New password and confirmation do not match")
 	}
 
+	// Check if the password has the required amount of entropy. In this case the min is 2^40 combinations
+	const minEntropy float64 = 40
+	if getEntropy(newPassword) < minEntropy {
+		return errors.New("New password does not meet the entropy requirement")
+	}
+
 	// Make sure the old password isn't incorrect
 	if !checkPasswordHash(oldPassword, u.Password) {
 		return errors.New("Old password is incorrect")
@@ -251,6 +259,48 @@ func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPas
 	_, err = DBConn.Exec("UPDATE users set password = ? where ID = ?", hashedPassword, u.ID)
 
 	return err
+}
+
+// getEntropy returns the log base 2 of the entropy of a password
+func getEntropy(password string) float64 {
+	type entropyDictionary struct {
+		lowercase bool
+		uppercase bool
+		numbers   bool
+		specials  bool
+	}
+	var charsets entropyDictionary
+	var lowercaseRe = regexp.MustCompile(`[a-z]`).MatchString
+	var uppercaseRe = regexp.MustCompile(`[A-Z]`).MatchString
+	var numbersRe = regexp.MustCompile(`[0-9]`).MatchString
+	for _, char := range password {
+		if lowercaseRe(string(char)) {
+			charsets.lowercase = true
+		} else if uppercaseRe(string(char)) {
+			charsets.uppercase = true
+		} else if numbersRe(string(char)) {
+			charsets.numbers = true
+		} else {
+			charsets.specials = true
+		}
+	}
+
+	var entropyBase = 0
+	if charsets.lowercase {
+		entropyBase += 26
+	}
+	if charsets.uppercase {
+		entropyBase += 26
+	}
+	if charsets.numbers {
+		entropyBase += 10
+	}
+	if charsets.specials {
+		entropyBase += 50
+	}
+
+	var entropy = math.Log2(math.Pow(float64(entropyBase), float64(len(password))))
+	return entropy
 }
 
 // UsernameIsAvailable - check the database to see if a certian username is
