@@ -30,14 +30,15 @@ func CheckIfUsernameIsAvailable(w http.ResponseWriter, r *http.Request) {
 
 // ChangePassword changes the password of the user as long as the checks on the new/old passwords go through
 func ChangePassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		SendResponse(w, utils.MakeError("You can only POST to the password change route"), 405)
+		return
+	}
+
 	type requestPayload struct {
 		oldPassword     string `json:"oldPassword"`
 		newPassword     string `json:"newPassword"`
 		confirmPassword string `json:"confirmPassword"`
-	}
-	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the password change route"), 405)
-		return
 	}
 
 	var payload requestPayload
@@ -53,4 +54,5 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		sendSystemError(w, err)
 	}
 
+	SendResponse(w, true, 200)
 }

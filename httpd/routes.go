@@ -17,11 +17,9 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/info":                  handlers.Info,
 		"/posts/":                handlers.GetPostByURL,
 
-		//change this to /post/url-is-available
-		"/posts/url-is-available/": handlers.CheckIfURLIsAvailable,
+		"/post/url-is-available/": handlers.CheckIfURLIsAvailable,
 
-		//change this to /user/username-is-available
-		"/users/username-is-available/": handlers.CheckIfUsernameIsAvailable,
+		"/user/username-is-available/": handlers.CheckIfUsernameIsAvailable,
 
 		"/comments/post/": handlers.GetCommentsForPost,
 		// TODO "/comments/user/":               handlers.GetCommentsForUser,
@@ -60,6 +58,9 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/subscriptions":       handlers.GetSubscriptions,
 		"/subscription/create": handlers.CreateSubscription,
 		"/subscription/delete": handlers.DeleteSubscription,
+
+		// USER ROUTES
+		"/user/change-password": handlers.ChangePassword,
 
 		// VOTES ROUTES
 		"/votes": handlers.GetVotes,
