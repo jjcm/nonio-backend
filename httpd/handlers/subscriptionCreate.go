@@ -8,29 +8,27 @@ import (
 	"soci-backend/models"
 )
 
-// SubscriptionAdditionRequest is the shape of the JSON request that is needed to add a sub for a tag
-type SubscriptionAdditionRequest struct {
-	TagName string `json:"tag"`
-}
-
 // CreateSubscription adds a sub for a tag
 func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the AddSubscription route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the create subscription route"), 405)
 		return
 	}
 
-	// decode the request parameters 'tag'
-	var request SubscriptionAdditionRequest
+	type requestPayload struct {
+		TagName string `json:"tag"`
+	}
+
+	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&request)
+	decoder.Decode(&payload)
 
 	// get the user from context
 	user := models.User{}
 	user.FindByID(r.Context().Value("user_id").(int))
 
 	tag := models.Tag{}
-	tag.FindByTagName(request.TagName)
+	tag.FindByTagName(payload.TagName)
 
 	subscription := models.Subscription{}
 

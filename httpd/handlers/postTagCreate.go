@@ -9,13 +9,6 @@ import (
 	"soci-backend/models"
 )
 
-// PostTagCreationRequest this is the shape of the JSON request that is needed to
-// create a new tag for post
-type PostTagCreationRequest struct {
-	PostURL string `json:"post"`
-	TagName string `json:"tag"`
-}
-
 // find the structure of user, post, tag with user id, post url, tag name from database
 func findUserPostTag(userID int, postURL string, tagName string) (*models.User, *models.Post, *models.Tag, error) {
 	// query the user by user id
@@ -56,16 +49,20 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// decode the request parameters 'post' and 'tag'
-	var request PostTagCreationRequest
+	type requestPayload struct {
+		PostURL string `json:"post"`
+		TagName string `json:"tag"`
+	}
+
+	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&request)
+	decoder.Decode(&payload)
 
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)
 
 	// find the structure of user, post, tag with user id, post url and tag name
-	user, post, tag, err := findUserPostTag(userID, request.PostURL, request.TagName)
+	user, post, tag, err := findUserPostTag(userID, payload.PostURL, payload.TagName)
 	if err != nil {
 		sendSystemError(w, err)
 		return

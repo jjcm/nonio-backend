@@ -9,31 +9,28 @@ import (
 	"soci-backend/models"
 )
 
-// PostTagVoteRemoveRequest this is the shape of the JSON request that is needed to
-// create a vote for post tag
-type PostTagVoteRemoveRequest struct {
-	PostURL string `json:"post"`
-	TagName string `json:"tag"`
-}
-
 // RemovePostTagVote - protected http handler
 // the user associated with the passed auth token can create a new post-tag
 func RemovePostTagVote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to RemovePostTagVote route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the remove post tag vote route"), 405)
 		return
 	}
 
-	// decode the request parameters 'post_id' and 'tag_id'
-	var request PostTagVoteRemoveRequest
+	type requestPayload struct {
+		PostURL string `json:"post"`
+		TagName string `json:"tag"`
+	}
+
+	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&request)
+	decoder.Decode(&payload)
 
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)
 
 	// find the structure of user, post, tag with user id, post url and tag name
-	user, post, tag, err := findUserPostTag(userID, request.PostURL, request.TagName)
+	user, post, tag, err := findUserPostTag(userID, payload.PostURL, payload.TagName)
 	if err != nil {
 		sendSystemError(w, err)
 		return

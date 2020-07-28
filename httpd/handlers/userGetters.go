@@ -12,5 +12,4 @@ func GetTokenDetails(w http.ResponseWriter, r *http.Request) {
 		"id":       r.Context().Value("user_id").(int),
 	}
 	SendResponse(w, data, 200)
-	return
 }

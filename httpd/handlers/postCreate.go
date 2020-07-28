@@ -8,15 +8,6 @@ import (
 	"soci-backend/models"
 )
 
-// PostCreationRequest this is the shape of the JSON request that is needed to
-// create a new post
-type PostCreationRequest struct {
-	Title   string `json:"title"`
-	URL     string `json:"url"`
-	Content string `json:"content"`
-	Type    string `json:"type"`
-}
-
 // CreatePost - protected http handler
 // the user associated with the passed auth token can create a new post
 func CreatePost(w http.ResponseWriter, r *http.Request) {
@@ -25,14 +16,21 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	type requestPayload struct {
+		Title   string `json:"title"`
+		URL     string `json:"url"`
+		Content string `json:"content"`
+		Type    string `json:"type"`
+	}
+
+	var payload requestPayload
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&payload)
+
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	var postRequest PostCreationRequest
-
-	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&postRequest)
-	newPost, err := u.CreatePost(postRequest.Title, postRequest.URL, postRequest.Content, postRequest.Type)
+	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Content, payload.Type)
 	if err != nil {
 		sendSystemError(w, err)
 		return

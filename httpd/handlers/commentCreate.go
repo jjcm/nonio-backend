@@ -16,6 +16,7 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 		Content  string `json:"content"`
 		ParentID *int   `json:"parent"`
 	}
+
 	if r.Method != "POST" {
 		SendResponse(w, utils.MakeError("You can only POST to the registration route"), 405)
 		return

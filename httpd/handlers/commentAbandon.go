@@ -11,17 +11,19 @@ import (
 
 // AbandonComment will remove the user from the comment, but leave the content
 func AbandonComment(w http.ResponseWriter, r *http.Request) {
-	type requestPayload struct {
-		ID *int `json:"id"`
-	}
 	if r.Method != "POST" {
 		SendResponse(w, utils.MakeError("You can only POST to the abandon comment route"), 405)
 		return
 	}
 
+	type requestPayload struct {
+		ID *int `json:"id"`
+	}
+
 	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
+
 	// before we even check for the existance of the related items, let's verify this comment payload is even valid
 	if payload.ID == nil {
 		sendSystemError(w, errors.New("Abandoning a comment requires the `id` of the comment to be present"))
@@ -32,7 +34,7 @@ func AbandonComment(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	// make sure the comment we're deleting exists
+	// make sure the comment we're abandoning exists
 	comment := models.Comment{}
 	comment.FindByID(*(payload.ID))
 
@@ -48,9 +50,5 @@ func AbandonComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// status 201 for "created"
-	w.Header().Set("Access-Control-Allow-Origin", "*") // this should be locked down before launch
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(201)
-	w.Write([]byte("true"))
+	SendResponse(w, true, 200)
 }

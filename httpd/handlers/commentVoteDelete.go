@@ -8,11 +8,6 @@ import (
 	"soci-backend/models"
 )
 
-// PostCommentVoteDeletionRequest defines the parameters for deleting the comment vote
-type PostCommentVoteDeletionRequest struct {
-	ID int `json:"id"`
-}
-
 func decrementLineageScore(tx models.Transaction, id int) (parent int, err error) {
 	// check if the comment is existed
 	comment := &models.Comment{}
@@ -35,21 +30,24 @@ func decrementLineageScore(tx models.Transaction, id int) (parent int, err error
 
 // RemoveCommentVote - protected http handler
 func RemoveCommentVote(w http.ResponseWriter, r *http.Request) {
+	type requestPayload struct {
+		ID int `json:"id"`
+	}
+
 	if r.Method != "POST" {
 		SendResponse(w, utils.MakeError("You can only POST to RemoveCommentVote route"), 405)
 		return
 	}
 
-	// decode the request parameters
-	var request PostCommentVoteDeletionRequest
+	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&request)
+	decoder.Decode(&payload)
 
 	// do many database operations with transaction
 	if err := models.WithTransaction(func(tx models.Transaction) error {
 
-		id := request.ID
-		// decrement the lineage_score for the comment, until the parent is zero
+		id := payload.ID
+		// decrement the lineage_score for the comment, until the parent no longer exists
 		for {
 			parent, err := decrementLineageScore(tx, id)
 			if err != nil {
@@ -67,9 +65,5 @@ func RemoveCommentVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// find the comment by id
-	comment := &models.Comment{}
-	comment.FindByID(request.ID)
-
-	SendResponse(w, comment, 200)
+	SendResponse(w, true, 200)
 }

@@ -67,9 +67,5 @@ func AddCommentVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// find the comment by id
-	comment := &models.Comment{}
-	comment.FindByID(request.ID)
-
-	SendResponse(w, comment, 200)
+	SendResponse(w, true, 200)
 }

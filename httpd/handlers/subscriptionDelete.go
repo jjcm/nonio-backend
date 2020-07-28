@@ -9,22 +9,20 @@ import (
 	"soci-backend/models"
 )
 
-// SubscriptionDeletionRequest is the shape of the JSON request that is needed to remove a sub for a tag
-type SubscriptionDeletionRequest struct {
-	TagName string `json:"tag"`
-}
-
 // DeleteSubscription removes a sub for a tag
 func DeleteSubscription(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the AddSubscription route"), 405)
+		SendResponse(w, utils.MakeError("You can only POST to the delete subscription route"), 405)
 		return
 	}
 
-	// decode the request parameters 'tag'
-	var request SubscriptionAdditionRequest
+	type requestPayload struct {
+		TagName string `json:"tag"`
+	}
+
+	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&request)
+	decoder.Decode(&payload)
 
 	// get the user from context
 	user := models.User{}
@@ -32,7 +30,7 @@ func DeleteSubscription(w http.ResponseWriter, r *http.Request) {
 
 	// figure out what tag they're trying to remove
 	tag := models.Tag{}
-	tag.FindByTagName(request.TagName)
+	tag.FindByTagName(payload.TagName)
 
 	// check if the Subscription exists in the db
 	if err := user.DeleteSubscription(tag); err != nil {

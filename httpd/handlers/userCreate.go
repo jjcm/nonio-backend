@@ -8,24 +8,23 @@ import (
 	"soci-backend/models"
 )
 
-// RegisterPayload This is the shape of the JSON payload that will be sent to
-// the API to register a new user
-type RegisterPayload struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-// Register Save a new user in the DB
+// Register saves a new user in the DB
 func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		SendResponse(w, utils.MakeError("You can only POST to the registration route"), 405)
 		return
 	}
 
-	var payload RegisterPayload
+	type requestPayload struct {
+		Email    string `json:"email"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
+
 	if payload.Username == "" || payload.Password == "" || payload.Email == "" {
 		SendResponse(w, utils.MakeError("username, password and email are all required"), 400)
 		return

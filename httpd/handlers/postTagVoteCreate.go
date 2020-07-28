@@ -9,13 +9,6 @@ import (
 	"soci-backend/models"
 )
 
-// PostTagVoteAdditionRequest this is the shape of the JSON request that is needed to
-// create a vote for post tag
-type PostTagVoteAdditionRequest struct {
-	PostURL string `json:"post"`
-	TagName string `json:"tag"`
-}
-
 // AddPostTagVote - protected http handler
 // the user associated with the passed auth token can create a new post-tag
 func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
@@ -24,16 +17,20 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// decode the request parameters 'post_id' and 'tag_id'
-	var request PostTagVoteAdditionRequest
+	type requestPayload struct {
+		PostURL string `json:"post"`
+		TagName string `json:"tag"`
+	}
+
+	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&request)
+	decoder.Decode(&payload)
 
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)
 
 	// find the structure of user, post, tag with user id, post url and tag name
-	user, post, tag, err := findUserPostTag(userID, request.PostURL, request.TagName)
+	user, post, tag, err := findUserPostTag(userID, payload.PostURL, payload.TagName)
 	if err != nil {
 		sendSystemError(w, err)
 		return
