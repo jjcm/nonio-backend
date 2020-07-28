@@ -32,6 +32,30 @@ func TestAUsersPasswordCanBeChecked(t *testing.T) {
 	}
 }
 
+func TestAUsersPasswordCanBeChanged(t *testing.T) {
+	setupTestingDB()
+
+	user, err := UserFactory("example@example.com", "", "password")
+	if err != nil {
+		panic(err)
+	}
+
+	err = user.ChangePassword("password", "newpassword", "newpassword")
+	if err != nil {
+		t.Errorf("Password should have been changed. Error: %v", err)
+	}
+
+	err = user.Login("newpassword")
+	if err != nil {
+		t.Errorf("The user should have been logged in with the new password. Error: %v", err)
+	}
+
+	err = user.Login("password")
+	if err == nil {
+		t.Errorf("The old password shouldn't have worked.")
+	}
+}
+
 func TestAUserCantBeCreatedIfTheEmailAlreadyExists(t *testing.T) {
 	setupTestingDB()
 

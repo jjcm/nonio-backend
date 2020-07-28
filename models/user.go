@@ -256,7 +256,8 @@ func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPas
 	}
 
 	// If the checks look good, change the password
-	_, err = DBConn.Exec("UPDATE users set password = ? where ID = ?", hashedPassword, u.ID)
+	u.Password = hashedPassword
+	err = u.update()
 
 	return err
 }
