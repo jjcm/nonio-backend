@@ -243,7 +243,7 @@ func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPas
 	const minEntropy float64 = 40
 	passwordEntropy := getEntropy(newPassword)
 	if passwordEntropy < minEntropy {
-		return fmt.Errorf("New password does not meet the entropy requirement. Password entropy: %v. Required: %v", passwordEntropy, minEntropy)
+		return fmt.Errorf("New password does not meet the entropy requirement. Password entropy: %v. Required: %v. Password: %v", passwordEntropy, minEntropy, newPassword)
 	}
 
 	// Make sure the old password isn't incorrect

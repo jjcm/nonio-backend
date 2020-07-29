@@ -1,6 +1,7 @@
 package models
 
 import (
+	"math"
 	"strconv"
 	"testing"
 )
@@ -53,6 +54,28 @@ func TestAUsersPasswordCanBeChanged(t *testing.T) {
 	err = user.Login("password")
 	if err == nil {
 		t.Errorf("The old password shouldn't have worked.")
+	}
+}
+
+func TestPasswordEntropy(t *testing.T) {
+	entropy := getEntropy("a")
+	if entropy != math.Log2(26) {
+		t.Errorf("Expected ~4.7 entropy. Got %v", entropy)
+	}
+
+	entropy = getEntropy("1")
+	if entropy != math.Log2(10) {
+		t.Errorf("Expected ~3.3 entropy. Got %v", entropy)
+	}
+
+	entropy = getEntropy("$")
+	if entropy != math.Log2(50) {
+		t.Errorf("Expected ~5.6 entropy. Got %v", entropy)
+	}
+
+	entropy = getEntropy("aA")
+	if entropy != math.Log2(52*52) {
+		t.Errorf("Expected ~11.4 entropy. Got %v", entropy)
 	}
 }
 

@@ -52,6 +52,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	err := user.ChangePassword(payload.oldPassword, payload.newPassword, payload.confirmPassword)
 	if err != nil {
 		sendSystemError(w, err)
+		return
 	}
 
 	SendResponse(w, true, 200)
