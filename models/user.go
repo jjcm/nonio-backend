@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -240,8 +241,9 @@ func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPas
 
 	// Check if the password has the required amount of entropy. In this case the min is 2^40 combinations
 	const minEntropy float64 = 40
-	if getEntropy(newPassword) < minEntropy {
-		return errors.New("New password does not meet the entropy requirement")
+	passwordEntropy := getEntropy(newPassword)
+	if passwordEntropy < minEntropy {
+		return fmt.Errorf("New password does not meet the entropy requirement. Password entropy: %v. Required: %v", passwordEntropy, minEntropy)
 	}
 
 	// Make sure the old password isn't incorrect
