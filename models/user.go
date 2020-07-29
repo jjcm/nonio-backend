@@ -187,7 +187,7 @@ func (u *User) DeleteComment(comment *Comment) error {
 // Login a user if their password matches the stored hash
 func (u *User) Login(password string) error {
 	if !checkPasswordHash(password, u.Password) {
-		return errors.New("Not a match")
+		return errors.New("Incorrect password")
 	}
 	u.LastLogin = time.Now()
 	err := u.update()
@@ -195,7 +195,7 @@ func (u *User) Login(password string) error {
 }
 
 func (u *User) update() error {
-	_, err := DBConn.Exec("UPDATE users SET email = ?, name = ?, last_login = ?, updated_at = ? WHERE id = ?", u.Email, u.Name, u.LastLogin, time.Now(), u.ID)
+	_, err := DBConn.Exec("UPDATE users SET email = ?, name = ?, last_login = ?, password = ?, updated_at = ? WHERE id = ?", u.Email, u.Name, u.LastLogin, u.Password, time.Now(), u.ID)
 	return err
 }
 

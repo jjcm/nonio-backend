@@ -41,17 +41,25 @@ func TestAUsersPasswordCanBeChanged(t *testing.T) {
 		panic(err)
 	}
 
+	err = user.Login("password")
+	if err != nil {
+		t.Errorf("The original password should have worked.")
+	}
+
 	err = user.ChangePassword("password", "newpassword", "newpassword")
 	if err != nil {
 		t.Errorf("Password should have been changed. Error: %v", err)
 	}
 
-	err = user.Login("newpassword")
+	u := User{}
+	u.FindByID(1)
+
+	err = u.Login("newpassword")
 	if err != nil {
 		t.Errorf("The user should have been logged in with the new password. Error: %v", err)
 	}
 
-	err = user.Login("password")
+	err = u.Login("password")
 	if err == nil {
 		t.Errorf("The old password shouldn't have worked.")
 	}

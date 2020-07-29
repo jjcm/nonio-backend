@@ -36,9 +36,9 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		oldPassword     string `json:"oldPassword"`
-		newPassword     string `json:"newPassword"`
-		confirmPassword string `json:"confirmPassword"`
+		OldPassword     string `json:"oldPassword"`
+		NewPassword     string `json:"newPassword"`
+		ConfirmPassword string `json:"confirmPassword"`
 	}
 
 	var payload requestPayload
@@ -49,11 +49,13 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	user.FindByID(r.Context().Value("user_id").(int))
 
-	err := user.ChangePassword(payload.oldPassword, payload.newPassword, payload.confirmPassword)
+	err := user.ChangePassword(payload.OldPassword, payload.NewPassword, payload.ConfirmPassword)
 	if err != nil {
 		sendSystemError(w, err)
 		return
 	}
+
+	user.FindByID(r.Context().Value("user_id").(int))
 
 	SendResponse(w, true, 200)
 }
