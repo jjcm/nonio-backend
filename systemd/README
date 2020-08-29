@@ -1,0 +1,21 @@
+#### update the values of environment variables
+
+Environment=DB_HOST=192.168.1.100       # the database ip
+Environment=DB_DATABASE=socidb_testing  # the database name
+Environment=DB_USER=root                # the database user name
+Environment=DB_PASSWORD=123456          # the database user's password
+Environment=APP_PORT=4201               # the application port
+Environment=APP_KEY=app_key             # the application key
+Environment=OAUTH_ID=123456             # the auth id
+Environment=OAUTH_SECRET=secret         # the auth secret
+ExecStart=/root/soci/socid              # the execute binary full path
+
+
+#### start the application by systemd
+
+$ cp soci-backend.service /etc/systemd/system/    # copy the 'soci-backend.service' to directory '/etc/systemd/system'
+$ systemctl daemon-reload
+$ systemctl enable soci-backend.service
+$ systemctl start soci-backend.service
+$ systemctl status soci-backend.service
+$ systemctl stop soci-backend.service

@@ -1,0 +1,16 @@
+[Unit]
+Description=Application soci-backend
+
+[Service]
+Environment=DB_HOST=192.168.1.100
+Environment=DB_DATABASE=socidb_testing
+Environment=DB_USER=root
+Environment=DB_PASSWORD=123456
+Environment=APP_PORT=4201
+Environment=APP_KEY=app_key
+Environment=OAUTH_ID=123456
+Environment=OAUTH_SECRET=secret
+ExecStart=/root/soci/socid
+
+[Install]
+WantedBy=multi-user.target
