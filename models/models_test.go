@@ -20,11 +20,12 @@ func setupTestingDB() error {
 	os.Setenv("DB_HOST", "localhost")
 	os.Setenv("DB_PORT", "3306")
 	os.Setenv("DB_USER", "dbtestuser")
+	os.Setenv("DB_DATABASE", testingDBName)
 	os.Setenv("DB_PASSWORD", "password")
 
 	c, err := bs.InitConfig()
 	if err != nil {
-		fmt.Println("bootstrap died")
+		fmt.Println("bootstrap died", err)
 		return err
 	}
 

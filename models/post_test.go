@@ -89,7 +89,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 		t.Errorf("We should be able to create a post. Error: %v", err)
 	}
 
-	expectedJSON := `{"title":"Post Title","user":"userName","time":` + strconv.Itoa(int(p.GetCreatedAtTimestamp())) + `,"url":"post-title","content":"lorem ipsum","type":"image","score":0,"tags":[]}`
+	expectedJSON := `{"ID":1,"title":"Post Title","user":"userName","time":` + strconv.Itoa(int(p.GetCreatedAtTimestamp())) + `,"url":"post-title","content":"lorem ipsum","type":"image","score":0,"tags":[]}`
 
 	if p.ToJSON() != expectedJSON {
 		t.Errorf("JSON output wasn't what we expected it to be.\nExpected: %v\nActual:   %v", expectedJSON, p.ToJSON())
@@ -310,10 +310,10 @@ func TestWeCanQueryPost(t *testing.T) {
 	}
 
 	if len(posts) != 2 {
-		t.Errorf("Querying with a tag failed. Expected 2 posts, got %v instead", len(posts))
 		for i := 0; i < len(posts); i++ {
 			t.Logf("ID: %v - %v", posts[i].ID, posts[i].ToJSON())
 		}
+		t.Errorf("Querying with a tag failed. Expected 2 posts, got %v instead", len(posts))
 	}
 
 	// Test querying with two tags

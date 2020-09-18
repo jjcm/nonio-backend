@@ -31,7 +31,7 @@ type PostQueryParams struct {
 	Offset int
 	UserID int
 	// @jjcm - let's deprecate SortedByScore in the params, I think for code sanity these params should match what we have in the URL
-	SortedByScore bool
+	SortedByScore bool // @lapubell - depreciated, see above
 	Sort          string
 }
 
@@ -202,14 +202,20 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 
 	// tags
 	if len(params.TagIDs) > 0 {
-		query = query + " and id in (?)"
+		query = query + " and id in (SELECT post_id from posts_tags where tag_id = ?)"
 		args = append(args, intSlice2Str(params.TagIDs))
 	}
 
 	// orders
-	if params.SortedByScore {
+
+	// @lapubell - Depreciated
+	// if params.SortedByScore {
+	// 	query = query + " order by score desc"
+	// }
+	if params.Sort == "popular" || params.Sort == "top" {
 		query = query + " order by score desc"
-	} else {
+	}
+	if params.Sort == "new" {
 		query = query + " order by created_at desc"
 	}
 
