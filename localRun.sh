@@ -8,7 +8,7 @@ export DB_PORT="3306"
 export DB_DATABASE="socidb"
 export DB_USER="dbuser"
 export DB_PASSWORD="password"
-export APP_PORT="8081"
+export APP_PORT="4201"
 
 cd ../migrations
 goose mysql "${DB_USER}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_DATABASE}" up
