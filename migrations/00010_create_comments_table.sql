@@ -5,9 +5,9 @@ CREATE TABLE `comments` (
     `author_id` bigint(20) unsigned NOT NULL,
     `post_id` int unsigned NOT NULL DEFAULT 0,
     `created_at` timestamp NOT NULL DEFAULT NOW(),
-    `type` varchar(255) NOT NULL DEFAULT "",
-    `content` varchar(255) NOT NULL DEFAULT "",
-    `text` varchar(255) NOT NULL DEFAULT "",
+    `type` varchar(191) NOT NULL DEFAULT "",
+    `content` varchar(191) NOT NULL DEFAULT "",
+    `text` varchar(191) NOT NULL DEFAULT "",
     `parent_id` bigint(20) unsigned NOT NULL DEFAULT 0, -- comments are self referential, so this id will reference other comments
     PRIMARY KEY (`id`),
     FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE

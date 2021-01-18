@@ -5,7 +5,7 @@ CREATE TABLE `votes` (
     `voter_id` bigint(20) unsigned NOT NULL,
     `vote` tinyint(1) NOT NULL DEFAULT "1",
     `item_id` int unsigned NOT NULL,
-    `item_type` varchar(255) NOT NULL DEFAULT "comment",
+    `item_type` varchar(191) NOT NULL DEFAULT "comment",
     PRIMARY KEY (`id`),
     FOREIGN KEY (voter_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
