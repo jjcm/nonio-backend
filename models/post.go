@@ -21,6 +21,8 @@ type Post struct {
 	CreatedAt time.Time `db:"created_at" json:"date"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 	Tags      []PostTag `db:"-"`
+	Width     int       `db:"width" json:"width"`
+	Height    int       `db:"height" json:"height"`
 }
 
 // PostQueryParams - structure represents the parameters for querying posts
@@ -58,6 +60,8 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		Type      string    `json:"type"`
 		Score     int       `json:"score"`
 		Tags      []PostTag `json:"tags"`
+		Width     int       `json:"width"`
+		Height    int       `json:"height"`
 	}{
 		ID:        p.ID,
 		Title:     p.Title,
@@ -68,6 +72,8 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		Type:      p.Type,
 		Score:     p.Score,
 		Tags:      p.Tags,
+		Width:     p.Width,
+		Height:    p.Height,
 	})
 }
 

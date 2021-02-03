@@ -21,6 +21,8 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		URL     string `json:"url"`
 		Content string `json:"content"`
 		Type    string `json:"type"`
+		Width   int    `json:"width"`
+		Height  int    `json:"height"`
 	}
 
 	var payload requestPayload
@@ -30,7 +32,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Content, payload.Type)
+	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Content, payload.Type, payload.Width, payload.Height)
 	if err != nil {
 		sendSystemError(w, err)
 		return

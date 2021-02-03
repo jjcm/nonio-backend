@@ -73,7 +73,7 @@ func (u *User) FindByID(id int) error {
 
 // CreatePost - create a new post in the database and set the current User as
 // the author
-func (u *User) CreatePost(title, url, content, postType string) (Post, error) {
+func (u *User) CreatePost(title, url, content, postType string, width int, height int) (Post, error) {
 	p := Post{}
 	now := time.Now().Format("2006-01-02 15:04:05")
 
@@ -92,7 +92,7 @@ func (u *User) CreatePost(title, url, content, postType string) (Post, error) {
 	}
 
 	// try and create the post in the DB
-	result, err := DBConn.Exec("INSERT INTO posts (title, url, user_id, thumbnail, score, content, type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", postTitle, postURL, u.ID, "", 0, content, postType, now, now)
+	result, err := DBConn.Exec("INSERT INTO posts (title, url, user_id, thumbnail, score, content, type, width, height, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", postTitle, postURL, u.ID, "", 0, content, postType, width, height, now, now)
 	// check for specific error of an existing post URL
 	// if we hit this error, run a second DB call to see how many of the posts have a similar URL alias and then tack on a suffix to make this one unique
 	if err != nil && err.Error()[0:10] == "Error 1062" {
