@@ -13,7 +13,7 @@ var Log *logrus.Logger
 // ClosedCors only allows reqs from authorized domains
 func ClosedCors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("Path: %v\n", r.RequestURI)
+		Log.Info(fmt.Sprintf("Closed Path: %v\n", r.RequestURI))
 		w.Header().Set("Access-Control-Allow-Origin", "https://non.io")
 		w.Header().Set("Access-Control-Max-Age", "604800") // One week
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -29,7 +29,7 @@ func ClosedCors(next http.HandlerFunc) http.HandlerFunc {
 // OpenCors allows reqs from all domains
 func OpenCors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("Path: %v\n", r.RequestURI)
+		Log.Info(fmt.Sprintf("Open Path: %v\n", r.RequestURI))
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Max-Age", "604800") // One week
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
