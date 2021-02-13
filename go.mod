@@ -10,6 +10,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/icrowley/fake v0.0.0-20180203215853-4178557ae428
+	github.com/jasonlvhit/gocron v0.0.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.9.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
