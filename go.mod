@@ -8,6 +8,7 @@ require (
 	github.com/danilopolani/gocialite v1.0.2 // indirect
 	github.com/denisenkom/go-mssqldb v0.9.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-co-op/gocron v0.6.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/icrowley/fake v0.0.0-20180203215853-4178557ae428
 	github.com/jasonlvhit/gocron v0.0.1

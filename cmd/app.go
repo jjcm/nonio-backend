@@ -9,7 +9,7 @@ import (
 	"soci-backend/httpd"
 	"soci-backend/httpd/middleware"
 
-	"github.com/jasonlvhit/gocron"
+	"github.com/go-co-op/gocron"
 	"github.com/urfave/cli"
 )
 
@@ -21,14 +21,13 @@ func runApp(c *cli.Context) error {
 		http.HandleFunc(path, middleware.OpenCors(middleware.CheckToken(handler)))
 	}
 
-	t := time.Date(2020, time.January, 1, 0, 28, 0, 0, time.Local)
-	gocron.Every(12).Weeks().From(&t).Do(finance.CalculatePayouts)
+	schedule := gocron.NewScheduler(time.UTC)
+	//schedule.Every(1).Month(1).Do(finance.CalculatePayouts)
+	schedule.Every(1).Hour().Do(finance.CalculatePayouts)
 
-	_, nextTime := gocron.NextRun()
-	fmt.Println("next run is at...")
-	fmt.Println(nextTime)
-	fmt.Println(":)")
-	gocron.Start()
+	schedule.StartAsync()
+	_, nextTime := schedule.NextRun()
+	log(fmt.Sprintf("Next payment calculation will run on %v", nextTime.Format("Mon Jan 2 15:04:05 2006")))
 
 	log("Starting web api at port " + sociConfig.AppPort)
 	http.ListenAndServe(":"+sociConfig.AppPort, nil)

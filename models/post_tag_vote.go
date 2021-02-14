@@ -65,6 +65,17 @@ func (v *PostTagVote) GetVotesByPostUser(postID int, userID int) ([]PostTagVote,
 	return votes, err
 }
 
+// GetUntalliedVotesByUser - query the rows from posts_tags_votes for votes for a specific user that haven't been tallied yet for payout
+func (v *PostTagVote) GetUntalliedVotesByUser(postID int, userID int) ([]PostTagVote, error) {
+	votes := []PostTagVote{}
+
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ?", userID)
+	if err == sql.ErrNoRows {
+		return votes, nil
+	}
+	return votes, err
+}
+
 // GetVotesByPostTag - query the rows from posts_tags_votes with post id and tag id
 func (v *PostTagVote) GetVotesByPostTag(postID int, tagID int) ([]PostTagVote, error) {
 	votes := []PostTagVote{}

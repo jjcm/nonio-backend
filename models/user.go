@@ -24,6 +24,21 @@ type User struct {
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
+// GetAll gets all users.
+func (u *User) GetAll() ([]User, error) {
+	users := []User{}
+	err := DBConn.Select(&users, "SELECT * FROM users")
+	fmt.Println("found users")
+	if err != nil {
+		fmt.Println("ohno")
+		return nil, err
+	}
+
+	// if an email was found, then let's hydrate the current User struct with
+	// the found one
+	return users, nil
+}
+
 // FindByEmail find a user by searching the DB
 func (u *User) FindByEmail(email string) error {
 	dbUser := User{}
