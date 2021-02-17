@@ -10,6 +10,7 @@ func TestWeCanFindPostTagVoteByUK(t *testing.T) {
 		PostID:  1,
 		TagID:   1,
 		VoterID: 1,
+		Tallied: false,
 	}
 	if err := item.CreatePostTagVote(); err != nil {
 		t.Errorf("PostTagVote creation should have worked: %v", err)
@@ -32,6 +33,7 @@ func TestWeCanCreatePostTagVote(t *testing.T) {
 		PostID:  1,
 		TagID:   1,
 		VoterID: 1,
+		Tallied: false,
 	}
 	if err := item.CreatePostTagVote(); err != nil {
 		t.Errorf("PostTagVote creation should have worked: %v", err)
@@ -46,6 +48,53 @@ func TestWeCanGetPostTagVotesByPostUser(t *testing.T) {
 		PostID:  1,
 		TagID:   1,
 		VoterID: 1,
+		Tallied: false,
+	}
+	if err := item.CreatePostTagVote(); err != nil {
+		t.Errorf("PostTagVote creation should have worked: %v", err)
+		return
+	}
+
+	votes, err := item.GetVotesByPostUser(item.PostID, item.VoterID)
+	if err != nil {
+		t.Errorf("Get votes: %v", err)
+	}
+	if len(votes) == 0 {
+		t.Errorf("We should have been able to find this PostTagVote by post id and voter id")
+	}
+}
+
+func TestWeCanGetUntalliedPostTagVotes(t *testing.T) {
+	setupTestingDB()
+
+	// create the PostTagVote first
+	item := &PostTagVote{
+		PostID:  1,
+		TagID:   1,
+		VoterID: 1,
+		Tallied: false,
+	}
+	if err := item.CreatePostTagVote(); err != nil {
+		t.Errorf("PostTagVote creation should have worked: %v", err)
+		return
+	}
+	// create the PostTagVote first
+	item = &PostTagVote{
+		PostID:  2,
+		TagID:   2,
+		VoterID: 2,
+		Tallied: false,
+	}
+	if err := item.CreatePostTagVote(); err != nil {
+		t.Errorf("PostTagVote creation should have worked: %v", err)
+		return
+	}
+	// create the PostTagVote first
+	item = &PostTagVote{
+		PostID:  2,
+		TagID:   2,
+		VoterID: 2,
+		Tallied: false,
 	}
 	if err := item.CreatePostTagVote(); err != nil {
 		t.Errorf("PostTagVote creation should have worked: %v", err)

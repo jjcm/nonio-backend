@@ -37,7 +37,7 @@ func TestWeCanGetTheParentIDsFromAListOfComments(t *testing.T) {
 
 	person, _ := UserFactory("person@example.com", "friendlyPerson", "password")
 	// create a post and a weird comment thread
-	post, _ := person.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+	post, _ := person.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	topLevelComment1, _ := person.CommentOnPost(post, nil, "text")
 	topLevelComment2, _ := person.CommentOnPost(post, nil, "text")
 	topLevelComment3, _ := person.CommentOnPost(post, nil, "text")

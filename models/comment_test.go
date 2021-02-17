@@ -9,7 +9,7 @@ func TestWeCanCreateComments(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	// create comment
 	comment, err := author.CommentOnPost(post, nil, "This is a dumb post")
@@ -27,7 +27,7 @@ func TestWeCanGetCommentsForAPost(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	// create comment
 	comment, _ := author.CommentOnPost(post, nil, "This is a dumb post")
@@ -49,7 +49,7 @@ func TestWeCanDeleteComments(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	// create comment
 	comment, _ := author.CommentOnPost(post, nil, "This is a dumb post")
@@ -65,7 +65,7 @@ func TestWeCanAbandonComments(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image")
+	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	// create comment
 	comment, _ := author.CommentOnPost(post, nil, "This is a dumb post")

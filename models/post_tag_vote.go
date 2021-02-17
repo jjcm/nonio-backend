@@ -1,6 +1,9 @@
 package models
 
-import "database/sql"
+import (
+	"database/sql"
+	"github.com/jmoiron/sqlx"
+)
 
 // PostTagVote - struct representation of a single post-tag-vote
 type PostTagVote struct {
@@ -14,6 +17,7 @@ type PostTagVote struct {
 	Voter     *User  `db:"-" json:"-"`
 	VoterName string `db:"-" json:"-"`
 	VoterID   int    `db:"voter_id" json:"-"`
+	Tallied   bool   `db:"tallied" json:"-"`
 }
 
 // FindByUK - find a given PostTagVote in the database by unique keys
@@ -80,11 +84,27 @@ func (v *PostTagVote) GetUntalliedVotesByUser(userID int) ([]PostTagVote, error)
 func (v *PostTagVote) GetUntalliedVotes() ([]PostTagVote, error) {
 	votes := []PostTagVote{}
 
-	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ?", userID)
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where tallied = ?", 0)
 	if err == sql.ErrNoRows {
 		return votes, nil
 	}
 	return votes, err
+}
+
+// MarkVotesAsTallied - Mark all of the votes in an array as being tallied.
+func (v *PostTagVote) MarkVotesAsTallied(votes []PostTagVote) error {
+	var ids []int
+	for _, vote := range votes {
+		ids = append(ids, vote.ID)
+	}
+
+	query := "UPDATE posts_tags_votes SET tallied = 1 where id IN = (?)"
+	generatedQuery, args, err := sqlx.In(query, 1, ids)
+	_, err = DBConn.Exec(generatedQuery, args...)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	return err
 }
 
 // GetVotesByPostTag - query the rows from posts_tags_votes with post id and tag id
