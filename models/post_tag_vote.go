@@ -3,21 +3,23 @@ package models
 import (
 	"database/sql"
 	"github.com/jmoiron/sqlx"
+	"time"
 )
 
 // PostTagVote - struct representation of a single post-tag-vote
 type PostTagVote struct {
-	ID        int    `db:"id" json:"-"`
-	Post      *Post  `db:"-" json:"-"`
-	PostID    int    `db:"post_id" json:"postID"`
-	PostURL   string `db:"-" json:"-"`
-	Tag       *Tag   `db:"-" json:"-"`
-	TagName   string `db:"-" json:"-"`
-	TagID     int    `db:"tag_id" json:"tagID"`
-	Voter     *User  `db:"-" json:"-"`
-	VoterName string `db:"-" json:"-"`
-	VoterID   int    `db:"voter_id" json:"-"`
-	Tallied   bool   `db:"tallied" json:"-"`
+	ID        int       `db:"id" json:"-"`
+	Post      *Post     `db:"-" json:"-"`
+	PostID    int       `db:"post_id" json:"postID"`
+	PostURL   string    `db:"-" json:"-"`
+	Tag       *Tag      `db:"-" json:"-"`
+	TagName   string    `db:"-" json:"-"`
+	TagID     int       `db:"tag_id" json:"tagID"`
+	Voter     *User     `db:"-" json:"-"`
+	VoterName string    `db:"-" json:"-"`
+	VoterID   int       `db:"voter_id" json:"-"`
+	Tallied   bool      `db:"tallied" json:"-"`
+	CreatedAt time.Time `db:"created_at" json:"-"`
 }
 
 // FindByUK - find a given PostTagVote in the database by unique keys
@@ -73,7 +75,7 @@ func (v *PostTagVote) GetVotesByPostUser(postID int, userID int) ([]PostTagVote,
 func (v *PostTagVote) GetUntalliedVotesByUser(userID int) ([]PostTagVote, error) {
 	votes := []PostTagVote{}
 
-	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ?", userID)
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND tallied = ?", userID, 0)
 	if err == sql.ErrNoRows {
 		return votes, nil
 	}
