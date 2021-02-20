@@ -8,7 +8,7 @@ func TestWeCanCreateASubscription(t *testing.T) {
 	setupTestingDB()
 
 	// create a user and a tag
-	user, _ := UserFactory("example@example.com", "", "password")
+	user, _ := UserFactory("example@example.com", "", "password", 0)
 	tag, _ := TagFactory("funny", user)
 
 	// use our subscription factory to make a new subscription
@@ -28,7 +28,7 @@ func TestWeCanDeleteASubscription(t *testing.T) {
 	setupTestingDB()
 
 	// create a user and a tag
-	user, _ := UserFactory("example@example.com", "", "password")
+	user, _ := UserFactory("example@example.com", "", "password", 0)
 	tag, _ := TagFactory("funny", user)
 
 	// use our subscription factory to make a new subscription

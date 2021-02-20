@@ -14,14 +14,15 @@ import (
 
 // User this is a standard struct that represents a user in the system
 type User struct {
-	ID        int       `db:"id" json:"id"`
-	Email     string    `db:"email" json:"email"`
-	Username  string    `db:"username" json:"username"`
-	Name      string    `db:"name" json:"name"`
-	Password  string    `db:"password" json:"password"`
-	LastLogin time.Time `db:"last_login" json:"-"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	ID                 int       `db:"id" json:"id"`
+	Email              string    `db:"email" json:"email"`
+	Username           string    `db:"username" json:"username"`
+	Name               string    `db:"name" json:"name"`
+	Password           string    `db:"password" json:"password"`
+	SubscriptionAmount float64   `db:"subscription_amount" json:"subscription_amount"`
+	LastLogin          time.Time `db:"last_login" json:"-"`
+	CreatedAt          time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt          time.Time `db:"updated_at" json:"updated_at"`
 }
 
 // GetAll gets all users.
@@ -215,10 +216,10 @@ func (u *User) update() error {
 }
 
 // CreateUser try and create a new user
-func createUser(email, username, password string) error {
+func createUser(email, username, password string, subscriptionAmount float64) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	hashedPassword, err := hashPassword(password)
-	_, err = DBConn.Exec("INSERT INTO users (email, username, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", email, username, hashedPassword, now, now)
+	_, err = DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", email, username, hashedPassword, subscriptionAmount, now, now)
 	if err != nil {
 		return err
 	}
@@ -226,9 +227,9 @@ func createUser(email, username, password string) error {
 }
 
 // UserFactory will create and return an instance of a user
-func UserFactory(email, username, password string) (User, error) {
+func UserFactory(email, username, password string, subscriptionAmount float64) (User, error) {
 	u := User{}
-	err := createUser(email, username, password)
+	err := createUser(email, username, password, subscriptionAmount)
 	if err != nil {
 		return u, err
 	}
@@ -400,4 +401,13 @@ func (u *User) MySubscriptions() ([]Subscription, error) {
 	}
 
 	return subscriptions, nil
+}
+
+// GetUntalliedVotesByUser - query the rows from posts_tags_votes for votes for a specific user that haven't been tallied yet for payout
+func (u *User) GetUntalliedVotes(before time.Time) ([]PostTagVote, error) {
+	votes := []PostTagVote{}
+
+	timestring := before.Format("2006-01-02 03:04:05 +0000 UTC")
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND created_at <= ? AND tallied = ?", u.ID, timestring, 0)
+	return votes, err
 }

@@ -17,6 +17,7 @@ type Config struct {
 	DBDatabase string
 	DBUsername string
 	DBPassword string
+	ServerFee  string
 	HMACKey    []byte
 	Logger     *logrus.Logger
 	DBConn     *sqlx.DB
@@ -43,6 +44,7 @@ func InitConfig() (Config, error) {
 		DBUsername: os.Getenv("DB_USER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		AppPort:    os.Getenv("APP_PORT"),
+		ServerFee:  os.Getenv("SERVER_FEE"),
 		HMACKey:    []byte(os.Getenv("APP_KEY")),
 	}
 	// now that we've tried to pull the env values, let's set defaults if any of them are empty
@@ -63,6 +65,9 @@ func InitConfig() (Config, error) {
 	}
 	if c.AppPort == "" {
 		c.AppPort = "9000"
+	}
+	if c.ServerFee == "" {
+		c.ServerFee = "1"
 	}
 
 	// initialize logging to stdout, maybe later we can extend this to

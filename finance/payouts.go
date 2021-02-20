@@ -11,17 +11,24 @@ func CalculatePayouts() {
 	fmt.Printf("Routine ran at %v\n", currentTime.String())
 
 	u := models.User{}
-	fmt.Println("created user")
 	users, err := u.GetAll()
-	fmt.Println("assigned users")
 	if err != nil {
-		fmt.Println("error with user")
-		fmt.Println(err)
+		Log.Error("Error getting list of users")
 		return
 	}
 
-	fmt.Println("printing users")
+	// For each of our users, get their votes and calculate what their individual payout is.
 	for _, user := range users {
-		fmt.Println(user.Email)
+		votes, err := user.GetUntalliedVotes(currentTime)
+		fmt.Println(ServerFee)
+		payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
+		fmt.Println(payoutPerVote)
+		if err != nil {
+			Log.Errorf("Error getting votes for user %v\n", user.Email)
+			return
+		}
+		for _, vote := range votes {
+			fmt.Println(vote.PostID)
+		}
 	}
 }

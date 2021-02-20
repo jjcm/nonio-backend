@@ -2,10 +2,12 @@ package main
 
 import (
 	bs "soci-backend/bootstrap"
+	"soci-backend/finance"
 	"soci-backend/httpd/handlers"
 	"soci-backend/httpd/middleware"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
+	"strconv"
 )
 
 var sociConfig bs.Config
@@ -35,4 +37,12 @@ func bootstrap() {
 	// let's now hydrate a few things in the models package
 	models.DBConn = sociConfig.DBConn
 	models.Log = sociConfig.Logger
+
+	// finance package hydration
+	finance.Log = sociConfig.Logger
+	finance.ServerFee, err = strconv.ParseFloat(sociConfig.ServerFee, 64)
+
+	if err != nil {
+		logError(err)
+	}
 }

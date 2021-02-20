@@ -10,7 +10,7 @@ func TestWeCanCreateAPost(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
@@ -27,7 +27,7 @@ func TestWeCanIncrementScoreForPost(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
@@ -50,7 +50,7 @@ func TestWeCanFindAPostByItsURL(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
@@ -65,7 +65,7 @@ func TestWeCanFindAPostByItsID(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 	post, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Error when creating post: %s", err.Error())
@@ -83,7 +83,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "userName", "password")
+	author, _ := UserFactory("example@example.com", "userName", "password", 0)
 	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("We should be able to create a post. Error: %v", err)
@@ -100,7 +100,7 @@ func TestWeTagAPost(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
@@ -124,7 +124,7 @@ func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
@@ -153,7 +153,7 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 	p1, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
@@ -185,7 +185,7 @@ func TestIfAPostIsCreatedWithAnEmptyTypeItGetsSetToTheDefaultTypeImage(t *testin
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 	p, err := author.CreatePost("Title", "post-title", "lorem ipsum", "", 0, 0) // note the empty 3rd param
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
@@ -231,8 +231,8 @@ func TestWeCanQueryPost(t *testing.T) {
 	p := Post{}
 
 	// create two authors for posts
-	author1, _ := UserFactory("example@example.com", "user1", "password")
-	author2, _ := UserFactory("example2@example.com", "user2", "password")
+	author1, _ := UserFactory("example@example.com", "user1", "password", 0)
+	author2, _ := UserFactory("example2@example.com", "user2", "password", 0)
 
 	// create some posts
 	author1.CreatePost("Post thats arty", "url1", "lorem ipsum", "image", 0, 0)

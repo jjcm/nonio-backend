@@ -15,7 +15,7 @@ func TestCanGetTags(t *testing.T) {
 	}
 
 	// create an author for tags
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 
 	// create a huge number of tags, so we can test our tag retriever with valid limits and offsets
 	limit := 500
@@ -41,7 +41,7 @@ func TestWeCanCreateAndRetrieveATag(t *testing.T) {
 	setupTestingDB()
 
 	// create our author
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 
 	newTag := fake.Word()
 	_, err := TagFactory(newTag, author)
@@ -63,7 +63,7 @@ func TestYouCantCreateATagWithTheNameOfAnExistingTag(t *testing.T) {
 	setupTestingDB()
 
 	// create our author
-	author, _ := UserFactory("example@example.com", "", "password")
+	author, _ := UserFactory("example@example.com", "", "password", 0)
 
 	newTag := fake.Word()
 	_, err := TagFactory(newTag, author)
