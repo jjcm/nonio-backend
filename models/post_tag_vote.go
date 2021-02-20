@@ -72,10 +72,11 @@ func (v *PostTagVote) GetVotesByPostUser(postID int, userID int) ([]PostTagVote,
 }
 
 // GetUntalliedVotesByUser - query the rows from posts_tags_votes for votes for a specific user that haven't been tallied yet for payout
-func (v *PostTagVote) GetUntalliedVotesByUser(userID int) ([]PostTagVote, error) {
+func (v *PostTagVote) GetUntalliedVotesByUser(userID int, before time.Time) ([]PostTagVote, error) {
 	votes := []PostTagVote{}
 
-	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND tallied = ?", userID, 0)
+	timestring := before.Format("2006-01-02 03:04:05 +0000 UTC")
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND created_at <= ? AND tallied = ?", userID, timestring, 0)
 	if err == sql.ErrNoRows {
 		return votes, nil
 	}

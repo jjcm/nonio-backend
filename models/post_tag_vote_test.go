@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestWeCanFindPostTagVoteByUK(t *testing.T) {
@@ -92,7 +93,17 @@ func TestWeCanGetUntalliedPostTagVotesForAUser(t *testing.T) {
 	}
 	item.CreatePostTagVote()
 
-	votes, err := item.GetUntalliedVotesByUser(1)
+	before := time.Now()
+	time.Sleep(2 * time.Second)
+
+	item = &PostTagVote{
+		PostID:  4,
+		TagID:   4,
+		VoterID: 1,
+	}
+	item.CreatePostTagVote()
+
+	votes, err := item.GetUntalliedVotesByUser(1, before)
 	if err != nil {
 		t.Errorf("Get votes: %v", err)
 	}
