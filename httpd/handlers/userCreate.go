@@ -16,16 +16,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		Email    string `json:"email"`
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Email              string  `json:"email"`
+		Username           string  `json:"username"`
+		Password           string  `json:"password"`
+		SubscriptionAmount float64 `json:"subscription_amount"`
 	}
 
 	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
 
-	if payload.Username == "" || payload.Password == "" || payload.Email == "" {
+	if payload.Username == "" || payload.Password == "" || payload.Email == "" || payload.SubscriptionAmount == 0 {
 		SendResponse(w, utils.MakeError("username, password and email are all required"), 400)
 		return
 	}
@@ -47,7 +48,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Log.Info("now creating new user")
-	_, err = models.UserFactory(payload.Email, payload.Username, payload.Password, 0)
+	_, err = models.UserFactory(payload.Email, payload.Username, payload.Password, payload.SubscriptionAmount)
 	if err != nil {
 		// err is nil, meaning there was not a problem looking up this user, so one was found
 		SendResponse(w, utils.MakeError("Error registering user: "+err.Error()), 500)

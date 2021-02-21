@@ -40,6 +40,7 @@ func bootstrap() {
 
 	// finance package hydration
 	finance.Log = sociConfig.Logger
+	finance.DBConn = sociConfig.DBConn
 	finance.ServerFee, err = strconv.ParseFloat(sociConfig.ServerFee, 64)
 
 	if err != nil {

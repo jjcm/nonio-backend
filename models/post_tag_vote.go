@@ -44,6 +44,12 @@ func (v *PostTagVote) DeleteByUKWithTx(tx Transaction, postID int, tagID int, us
 }
 
 // CreatePostTagVote - create the PostTagVote with post and tag information
+func (u *User) CreatePostTagVote(postID int, tagID int) error {
+	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id) VALUES (?, ?, ?)", postID, tagID, u.ID)
+	return err
+}
+
+// CreatePostTagVote - create the PostTagVote with post and tag information
 func (v *PostTagVote) CreatePostTagVote() error {
 	// create a new PostTag association
 	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id) VALUES (?, ?, ?)", v.PostID, v.TagID, v.VoterID)

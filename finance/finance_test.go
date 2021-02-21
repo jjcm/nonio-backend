@@ -13,6 +13,7 @@ import (
 )
 
 func setupTestingDB() error {
+	fmt.Println("setting up db	")
 	var testingDBName = "socidb_testing"
 	os.Setenv("APP_KEY", "secret")
 	os.Setenv("OAUTH_ID", "12345")
@@ -49,7 +50,7 @@ func setupTestingDB() error {
 	if err != nil {
 		fmt.Println(err)
 	}
-	workingDir = strings.Replace(workingDir, "models", "migrations", -1)
+	workingDir = strings.Replace(workingDir, "finance", "migrations", -1)
 	cmd.Dir = workingDir
 
 	var output bytes.Buffer

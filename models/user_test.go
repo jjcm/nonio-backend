@@ -15,6 +15,14 @@ func TestCanCreateAUser(t *testing.T) {
 	}
 }
 
+func TestWeCanCallModelFuncWithDBCall(t *testing.T) {
+	setupTestingDB()
+	err := DemoInsertUser()
+	if err != nil {
+		t.Errorf("Error creating user: %v", err)
+	}
+}
+
 func TestAUsersPasswordCanBeChecked(t *testing.T) {
 	setupTestingDB()
 

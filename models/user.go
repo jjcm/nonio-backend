@@ -215,11 +215,26 @@ func (u *User) update() error {
 	return err
 }
 
-// CreateUser try and create a new user
+// createUser try and create a new user
 func createUser(email, username, password string, subscriptionAmount float64) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	hashedPassword, err := hashPassword(password)
-	_, err = DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", email, username, hashedPassword, subscriptionAmount, now, now)
+	_, err = DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", email, username, hashedPassword, 10, now, now)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DemoReturnString just returns a string
+func DemoReturnString() string {
+	return "hello, world"
+}
+
+// DemoInsertUser inserts an example user into the db
+func DemoInsertUser() error {
+	now := time.Now().Format("2006-01-02 15:04:05")
+	_, err := DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", "example@example.com", "example", "asdf", 10, now, now)
 	if err != nil {
 		return err
 	}
