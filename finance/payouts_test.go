@@ -12,8 +12,15 @@ func TestWeCanCallModelPackage(t *testing.T) {
 	fmt.Println(s)
 }
 
+func TestWeCanCallFuncWithDBCall(t *testing.T) {
+	models.SetupTestingDB()
+	err := DemoInsertUser()
+	if err != nil {
+		t.Errorf("Error creating user: %v", err)
+	}
+}
+
 func TestWeCanCallModelFuncWithDBCall(t *testing.T) {
-	setupTestingDB()
 	err := models.DemoInsertUser()
 	if err != nil {
 		t.Errorf("Error creating user: %v", err)

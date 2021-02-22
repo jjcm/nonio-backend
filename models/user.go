@@ -234,6 +234,9 @@ func DemoReturnString() string {
 // DemoInsertUser inserts an example user into the db
 func DemoInsertUser() error {
 	now := time.Now().Format("2006-01-02 15:04:05")
+	if DBConn == nil {
+		return fmt.Errorf("DBConn doesnt exist\n")
+	}
 	_, err := DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", "example@example.com", "example", "asdf", 10, now, now)
 	if err != nil {
 		return err
