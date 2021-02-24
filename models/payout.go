@@ -1,8 +1,7 @@
-package finance
+package models
 
 import (
 	"fmt"
-	"soci-backend/models"
 	"time"
 )
 
@@ -15,7 +14,7 @@ func CalculatePayouts() ([]Payout, error) {
 	currentTime := time.Now()
 	fmt.Printf("Routine ran at %v\n", currentTime.String())
 
-	u := models.User{}
+	u := User{}
 	users, err := u.GetAll()
 	var payouts []Payout
 	if err != nil {
@@ -26,9 +25,9 @@ func CalculatePayouts() ([]Payout, error) {
 	// For each of our users, get their votes and calculate what their individual payout is.
 	for _, user := range users {
 		votes, err := user.GetUntalliedVotes(currentTime)
-		fmt.Println(ServerFee)
+		fmt.Printf("Server fee is %v, %v's subscription is %v and has %v votes.\n", ServerFee, user.Username, user.SubscriptionAmount, len(votes))
 		payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
-		fmt.Println(payoutPerVote)
+		fmt.Printf("Payout per vote for user %v is %v\n", user.Username, payoutPerVote)
 		if err != nil {
 			Log.Errorf("Error getting votes for user %v\n", user.Email)
 			return payouts, err
@@ -38,14 +37,4 @@ func CalculatePayouts() ([]Payout, error) {
 		}
 	}
 	return payouts, err
-}
-
-// DemoInsertUser inserts an example user into the db
-func DemoInsertUser() error {
-	now := time.Now().Format("2006-01-02 15:04:05")
-	_, err := DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", "example@example.com", "example", "asdf", 10, now, now)
-	if err != nil {
-		return err
-	}
-	return nil
 }

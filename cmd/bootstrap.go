@@ -37,11 +37,7 @@ func bootstrap() {
 	// let's now hydrate a few things in the models package
 	models.DBConn = sociConfig.DBConn
 	models.Log = sociConfig.Logger
-
-	// finance package hydration
-	finance.Log = sociConfig.Logger
-	finance.DBConn = sociConfig.DBConn
-	finance.ServerFee, err = strconv.ParseFloat(sociConfig.ServerFee, 64)
+	models.ServerFee, err = strconv.ParseFloat(sociConfig.ServerFee, 64)
 
 	if err != nil {
 		logError(err)

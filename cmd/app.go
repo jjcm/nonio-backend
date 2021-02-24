@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"soci-backend/finance"
 	"soci-backend/httpd"
 	"soci-backend/httpd/middleware"
+	"soci-backend/models"
 
 	"github.com/go-co-op/gocron"
 	"github.com/urfave/cli"
@@ -22,8 +22,8 @@ func runApp(c *cli.Context) error {
 	}
 
 	schedule := gocron.NewScheduler(time.UTC)
-	//schedule.Every(1).Month(1).Do(finance.CalculatePayouts)
-	schedule.Every(1).Hour().Do(finance.CalculatePayouts)
+	//schedule.Every(1).Month(1).Do(models.CalculatePayouts)
+	schedule.Every(1).Hour().Do(models.CalculatePayouts)
 
 	schedule.StartAsync()
 	_, nextTime := schedule.NextRun()

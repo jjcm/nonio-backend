@@ -18,6 +18,8 @@ type PostTagVote struct {
 	Voter     *User     `db:"-" json:"-"`
 	VoterName string    `db:"-" json:"-"`
 	VoterID   int       `db:"voter_id" json:"-"`
+	Creator   *User     `db:"-" json:"-"`
+	CreatorID int       `db:"creator_id" json:"-"`
 	Tallied   bool      `db:"tallied" json:"-"`
 	CreatedAt time.Time `db:"created_at" json:"-"`
 }
@@ -45,7 +47,9 @@ func (v *PostTagVote) DeleteByUKWithTx(tx Transaction, postID int, tagID int, us
 
 // CreatePostTagVote - create the PostTagVote with post and tag information
 func (u *User) CreatePostTagVote(postID int, tagID int) error {
-	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id) VALUES (?, ?, ?)", postID, tagID, u.ID)
+	post := &Post{}
+	post.FindByID(postID)
+	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id, creator_id) VALUES (?, ?, ?, ?)", postID, tagID, u.ID, post.AuthorID)
 	return err
 }
 

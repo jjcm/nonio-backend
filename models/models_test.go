@@ -1,10 +1,12 @@
-package finance
+package models
 
 import (
 	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	bs "soci-backend/bootstrap"
@@ -13,7 +15,6 @@ import (
 )
 
 func setupTestingDB() error {
-	fmt.Println("setting up db	")
 	var testingDBName = "socidb_testing"
 	os.Setenv("APP_KEY", "secret")
 	os.Setenv("OAUTH_ID", "12345")
@@ -38,6 +39,7 @@ func setupTestingDB() error {
 	}
 	DBConn = c.DBConn
 	Log = c.Logger // so we don't choke on any log calls
+	ServerFee = 1
 
 	// get the database back to square 1
 	resetTestingDB()
@@ -46,11 +48,10 @@ func setupTestingDB() error {
 	command := goPath + "/bin/goose"
 	cmd := exec.Command(command, "mysql", os.Getenv("DB_USER")+":"+os.Getenv("DB_PASSWORD")+"@/"+testingDBName, "up")
 
-	workingDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-	}
-	workingDir = strings.Replace(workingDir, "finance", "migrations", -1)
+	_, b, _, _ := runtime.Caller(0)
+	basepath := filepath.Dir(b)
+
+	workingDir := strings.Replace(basepath, "models", "migrations", -1)
 	cmd.Dir = workingDir
 
 	var output bytes.Buffer

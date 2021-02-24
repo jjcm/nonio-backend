@@ -11,3 +11,6 @@ var DBConn *sqlx.DB
 
 // Log this is here so we can share the same logger with the main package
 var Log *logrus.Logger
+
+// The fee for the server
+var ServerFee float64
