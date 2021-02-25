@@ -111,3 +111,22 @@ func TestWeCanGetUntalliedPostTagVotesForAUser(t *testing.T) {
 		t.Errorf(fmt.Sprintf("%v", len(votes)))
 	}
 }
+
+func TestWeCanGetCreatorFromPostTagVote(t *testing.T) {
+	setupTestingDB()
+
+	user1, _ := UserFactory("example1@example.com", "ralph", "password", 10+ServerFee)
+	user2, _ := UserFactory("example2@example.com", "joey", "password", 20+ServerFee)
+
+	post, _ := user1.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	// create the PostTagVote first
+
+	user2.CreatePostTagVote(post.ID, 1)
+	vote := &PostTagVote{}
+	vote.FindByUK(post.ID, 1, user2.ID)
+
+	if vote.CreatorID != user1.ID {
+		t.Errorf("CreatorID of the vote is invalid. Expected %v but got %v instead.", user1.ID, vote.CreatorID)
+		return
+	}
+}
