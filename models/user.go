@@ -400,13 +400,3 @@ func (u *User) MySubscriptions() ([]Subscription, error) {
 
 	return subscriptions, nil
 }
-
-// GetUntalliedVotesByUser - query the rows from posts_tags_votes for votes for a specific user that haven't been tallied yet for payout
-func (u *User) GetUntalliedVotes(before time.Time) ([]PostTagVote, error) {
-	votes := []PostTagVote{}
-
-	timestring := before.UTC().Format("2006-01-02 03:04:05 +0000 UTC")
-	fmt.Println(timestring)
-	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND created_at <= ? AND tallied = ?", u.ID, timestring, 0)
-	return votes, err
-}

@@ -4,7 +4,6 @@ import (
 	"math"
 	"strconv"
 	"testing"
-	"time"
 )
 
 func TestCanCreateAUser(t *testing.T) {
@@ -277,28 +276,4 @@ func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 	if len(limitedPosts) != 100 {
 		t.Errorf("Expected that we could limit the total number of Posts returned.\nExpected: %v\n  Actual: %v", 100, len(limitedPosts))
 	}
-}
-
-func TestWeCanGetUntalliedVotesForAUser(t *testing.T) {
-	setupTestingDB()
-
-	user, _ := UserFactory("example1@example.com", "ralph", "password", 10)
-	user.CreatePostTagVote(1, 1)
-	user.CreatePostTagVote(2, 2)
-
-	pt := &PostTagVote{}
-	pt.FindByUK(1, 1, 1)
-
-	time.Sleep(1 * time.Second)
-	currentTime := time.Now()
-
-	votes, err := user.GetUntalliedVotes(currentTime)
-	if err != nil {
-		t.Errorf("Error getting untallied votes for the user.")
-	}
-
-	if len(votes) != 2 {
-		t.Errorf("Got %v untallied votes for the user, expected 2. Ensure your DB is set to UTC time.", len(votes))
-	}
-
 }

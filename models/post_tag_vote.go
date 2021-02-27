@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"time"
 )
@@ -83,15 +84,13 @@ func (v *PostTagVote) GetVotesByPostUser(postID int, userID int) ([]PostTagVote,
 	return votes, err
 }
 
-// GetUntalliedVotesByUser - query the rows from posts_tags_votes for votes for a specific user that haven't been tallied yet for payout
-func (v *PostTagVote) GetUntalliedVotesByUser(userID int, before time.Time) ([]PostTagVote, error) {
+// GetUntalliedVotes - query the rows from posts_tags_votes for votes for a specific user that haven't been tallied yet for payout
+func (u *User) GetUntalliedVotes(before time.Time) ([]PostTagVote, error) {
 	votes := []PostTagVote{}
 
-	timestring := before.Format("2006-01-02 03:04:05 +0000 UTC")
-	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND created_at <= ? AND tallied = ?", userID, timestring, 0)
-	if err == sql.ErrNoRows {
-		return votes, nil
-	}
+	timestring := before.UTC().Format("2006-01-02 03:04:05 -0700 MST")
+	fmt.Printf("time is %v", timestring)
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND created_at <= ? AND tallied = ? AND creator_id != ?", u.ID, timestring, 0, u.ID)
 	return votes, err
 }
 
