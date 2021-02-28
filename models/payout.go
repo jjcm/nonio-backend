@@ -10,7 +10,31 @@ type Payout struct {
 	Payout float64
 }
 
-func CalculatePayouts() ([]Payout, error) {
+func AllocatePayouts() error {
+	payouts, err := calculatePayouts()
+	if err != nil {
+		Log.Errorf("Error calculating payouts: %v", err)
+		return err
+	}
+
+	users := make(map[int]float64)
+
+	for _, payout := range payouts {
+		users[payout.UserID] = users[payout.UserID] + payout.Payout
+	}
+
+	for user, payout := range users {
+		fmt.Printf("User %v is getting paid %v\n", user, payout)
+		_, err := DBConn.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", payout, user)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func calculatePayouts() ([]Payout, error) {
 	currentTime := time.Now()
 	fmt.Printf("Routine ran at %v\n", currentTime.String())
 
@@ -25,16 +49,42 @@ func CalculatePayouts() ([]Payout, error) {
 	// For each of our users, get their votes and calculate what their individual payout is.
 	for _, user := range users {
 		votes, err := user.GetUntalliedVotes(currentTime)
-		fmt.Printf("Server fee is %v, %v's subscription is %v and has %v votes.\n", ServerFee, user.Username, user.SubscriptionAmount, len(votes))
+
+		// A user may have multiple tags they voted on for a post. A vote for a post should only be counted once, regardless of the tags upvoted.
+		votes = uniquePostFilter(votes)
+
 		payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
-		fmt.Printf("Payout per vote for user %v is %v\n", user.Username, payoutPerVote)
+
 		if err != nil {
 			Log.Errorf("Error getting votes for user %v\n", user.Email)
 			return payouts, err
 		}
+
 		for _, vote := range votes {
-			fmt.Println(vote.PostID)
+			post := Post{}
+			post.FindByID(vote.PostID)
+
+			payout := Payout{
+				UserID: post.AuthorID,
+				Payout: payoutPerVote,
+			}
+
+			payouts = append(payouts, payout)
 		}
 	}
 	return payouts, err
+}
+
+func uniquePostFilter(votes []PostTagVote) []PostTagVote {
+	keys := make(map[int]bool)
+	uniqueVotes := []PostTagVote{}
+
+	for _, vote := range votes {
+		if _, added := keys[vote.PostID]; !added {
+			keys[vote.PostID] = true
+			uniqueVotes = append(uniqueVotes, vote)
+		}
+	}
+
+	return uniqueVotes
 }

@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 	"time"
 )
@@ -89,7 +88,6 @@ func (u *User) GetUntalliedVotes(before time.Time) ([]PostTagVote, error) {
 	votes := []PostTagVote{}
 
 	timestring := before.UTC().Format("2006-01-02 03:04:05 -0700 MST")
-	fmt.Printf("time is %v", timestring)
 	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND created_at <= ? AND tallied = ? AND creator_id != ?", u.ID, timestring, 0, u.ID)
 	return votes, err
 }
