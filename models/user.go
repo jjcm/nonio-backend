@@ -20,7 +20,7 @@ type User struct {
 	Name               string    `db:"name" json:"name"`
 	Password           string    `db:"password" json:"password"`
 	SubscriptionAmount float64   `db:"subscription_amount" json:"subscription_amount"`
-	Cash               float64   `db:"cash" json:"cash"`
+	Cash               float64   `db:"cash" json:"-"`
 	LastLogin          time.Time `db:"last_login" json:"-"`
 	CreatedAt          time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt          time.Time `db:"updated_at" json:"updated_at"`
@@ -54,9 +54,9 @@ func (u *User) FindByEmail(email string) error {
 }
 
 // FindByUsername find a user by searching the DB
-func (u *User) FindByUsername(email string) error {
+func (u *User) FindByUsername(username string) error {
 	dbUser := User{}
-	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE username = ?", email)
+	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE username = ?", username)
 	if err != nil {
 		return err
 	}
@@ -400,4 +400,23 @@ func (u *User) MySubscriptions() ([]Subscription, error) {
 	}
 
 	return subscriptions, nil
+}
+
+type FinancialData struct {
+	SubscriptionAmount float64 `db:"subscription_amount" json:"subscription_amount"`
+	Cash               float64 `db:"cash" json:"cash"`
+}
+
+// GetFinancialData will return the user's tag subscriptions
+func (u *User) GetFinancialData() (FinancialData, error) {
+	financialData := FinancialData{}
+
+	// run the correct sql query
+	var query = "SELECT cash, subscription_amount FROM users WHERE id = ?"
+	err := DBConn.Get(&financialData, query, u.ID)
+	if err != nil {
+		return financialData, err
+	}
+
+	return financialData, nil
 }
