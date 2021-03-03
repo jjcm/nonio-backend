@@ -77,6 +77,6 @@ func TestWeCanAllocatePayouts(t *testing.T) {
 
 	financialData3, err := user3.GetFinancialData()
 	if financialData3.Cash != 25 {
-		t.Errorf("User 3's cash was incorrect. Got %v expected 20.", financialData3.Cash)
+		t.Errorf("User 3's cash was incorrect. Got %v expected 25.", financialData3.Cash)
 	}
 }

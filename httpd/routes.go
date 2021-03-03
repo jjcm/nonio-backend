@@ -61,6 +61,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		// USER ROUTES
 		"/user/change-password": handlers.ChangePassword,
+		"/user/get-financials":  handlers.GetFinancials,
 
 		// VOTES ROUTES
 		"/votes": handlers.GetVotes,
