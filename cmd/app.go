@@ -22,8 +22,8 @@ func runApp(c *cli.Context) error {
 	}
 
 	schedule := gocron.NewScheduler(time.UTC)
-	//schedule.Every(1).Month(1).Do(models.CalculatePayouts)
-	schedule.Every(1).Hour().Do(models.CalculatePayouts)
+	//schedule.Every(1).Month(1).Do(models.AllocatePayouts)
+	schedule.Every(1).Hour().Do(models.AllocatePayouts)
 
 	schedule.StartAsync()
 	_, nextTime := schedule.NextRun()

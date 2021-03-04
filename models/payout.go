@@ -42,7 +42,7 @@ func calculatePayouts() ([]Payout, error) {
 	users, err := u.GetAll()
 	var payouts []Payout
 	if err != nil {
-		Log.Error("Error getting list of users")
+		Log.Errorf("Error getting list of users: %v\n", err)
 		return payouts, err
 	}
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	bs "soci-backend/bootstrap"
-	"soci-backend/finance"
 	"soci-backend/httpd/handlers"
 	"soci-backend/httpd/middleware"
 	"soci-backend/httpd/utils"

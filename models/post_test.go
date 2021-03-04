@@ -89,7 +89,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 		t.Errorf("We should be able to create a post. Error: %v", err)
 	}
 
-	expectedJSON := `{"ID":1,"title":"Post Title","user":"userName","time":` + strconv.Itoa(int(p.GetCreatedAtTimestamp())) + `,"url":"post-title","content":"lorem ipsum","type":"image","score":0,"tags":[]}`
+	expectedJSON := `{"ID":1,"title":"Post Title","user":"userName","time":` + strconv.Itoa(int(p.GetCreatedAtTimestamp())) + `,"url":"post-title","content":"lorem ipsum","type":"image","score":0,"tags":[],"width":0,"height":0}`
 
 	if p.ToJSON() != expectedJSON {
 		t.Errorf("JSON output wasn't what we expected it to be.\nExpected: %v\nActual:   %v", expectedJSON, p.ToJSON())
