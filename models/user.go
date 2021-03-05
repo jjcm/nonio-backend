@@ -19,11 +19,11 @@ type User struct {
 	Username           string    `db:"username" json:"username"`
 	Name               string    `db:"name" json:"name"`
 	Password           string    `db:"password" json:"password"`
-	SubscriptionAmount float64   `db:"subscription_amount" json:"subscription_amount"`
+	SubscriptionAmount float64   `db:"subscription_amount" json:"subscriptionAmount"`
 	Cash               float64   `db:"cash" json:"cash"`
 	LastLogin          time.Time `db:"last_login" json:"-"`
-	CreatedAt          time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt          time.Time `db:"updated_at" json:"updated_at"`
+	CreatedAt          time.Time `db:"created_at" json:"createdAt"`
+	UpdatedAt          time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 // GetAll gets all users.

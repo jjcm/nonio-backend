@@ -19,7 +19,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		Email              string  `json:"email"`
 		Username           string  `json:"username"`
 		Password           string  `json:"password"`
-		SubscriptionAmount float64 `json:"subscription_amount"`
+		SubscriptionAmount float64 `json:"subscriptionAmount"`
 	}
 
 	var payload requestPayload
@@ -27,7 +27,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&payload)
 
 	if payload.Username == "" || payload.Password == "" || payload.Email == "" || payload.SubscriptionAmount == 0 {
-		SendResponse(w, utils.MakeError("username, password and email are all required"), 400)
+		SendResponse(w, utils.MakeError("username, password, email, and subscription amount are all required"), 400)
 		return
 	}
 
