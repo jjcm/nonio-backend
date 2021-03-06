@@ -113,4 +113,14 @@ func TestWeCanGetUntalliedVotesForAUser(t *testing.T) {
 	if len(votes) != 1 {
 		t.Errorf("Got %v untallied votes for the user, expected 1. Ensure your DB is set to UTC time.", len(votes))
 	}
+
+	vote.MarkVotesAsTallied(currentTime)
+	votes, err = user2.GetUntalliedVotes(currentTime)
+	if err != nil {
+		t.Errorf("Error getting untallied votes for the user.")
+	}
+
+	if len(votes) != 0 {
+		t.Errorf("Got %v untallied votes for the user, expected 0 after marking votes as tallied.", len(votes))
+	}
 }

@@ -2,6 +2,7 @@ package models
 
 import (
 	"testing"
+	"time"
 )
 
 func TestWeCanCalculatePayouts(t *testing.T) {
@@ -28,7 +29,8 @@ func TestWeCanCalculatePayouts(t *testing.T) {
 	user3.CreatePostTagVote(post2.ID, 1)
 	user3.CreatePostTagVote(post2.ID, 2)
 
-	payouts, err := calculatePayouts()
+	currentTime := time.Now()
+	payouts, err := calculatePayouts(currentTime)
 	if err != nil {
 		t.Errorf("Payout calculation failed: %v\n", err)
 	}
@@ -78,5 +80,15 @@ func TestWeCanAllocatePayouts(t *testing.T) {
 	financialData3, err := user3.GetFinancialData()
 	if financialData3.Cash != 25 {
 		t.Errorf("User 3's cash was incorrect. Got %v expected 25.", financialData3.Cash)
+	}
+
+	// try allocating again to ensure double counts arent happening
+	AllocatePayouts()
+	financialData1, err = user1.GetFinancialData()
+	if err != nil {
+		t.Errorf("Couldn't get financial data: %v", err)
+	}
+	if financialData1.Cash != 2 {
+		t.Errorf("User 1's cash was incorrect. Got %v expected 2.", financialData1.Cash)
 	}
 }

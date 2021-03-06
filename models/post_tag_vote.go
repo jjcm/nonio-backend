@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"github.com/jmoiron/sqlx"
 	"time"
 )
 
@@ -104,18 +103,8 @@ func (v *PostTagVote) GetUntalliedVotes() ([]PostTagVote, error) {
 }
 
 // MarkVotesAsTallied - Mark all of the votes in an array as being tallied.
-func (v *PostTagVote) MarkVotesAsTallied(votes []PostTagVote) error {
-	var ids []int
-	for _, vote := range votes {
-		ids = append(ids, vote.ID)
-	}
-
-	query := "UPDATE posts_tags_votes SET tallied = 1 where id IN = (?)"
-	generatedQuery, args, err := sqlx.In(query, 1, ids)
-	_, err = DBConn.Exec(generatedQuery, args...)
-	if err == sql.ErrNoRows {
-		return nil
-	}
+func (v *PostTagVote) MarkVotesAsTallied(before time.Time) error {
+	_, err := DBConn.Exec("UPDATE posts_tags_votes SET tallied = 1 where created_at < ?", before)
 	return err
 }
 

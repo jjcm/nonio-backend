@@ -11,7 +11,8 @@ type Payout struct {
 }
 
 func AllocatePayouts() error {
-	payouts, err := calculatePayouts()
+	currentTime := time.Now()
+	payouts, err := calculatePayouts(currentTime)
 	if err != nil {
 		Log.Errorf("Error calculating payouts: %v", err)
 		return err
@@ -31,11 +32,16 @@ func AllocatePayouts() error {
 		}
 	}
 
+	v := PostTagVote{}
+	err = v.MarkVotesAsTallied(currentTime)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func calculatePayouts() ([]Payout, error) {
-	currentTime := time.Now()
+func calculatePayouts(currentTime time.Time) ([]Payout, error) {
 	fmt.Printf("Routine ran at %v\n", currentTime.String())
 
 	u := User{}
