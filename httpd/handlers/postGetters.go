@@ -47,6 +47,7 @@ func fillPostTags(posts []*models.Post) error {
 
 // GetPosts - get the posts from database with different url parameters
 func GetPosts(w http.ResponseWriter, r *http.Request) {
+	Log.Info(r.URL)
 	params := &models.PostQueryParams{}
 	// parse the url parameters
 	r.ParseForm()
@@ -82,27 +83,15 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 
 	// ?tag=TAG
 	// Only returns results that match a specific tag. Multiple tags can be listed by separating tags with a +
-	formTag := strings.TrimSpace(r.FormValue("tag"))
-	// query the post ids from 'posts_tags' by 'tags', sorted by 'score' default
-	if formTag != "" {
-		tags := strings.Replace(strings.Trim(formTag, "+"), "+", ",", -1)
-
-		pt := &models.PostTag{}
-		// @jjcm - the problem with this approach is that the GetPostsByTags function ignores the other params.
-		// It always sorts by score and it ignores ?offset and ?time.
-		ids, err := pt.GetPostsByTags(tags)
+	tag := strings.TrimSpace(r.FormValue("tag"))
+	if tag != "" {
+		t := &models.Tag{}
+		err := t.FindByTagName(tag)
 		if err != nil {
-			sendSystemError(w, fmt.Errorf("Query posts by tags %s: %v", tags, err))
+			sendSystemError(w, fmt.Errorf("Query posts by tag %s: %v", tag, err))
 			return
 		}
-		params.TagIDs = ids
-	}
-
-	// sort by the post score default
-	params.SortedByScore = true
-	// if the tag list is not empty, sort by the score of the posttag
-	if len(params.TagIDs) > 0 {
-		params.SortedByScore = false
+		params.TagID = t.ID
 	}
 
 	// ?sort=popular|top|new
@@ -129,7 +118,6 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 
 	case "new":
 		// sort by the create time
-		params.SortedByScore = false
 	}
 
 	// ?user=USER
