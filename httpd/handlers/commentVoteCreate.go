@@ -10,27 +10,8 @@ import (
 
 // PostCommentVoteAdditionRequest defines the parameters for adding the comment vote
 type PostCommentVoteAdditionRequest struct {
-	ID int `json:"id"`
-}
-
-func incrementLineageScore(tx models.Transaction, id int) (parent int, err error) {
-	// check if the comment is existed
-	comment := &models.Comment{}
-	if err = comment.FindByID(id); err != nil {
-		return
-	}
-	// if the comment is not existed, return error
-	if comment.ID == 0 {
-		err = fmt.Errorf("Comment is not existed")
-		return
-	}
-
-	// increment lineage source for the comment
-	if err = comment.IncrementLineageScoreWithTx(tx, id); err != nil {
-		return
-	}
-
-	return comment.ParentID, nil
+	ID     int  `json:"id"`
+	Upvote bool `json:"upvoted"`
 }
 
 // AddCommentVote - protected http handler
@@ -40,10 +21,14 @@ func AddCommentVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	Log.Info(r.Body)
 	// decode the request parameters
 	var request PostCommentVoteAdditionRequest
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&request)
+	Log.Info("comment vote time")
+	Log.Info(fmt.Sprintf("comment id: %v", request.ID))
+	Log.Info(fmt.Sprintf("comment upvoted: %v", request.Upvote))
 
 	// do many database operations with transaction
 	if err := models.WithTransaction(func(tx models.Transaction) error {
@@ -51,14 +36,33 @@ func AddCommentVote(w http.ResponseWriter, r *http.Request) {
 		id := request.ID
 		// increment the lineage_score for the comment, until the parent is zero
 		for {
-			parent, err := incrementLineageScore(tx, id)
+			comment := &models.Comment{}
+			err := comment.FindByID(id)
+			if err != nil {
+				return err
+			}
+
+			if comment.ID == 0 {
+				err = fmt.Errorf("Comment does not exist")
+				return err
+			}
+
+			Log.Info(fmt.Sprintf("Comment %v is being upvoted? %v", id, request.Upvote))
+			if request.Upvote {
+				err = comment.IncrementLineageScoreWithTx(tx, id)
+			} else {
+				err = comment.DecrementLineageScoreWithTx(tx, id)
+			}
+
 			if err != nil {
 				return fmt.Errorf("increment lineage score: %v", err)
 			}
-			if parent == 0 {
+
+			if comment.ParentID == 0 {
 				break
 			}
-			id = parent
+
+			id = comment.ParentID
 		}
 
 		return nil

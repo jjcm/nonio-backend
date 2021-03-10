@@ -81,6 +81,7 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 
 // FindByID - find a given comment in the database by its primary key
 func (c *Comment) FindByID(id int) error {
+	Log.Info(fmt.Sprintf("finding comment %v", id))
 	dbComment := Comment{}
 	if err := DBConn.Get(&dbComment, "SELECT * FROM comments WHERE id = ?", id); err != nil {
 		if err == sql.ErrNoRows {
