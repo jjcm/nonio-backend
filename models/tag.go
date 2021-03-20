@@ -42,16 +42,9 @@ func (t *Tag) ToJSON() string {
 	return string(jsonData)
 }
 
-// GetTags - get tags out of the database offset by an integer
-func GetTags(offset int, limit int) ([]Tag, error) {
-	tags := []Tag{}
-	err := DBConn.Select(&tags, "SELECT id, name FROM tags LIMIT ? OFFSET ?", limit, offset)
-	if err != nil {
-		return tags, err
-	}
-
-	return tags, nil
-}
+/************************************************/
+/******************** CREATE ********************/
+/************************************************/
 
 // createTag - create a tag in the database by a given word
 func createTag(tag string, author User) error {
@@ -75,6 +68,10 @@ func TagFactory(tag string, author User) (Tag, error) {
 
 	return t, err
 }
+
+/************************************************/
+/********************* READ *********************/
+/************************************************/
 
 // FindByID - find a given tag in the database by its primary key
 func (t *Tag) FindByID(id int) error {
@@ -102,3 +99,24 @@ func (t *Tag) FindByTagName(name string) error {
 	*t = dbTag
 	return nil
 }
+
+// GetTags - get tags out of the database offset by an integer
+func GetTags(offset int, limit int) ([]Tag, error) {
+	tags := []Tag{}
+	err := DBConn.Select(&tags, "SELECT id, name FROM tags LIMIT ? OFFSET ?", limit, offset)
+	if err != nil {
+		return tags, err
+	}
+
+	return tags, nil
+}
+
+/************************************************/
+/******************** UPDATE ********************/
+/************************************************/
+// Not needed
+
+/************************************************/
+/******************** DELETE ********************/
+/************************************************/
+// TODO

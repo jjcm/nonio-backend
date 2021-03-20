@@ -20,8 +20,8 @@ type Comment struct {
 	User                   string        `db:"-" json:"user"`
 	Author                 User          `db:"-" json:"-"`
 	AuthorID               sql.NullInt32 `db:"author_id" json:"-"`
-	UpVotes                []Vote        `db:"-" json:"upvotes"`
-	DownVotes              []Vote        `db:"-" json:"downvotes"`
+	Upvotes                int           `db:"-" json:"upvotes"`
+	Downvotes              int           `db:"-" json:"downvotes"`
 	LineageScore           int           `db:"lineage_score" json:"lineage_score"`
 	DescendentCommentCount int           `db:"descendent_comment_count" json:"descendent_comment_count"`
 }
@@ -49,8 +49,8 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 		Post                   string `json:"post"`
 		Content                string `json:"content"`
 		User                   string `json:"user"`
-		UpVotes                int    `json:"upvotes"`
-		DownVotes              int    `json:"downvotes"`
+		Upvotes                int    `json:"upvotes"`
+		Downvotes              int    `json:"downvotes"`
 		Parent                 int    `json:"parent"`
 		LineageScore           int    `json:"lineage_score"`
 		DescendentCommentCount int    `json:"descendent_comment_count"`
@@ -60,8 +60,8 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 		Post:                   c.Post.URL,
 		Content:                c.Content,
 		User:                   c.Author.GetDisplayName(),
-		UpVotes:                len(c.UpVotes),
-		DownVotes:              len(c.DownVotes),
+		Upvotes:                c.Upvotes,
+		Downvotes:              c.Downvotes,
 		Parent:                 c.ParentID,
 		LineageScore:           c.LineageScore,
 		DescendentCommentCount: c.DescendentCommentCount,
