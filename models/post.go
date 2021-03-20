@@ -83,17 +83,70 @@ func (p *Post) ToJSON() string {
 	return string(jsonData)
 }
 
-// FindByURL - find a given post in the database by its URL
-func (p *Post) FindByURL(url string) error {
-	dbPost := Post{}
-	err := DBConn.Get(&dbPost, "SELECT * FROM posts WHERE url = ?", url)
-	if err != nil {
-		return err
+/************************************************/
+/******************** CREATE ********************/
+/************************************************/
+
+// CreatePost - create a new post in the database
+func (u *User) CreatePost(title, url, content, postType string, width int, height int) (Post, error) {
+	p := Post{}
+	now := time.Now().Format("2006-01-02 15:04:05")
+
+	postURL := url
+	// TODO: this needs some backend verification that it's only /^[0-9A-Za-z-_]+$/
+
+	// perpare and truncate the title if necessary
+	postTitle := title
+	if len(title) > 256 {
+		postTitle = title[0:255]
 	}
 
-	*p = dbPost
-	return nil
+	// set the type if it's blank
+	if strings.TrimSpace(postType) == "" {
+		postType = "image"
+	}
+
+	// try and create the post in the DB
+	result, err := DBConn.Exec("INSERT INTO posts (title, url, user_id, thumbnail, score, content, type, width, height, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", postTitle, postURL, u.ID, "", 0, content, postType, width, height, now, now)
+	// check for specific error of an existing post URL
+	// if we hit this error, run a second DB call to see how many of the posts have a similar URL alias and then tack on a suffix to make this one unique
+	if err != nil && err.Error()[0:10] == "Error 1062" {
+		var countSimilarAliases int
+		// the uniquie URL that we are testing for might not be long enough for the following LIKE query to work, so let's check that here
+		urlToCheckFor := postURL
+		if len(urlToCheckFor) > 240 {
+			urlToCheckFor = urlToCheckFor[0:240] // 240 is safe enough, since this is such an edge case that it's probably never going to happen
+		}
+		DBConn.Get(&countSimilarAliases, "SELECT COUNT(*) FROM posts WHERE url LIKE ?", urlToCheckFor+"%")
+		suffix := "-" + strconv.Itoa(countSimilarAliases+1)
+		newURL := postURL + suffix
+		if len(newURL) > 255 {
+			newURL = postURL[0:len(postURL)-len(suffix)] + suffix
+		}
+
+		// now let's try it again with the updated post URL
+		result, err = DBConn.Exec("INSERT INTO posts (title, url, user_id, thumbnail, score, content, type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", postTitle, newURL, u.ID, "", 0, content, postType, now, now)
+		if err != nil {
+			return p, err
+		}
+	}
+
+	if err != nil {
+		return p, err
+	}
+	insertID, err := result.LastInsertId()
+	if err != nil {
+		return p, err
+	}
+	p.FindByID(int(insertID))
+	p.Author = *u
+
+	return p, nil
 }
+
+/************************************************/
+/********************* READ *********************/
+/************************************************/
 
 // FindByID - find a given post in the database by its primary key
 func (p *Post) FindByID(id int) error {
@@ -107,86 +160,16 @@ func (p *Post) FindByID(id int) error {
 	return nil
 }
 
-// IncrementScore - increment the score by post id
-func (p *Post) IncrementScore(id int) error {
-	_, err := DBConn.Exec("update posts set score=score+1 where id = ?", id)
-	return err
-}
-
-// IncrementScoreWithTx - increment the score by post id
-func (p *Post) IncrementScoreWithTx(tx Transaction, id int) error {
-	_, err := tx.Exec("update posts set score=score+1 where id = ?", id)
-	return err
-}
-
-// DecrementScoreWithTx - decrement the score by post id
-func (p *Post) DecrementScoreWithTx(tx Transaction, id int) error {
-	_, err := tx.Exec("update posts set score=score-1 where id = ?", id)
-	return err
-}
-
-// GetCreatedAtTimestamp - get the created at timestamp in the predetermined format
-func (p *Post) GetCreatedAtTimestamp() int64 {
-	return p.CreatedAt.UnixNano() / int64(time.Millisecond)
-}
-
-// AddTag - associate a post with an existing tag
-func (p *Post) AddTag(t Tag) error {
-	now := time.Now().Format("2006-01-02 15:04:05")
-
-	// create a new tag association
-	_, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", p.ID, t.ID, now)
+// FindByURL - find a given post in the database by its URL
+func (p *Post) FindByURL(url string) error {
+	dbPost := Post{}
+	err := DBConn.Get(&dbPost, "SELECT * FROM posts WHERE url = ?", url)
 	if err != nil {
 		return err
 	}
 
-	// get the post tags from 'posts_tags'
-	err = p.getPostTags()
-	if err != nil {
-		return err
-	}
+	*p = dbPost
 	return nil
-}
-
-// get the post tags
-func (p *Post) getPostTags() error {
-	postTags := []PostTag{}
-	err := DBConn.Select(&postTags, "SELECT * FROM posts_tags where post_id = ?", p.ID)
-	if err != nil {
-		return err
-	}
-	p.Tags = postTags
-	return nil
-}
-
-// GetPostTags - get the tags with post id
-func GetPostTags(id int) ([]PostTag, error) {
-	tags := []PostTag{}
-
-	err := DBConn.Select(&tags, "SELECT * FROM posts_tags where post_id = ?", id)
-	if err != nil {
-		return nil, err
-	}
-
-	// query the tag name with id
-	for i, item := range tags {
-		tag := Tag{}
-		if err = tag.FindByID(item.TagID); err != nil {
-			return nil, err
-		}
-		tags[i].TagName = tag.Name
-	}
-
-	return tags, err
-}
-
-func intSlice2Str(vals []int) string {
-	var s []string
-
-	for _, v := range vals {
-		s = append(s, strconv.Itoa(v))
-	}
-	return strings.TrimSuffix(strings.Join(s, ","), ",")
 }
 
 // GetPostsByParams - get the posts by parameters
@@ -230,13 +213,72 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	return posts, nil
 }
 
-// Comments will return comments associated with the current post
-// This method has gone back and forth a bit, and
-func (p *Post) Comments(depthLimit int) ([]Comment, error) {
-	var err error
-	var comments []Comment
+// GetPosts will return all Posts that were authored by this user.
+// limit and offset will adjust the SQL query to return a smaller subset
+// pass -1 for limit and you can return all
+func (u *User) GetPosts(limit, offset int) ([]Post, error) {
+	posts := []Post{}
 
-	// this is a temporary work around to let front end dev get back at it...
-	err = DBConn.Select(&comments, "SELECT * FROM comments WHERE post_id = ?", p.ID)
-	return comments, err
+	// run the correct sql query
+	var query string
+	if limit == -1 {
+		query = "SELECT * FROM posts WHERE user_id = ?"
+		err := DBConn.Select(&posts, query, u.ID)
+		if err != nil {
+			return posts, err
+		}
+	} else {
+		query = "SELECT * FROM posts WHERE user_id = ? LIMIT ? OFFSET ?"
+		err := DBConn.Select(&posts, query, u.ID, limit, offset)
+		if err != nil {
+			return posts, err
+		}
+	}
+
+	return posts, nil
+}
+
+/************************************************/
+/******************** UPDATE ********************/
+/************************************************/
+
+// IncrementScore - increment the score by post id
+func (p *Post) IncrementScore(id int) error {
+	_, err := DBConn.Exec("update posts set score=score+1 where id = ?", id)
+	return err
+}
+
+// IncrementScoreWithTx - increment the score by post id
+func (p *Post) IncrementScoreWithTx(tx Transaction, id int) error {
+	_, err := tx.Exec("update posts set score=score+1 where id = ?", id)
+	return err
+}
+
+// DecrementScoreWithTx - decrement the score by post id
+func (p *Post) DecrementScoreWithTx(tx Transaction, id int) error {
+	_, err := tx.Exec("update posts set score=score-1 where id = ?", id)
+	return err
+}
+
+/************************************************/
+/******************** DELETE ********************/
+/************************************************/
+// TODO
+
+/************************************************/
+/******************** HELPER ********************/
+/************************************************/
+
+// GetCreatedAtTimestamp - get the created at timestamp in the predetermined format
+func (p *Post) GetCreatedAtTimestamp() int64 {
+	return p.CreatedAt.UnixNano() / int64(time.Millisecond)
+}
+
+func intSlice2Str(vals []int) string {
+	var s []string
+
+	for _, v := range vals {
+		s = append(s, strconv.Itoa(v))
+	}
+	return strings.TrimSuffix(strings.Join(s, ","), ",")
 }

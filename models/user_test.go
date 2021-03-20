@@ -232,7 +232,7 @@ func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password", 0)
 	// the author shouldn't have any posts at this point
-	posts, err := author.MyPosts(-1, 0)
+	posts, err := author.GetPosts(-1, 0)
 	if len(posts) != 0 {
 		t.Errorf("Expected the User to not have any posts")
 	}
@@ -242,7 +242,7 @@ func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 
 	// create a post
 	author.CreatePost("It's my post! Yay!", "post-title", "lorem ipsum", "image", 0, 0)
-	posts, err = author.MyPosts(-1, 0)
+	posts, err = author.GetPosts(-1, 0)
 	if err != nil {
 		t.Error(err)
 	}
@@ -257,7 +257,7 @@ func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 		author.CreatePost("Post Title "+indexAsString, "post-title-"+indexAsString, "lorem ipsum", "image", 0, 0)
 	}
 
-	posts, err = author.MyPosts(-1, 0)
+	posts, err = author.GetPosts(-1, 0)
 	if err != nil {
 		t.Error(err)
 	}
@@ -266,7 +266,7 @@ func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 		return
 	}
 
-	limitedPosts, err := author.MyPosts(100, 0)
+	limitedPosts, err := author.GetPosts(100, 0)
 	if err != nil {
 		t.Error(err)
 	}

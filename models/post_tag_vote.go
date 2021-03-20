@@ -23,26 +23,9 @@ type PostTagVote struct {
 	CreatedAt time.Time `db:"created_at" json:"-"`
 }
 
-// FindByUK - find a given PostTagVote in the database by unique keys
-func (v *PostTagVote) FindByUK(postID int, tagID int, userID int) error {
-	dbPostTagVote := PostTagVote{}
-	err := DBConn.Get(&dbPostTagVote, "SELECT * FROM posts_tags_votes WHERE post_id = ? and tag_id = ? and voter_id = ?", postID, tagID, userID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil
-		}
-		return err
-	}
-
-	*v = dbPostTagVote
-	return nil
-}
-
-// DeleteByUKWithTx - delete a PostTagVote in the database by unique keys
-func (v *PostTagVote) DeleteByUKWithTx(tx Transaction, postID int, tagID int, userID int) error {
-	_, err := tx.Exec("delete from posts_tags_votes where post_id = ? and tag_id = ? and voter_id = ?", postID, tagID, userID)
-	return err
-}
+/************************************************/
+/******************** CREATE ********************/
+/************************************************/
 
 // CreatePostTagVote - create the PostTagVote with post and tag information
 func (u *User) CreatePostTagVote(postID int, tagID int) error {
@@ -71,6 +54,41 @@ func (v *PostTagVote) CreatePostTagVoteWithTx(tx Transaction) error {
 	return nil
 }
 
+/************************************************/
+/********************* READ *********************/
+/************************************************/
+
+// FindByUK - find a given PostTagVote in the database by unique keys
+func (v *PostTagVote) FindByID(id int) error {
+	dbPostTagVote := PostTagVote{}
+	err := DBConn.Get(&dbPostTagVote, "SELECT * FROM posts_tags_votes WHERE id = ?", id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+
+	*v = dbPostTagVote
+	return nil
+}
+
+// FindByUK - find a given PostTagVote in the database by unique keys
+func (v *PostTagVote) FindByUK(postID int, tagID int, userID int) error {
+	dbPostTagVote := PostTagVote{}
+	err := DBConn.Get(&dbPostTagVote, "SELECT * FROM posts_tags_votes WHERE post_id = ? and tag_id = ? and voter_id = ?", postID, tagID, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+
+	*v = dbPostTagVote
+	return nil
+}
+
+// TODO - change this to be a user centric version i.e. u.GetVotesForPost
 // GetVotesByPostUser - query the rows from posts_tags_votes with post id and user id
 func (v *PostTagVote) GetVotesByPostUser(postID int, userID int) ([]PostTagVote, error) {
 	votes := []PostTagVote{}
@@ -102,12 +120,6 @@ func (v *PostTagVote) GetUntalliedVotes() ([]PostTagVote, error) {
 	return votes, err
 }
 
-// MarkVotesAsTallied - Mark all of the votes in an array as being tallied.
-func (v *PostTagVote) MarkVotesAsTallied(before time.Time) error {
-	_, err := DBConn.Exec("UPDATE posts_tags_votes SET tallied = 1 where created_at < ?", before)
-	return err
-}
-
 // GetVotesByPostTag - query the rows from posts_tags_votes with post id and tag id
 func (v *PostTagVote) GetVotesByPostTag(postID int, tagID int) ([]PostTagVote, error) {
 	votes := []PostTagVote{}
@@ -117,4 +129,38 @@ func (v *PostTagVote) GetVotesByPostTag(postID int, tagID int) ([]PostTagVote, e
 		return votes, nil
 	}
 	return votes, err
+}
+
+// GetVotes will return every posttag the user has voted on.
+func (u *User) GetVotes() ([]PostTagVote, error) {
+	votes := []PostTagVote{}
+
+	// run the correct sql query
+	var query = "SELECT * FROM posts_tags_votes WHERE voter_id = ?"
+	err := DBConn.Select(&votes, query, u.ID)
+	if err != nil {
+		return votes, err
+	}
+
+	return votes, nil
+}
+
+/************************************************/
+/******************** UPDATE ********************/
+/************************************************/
+
+// MarkVotesAsTallied - Mark all of the votes in an array as being tallied.
+func (v *PostTagVote) MarkVotesAsTallied(before time.Time) error {
+	_, err := DBConn.Exec("UPDATE posts_tags_votes SET tallied = 1 where created_at < ?", before)
+	return err
+}
+
+/************************************************/
+/******************** DELETE ********************/
+/************************************************/
+
+// DeleteByUKWithTx - delete a PostTagVote in the database by unique keys
+func (v *PostTagVote) DeleteByUKWithTx(tx Transaction, postID int, tagID int, userID int) error {
+	_, err := tx.Exec("delete from posts_tags_votes where post_id = ? and tag_id = ? and voter_id = ?", postID, tagID, userID)
+	return err
 }

@@ -55,68 +55,9 @@ func (p *PostTag) ToJSON() string {
 	return string(jsonData)
 }
 
-// FindByID - find a given PostTag in the database by its primary key
-func (p *PostTag) FindByID(id int) error {
-	dbPostTag := PostTag{}
-	err := DBConn.Get(&dbPostTag, "SELECT * FROM posts_tags WHERE id = ?", id)
-	if err != nil {
-		return err
-	}
-
-	*p = dbPostTag
-	return nil
-}
-
-// GetPostsByTags - query the post ids by the tags
-func (p *PostTag) GetPostsByTags(tags string) ([]int, error) {
-	ids := []int{}
-
-	err := DBConn.Select(&ids, "select t1.post_id from posts_tags t1 join tags t2 on t1.tag_id = t2.id and t2.name in (?) ORDER BY score DESC", tags)
-	if err != nil {
-		return nil, err
-	}
-
-	return ids, nil
-}
-
-// FindByUK - query the PostTag by unique key: post id and tag id
-func (p *PostTag) FindByUK(postID int, tagID int) error {
-	dbPostTag := PostTag{}
-	err := DBConn.Get(&dbPostTag, "select * from posts_tags where post_id = ? and tag_id = ?", postID, tagID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil
-		}
-		return err
-	}
-
-	*p = dbPostTag
-	return nil
-}
-
-// IncrementScore - increment the score by post id and tag id
-func (p *PostTag) IncrementScore(postID int, tagID int) error {
-	_, err := DBConn.Exec("update posts_tags set score=score+1 where post_id = ? and tag_id = ?", postID, tagID)
-	return err
-}
-
-// IncrementScoreWithTx - increment the score by post id and tag id
-func (p *PostTag) IncrementScoreWithTx(tx Transaction, postID int, tagID int) error {
-	_, err := tx.Exec("update posts_tags set score=score+1 where post_id = ? and tag_id = ?", postID, tagID)
-	return err
-}
-
-// DecrementScoreWithTx - decrement the score by post id and tag id
-func (p *PostTag) DecrementScoreWithTx(tx Transaction, postID int, tagID int) error {
-	_, err := tx.Exec("update posts_tags set score=score-1 where post_id = ? and tag_id = ?", postID, tagID)
-	return err
-}
-
-// DeleteByUKWithTx - delete a PostTag in the database by unique keys
-func (p *PostTag) DeleteByUKWithTx(tx Transaction, postID int, tagID int) error {
-	_, err := tx.Exec("delete from posts_tags where post_id = ? and tag_id = ?", postID, tagID)
-	return err
-}
+/************************************************/
+/******************** CREATE ********************/
+/************************************************/
 
 // createPostTag - create the PostTag with post and tag information
 func (p *PostTag) createPostTag() error {
@@ -156,4 +97,117 @@ func (p *PostTag) CreatePostTagWithTx(tx Transaction) error {
 		return err
 	}
 	return nil
+}
+
+// AddTag - associate a post with an existing tag
+func (p *Post) AddTag(t Tag) error {
+	now := time.Now().Format("2006-01-02 15:04:05")
+
+	// create a new tag association
+	_, err := DBConn.Exec("INSERT INTO posts_tags (post_id, tag_id, score, created_at) VALUES (?, ?, 1, ?)", p.ID, t.ID, now)
+	if err != nil {
+		return err
+	}
+
+	// get the post tags from 'posts_tags'
+	err = p.getPostTags()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/************************************************/
+/********************* READ *********************/
+/************************************************/
+
+// FindByID - find a given PostTag in the database by its primary key
+func (p *PostTag) FindByID(id int) error {
+	dbPostTag := PostTag{}
+	err := DBConn.Get(&dbPostTag, "SELECT * FROM posts_tags WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	*p = dbPostTag
+	return nil
+}
+
+// FindByUK - query the PostTag by unique key: post id and tag id
+func (p *PostTag) FindByUK(postID int, tagID int) error {
+	dbPostTag := PostTag{}
+	err := DBConn.Get(&dbPostTag, "select * from posts_tags where post_id = ? and tag_id = ?", postID, tagID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+
+	*p = dbPostTag
+	return nil
+}
+
+// get the post tags
+func (p *Post) getPostTags() error {
+	postTags := []PostTag{}
+	err := DBConn.Select(&postTags, "SELECT * FROM posts_tags where post_id = ?", p.ID)
+	if err != nil {
+		return err
+	}
+	p.Tags = postTags
+	return nil
+}
+
+// GetPostTags - get the tags with post id
+func GetPostTags(id int) ([]PostTag, error) {
+	tags := []PostTag{}
+
+	err := DBConn.Select(&tags, "SELECT * FROM posts_tags where post_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+
+	// query the tag name with id
+	for i, item := range tags {
+		tag := Tag{}
+		if err = tag.FindByID(item.TagID); err != nil {
+			return nil, err
+		}
+		tags[i].TagName = tag.Name
+	}
+
+	return tags, err
+}
+
+/************************************************/
+/******************** UPDATE ********************/
+/************************************************/
+
+// IncrementScore - increment the score by post id and tag id
+func (p *PostTag) IncrementScore(postID int, tagID int) error {
+	_, err := DBConn.Exec("update posts_tags set score=score+1 where post_id = ? and tag_id = ?", postID, tagID)
+	return err
+}
+
+// IncrementScoreWithTx - increment the score by post id and tag id
+func (p *PostTag) IncrementScoreWithTx(tx Transaction, postID int, tagID int) error {
+	_, err := tx.Exec("update posts_tags set score=score+1 where post_id = ? and tag_id = ?", postID, tagID)
+	return err
+}
+
+// DecrementScoreWithTx - decrement the score by post id and tag id
+func (p *PostTag) DecrementScoreWithTx(tx Transaction, postID int, tagID int) error {
+	_, err := tx.Exec("update posts_tags set score=score-1 where post_id = ? and tag_id = ?", postID, tagID)
+	return err
+}
+
+/************************************************/
+/******************** DELETE ********************/
+/************************************************/
+
+// DeleteByUKWithTx - delete a PostTag in the database by unique keys
+func (p *PostTag) DeleteByUKWithTx(tx Transaction, postID int, tagID int) error {
+	_, err := tx.Exec("delete from posts_tags where post_id = ? and tag_id = ?", postID, tagID)
+	return err
 }

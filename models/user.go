@@ -6,7 +6,6 @@ import (
 	"math"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -26,17 +25,52 @@ type User struct {
 	UpdatedAt          time.Time `db:"updated_at" json:"updatedAt"`
 }
 
-// GetAll gets all users.
-func (u *User) GetAll() ([]User, error) {
-	users := []User{}
-	err := DBConn.Select(&users, "SELECT * FROM users")
+/************************************************/
+/******************** CREATE ********************/
+/************************************************/
+
+// createUser try and create a new user
+func createUser(email, username, password string, subscriptionAmount float64) error {
+	now := time.Now().Format("2006-01-02 15:04:05")
+	hashedPassword, err := hashPassword(password)
+	_, err = DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", email, username, hashedPassword, subscriptionAmount, now, now)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	return nil
+}
+
+// UserFactory will create and return an instance of a user
+func UserFactory(email, username, password string, subscriptionAmount float64) (User, error) {
+	u := User{}
+	err := createUser(email, username, password, subscriptionAmount)
+	if err != nil {
+		return u, err
+	}
+	err = u.FindByEmail(email)
+
+	return u, err
+}
+
+/************************************************/
+/********************* READ *********************/
+/************************************************/
+
+// FindByID find a user by searching the DB
+func (u *User) FindByID(id int) error {
+	dbUser := User{}
+	if id == 0 {
+		dbUser.Username = "Anonymous coward"
+		*u = dbUser
+		return nil
+	}
+	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE id = ?", id)
+	if err != nil {
+		return err
 	}
 
-	// if an email was found, then let's hydrate the current User struct with
-	// the found one
-	return users, nil
+	*u = dbUser
+	return nil
 }
 
 // FindByEmail find a user by searching the DB
@@ -69,183 +103,41 @@ func (u *User) FindByUsername(username string) error {
 	return nil
 }
 
-// FindByID find a user by searching the DB
-func (u *User) FindByID(id int) error {
-	dbUser := User{}
-	if id == 0 {
-		dbUser.Username = "Anonymous coward"
-		*u = dbUser
-		return nil
-	}
-	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE id = ?", id)
+// GetAll gets all users.
+func (u *User) GetAll() ([]User, error) {
+	users := []User{}
+	err := DBConn.Select(&users, "SELECT * FROM users")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	*u = dbUser
-	return nil
+	// if an email was found, then let's hydrate the current User struct with
+	// the found one
+	return users, nil
 }
 
-// CreatePost - create a new post in the database and set the current User as
-// the author
-func (u *User) CreatePost(title, url, content, postType string, width int, height int) (Post, error) {
-	p := Post{}
-	now := time.Now().Format("2006-01-02 15:04:05")
+type FinancialData struct {
+	SubscriptionAmount float64 `db:"subscription_amount" json:"subscription_amount"`
+	Cash               float64 `db:"cash" json:"cash"`
+}
 
-	postURL := url
-	// TODO: this needs some backend verification that it's only /^[0-9A-Za-z-_]+$/
+// GetFinancialData will return the user's tag subscriptions
+func (u *User) GetFinancialData() (FinancialData, error) {
+	financialData := FinancialData{}
 
-	// perpare and truncate the title if necessary
-	postTitle := title
-	if len(title) > 256 {
-		postTitle = title[0:255]
-	}
-
-	// set the type if it's blank
-	if strings.TrimSpace(postType) == "" {
-		postType = "image"
-	}
-
-	// try and create the post in the DB
-	result, err := DBConn.Exec("INSERT INTO posts (title, url, user_id, thumbnail, score, content, type, width, height, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", postTitle, postURL, u.ID, "", 0, content, postType, width, height, now, now)
-	// check for specific error of an existing post URL
-	// if we hit this error, run a second DB call to see how many of the posts have a similar URL alias and then tack on a suffix to make this one unique
-	if err != nil && err.Error()[0:10] == "Error 1062" {
-		var countSimilarAliases int
-		// the uniquie URL that we are testing for might not be long enough for the following LIKE query to work, so let's check that here
-		urlToCheckFor := postURL
-		if len(urlToCheckFor) > 240 {
-			urlToCheckFor = urlToCheckFor[0:240] // 240 is safe enough, since this is such an edge case that it's probably never going to happen
-		}
-		DBConn.Get(&countSimilarAliases, "SELECT COUNT(*) FROM posts WHERE url LIKE ?", urlToCheckFor+"%")
-		suffix := "-" + strconv.Itoa(countSimilarAliases+1)
-		newURL := postURL + suffix
-		if len(newURL) > 255 {
-			newURL = postURL[0:len(postURL)-len(suffix)] + suffix
-		}
-
-		// now let's try it again with the updated post URL
-		result, err = DBConn.Exec("INSERT INTO posts (title, url, user_id, thumbnail, score, content, type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", postTitle, newURL, u.ID, "", 0, content, postType, now, now)
-		if err != nil {
-			return p, err
-		}
-	}
-
+	// run the correct sql query
+	var query = "SELECT cash, subscription_amount FROM users WHERE id = ?"
+	err := DBConn.Get(&financialData, query, u.ID)
 	if err != nil {
-		return p, err
+		return financialData, err
 	}
-	insertID, err := result.LastInsertId()
-	if err != nil {
-		return p, err
-	}
-	p.FindByID(int(insertID))
-	p.Author = *u
 
-	return p, nil
+	return financialData, nil
 }
 
-// CommentOnPost will try and create a comment in the database
-func (u *User) CommentOnPost(post Post, parent *Comment, content string) (Comment, error) {
-	c := Comment{}
-	now := time.Now().Format("2006-01-02 15:04:05")
-
-	if u.ID == 0 || post.ID == 0 {
-		return c, errors.New("Can't create a comment for an invalid user or post")
-	}
-
-	var commentParentID int
-	if parent != nil {
-		commentParentID = parent.ID
-	}
-
-	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, content, parent_id) VALUES (?, ?, ?, ?, ?)", u.ID, post.ID, now, content, commentParentID)
-	if err != nil {
-		return c, err
-	}
-	insertID, err := result.LastInsertId()
-	if err != nil {
-		return c, err
-	}
-
-	c.FindByID(int(insertID))
-	return c, err
-}
-
-// AbandonComment removes the user from the comment, but leaves the content
-func (u *User) AbandonComment(comment *Comment) error {
-	if u.ID == 0 || comment.ID == 0 {
-		return errors.New("Can't abandon a comment for an invalid user or comment")
-	}
-
-	_, err := DBConn.Exec("UPDATE comments SET author_id = NULL WHERE id = ?", comment.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// DeleteComment removes it from the db
-func (u *User) DeleteComment(comment *Comment) error {
-	if u.ID == 0 || comment.ID == 0 {
-		return errors.New("Can't delete a comment for an invalid user or comment")
-	}
-
-	_, err := DBConn.Exec("DELETE FROM comments WHERE id = ?", comment.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Login a user if their password matches the stored hash
-func (u *User) Login(password string) error {
-	if !checkPasswordHash(password, u.Password) {
-		return errors.New("Incorrect password")
-	}
-	u.LastLogin = time.Now()
-	err := u.update()
-	return err
-}
-
-func (u *User) update() error {
-	_, err := DBConn.Exec("UPDATE users SET email = ?, name = ?, last_login = ?, password = ?, updated_at = ? WHERE id = ?", u.Email, u.Name, u.LastLogin, u.Password, time.Now(), u.ID)
-	return err
-}
-
-// createUser try and create a new user
-func createUser(email, username, password string, subscriptionAmount float64) error {
-	now := time.Now().Format("2006-01-02 15:04:05")
-	hashedPassword, err := hashPassword(password)
-	_, err = DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", email, username, hashedPassword, subscriptionAmount, now, now)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// UserFactory will create and return an instance of a user
-func UserFactory(email, username, password string, subscriptionAmount float64) (User, error) {
-	u := User{}
-	err := createUser(email, username, password, subscriptionAmount)
-	if err != nil {
-		return u, err
-	}
-	err = u.FindByEmail(email)
-
-	return u, err
-}
-
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func checkPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
+/************************************************/
+/******************** UPDATE ********************/
+/************************************************/
 
 // ChangePassword changes the password of the user, assuming correct args
 func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPassword string) error {
@@ -277,6 +169,69 @@ func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPas
 	err = u.update()
 
 	return err
+}
+
+/************************************************/
+/******************** DELETE ********************/
+/************************************************/
+
+// TODO
+
+/************************************************/
+/******************** HELPER ********************/
+/************************************************/
+
+// UsernameIsAvailable - check the database to see if a certian username is
+// already taken
+func UsernameIsAvailable(username string) (bool, error) {
+	var total int
+	err := DBConn.Get(&total, "SELECT COUNT(*) FROM users WHERE username = ?", username)
+	if err != nil {
+		return false, err
+	}
+	if total != 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
+// GetDisplayName - return a string that shows the user's preferred display name
+func (u *User) GetDisplayName() string {
+	if u.Username != "" {
+		return u.Username
+	}
+	if u.Name != "" {
+		return u.Name
+	}
+	if u.Email != "" {
+		return u.Email
+	}
+	return "User" + strconv.Itoa(u.ID)
+}
+
+// Login a user if their password matches the stored hash
+func (u *User) Login(password string) error {
+	if !checkPasswordHash(password, u.Password) {
+		return errors.New("Incorrect password")
+	}
+	u.LastLogin = time.Now()
+	err := u.update()
+	return err
+}
+
+func (u *User) update() error {
+	_, err := DBConn.Exec("UPDATE users SET email = ?, name = ?, last_login = ?, password = ?, updated_at = ? WHERE id = ?", u.Email, u.Name, u.LastLogin, u.Password, time.Now(), u.ID)
+	return err
+}
+
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // getEntropy returns the log base 2 of the entropy of a password
@@ -319,104 +274,4 @@ func getEntropy(password string) float64 {
 
 	var entropy = math.Log2(math.Pow(float64(entropyBase), float64(len(password))))
 	return entropy
-}
-
-// UsernameIsAvailable - check the database to see if a certian username is
-// already taken
-func UsernameIsAvailable(username string) (bool, error) {
-	var total int
-	err := DBConn.Get(&total, "SELECT COUNT(*) FROM users WHERE username = ?", username)
-	if err != nil {
-		return false, err
-	}
-	if total != 0 {
-		return false, nil
-	}
-	return true, nil
-}
-
-// GetDisplayName - return a string that shows the user's preferred display name
-func (u *User) GetDisplayName() string {
-	if u.Username != "" {
-		return u.Username
-	}
-	if u.Name != "" {
-		return u.Name
-	}
-	if u.Email != "" {
-		return u.Email
-	}
-	return "User" + strconv.Itoa(u.ID)
-}
-
-// MyPosts will return all Posts that were authored by this user.
-// limit and offset will adjust the SQL query to return a smaller subset
-// pass -1 for limit and you can return all
-func (u *User) MyPosts(limit, offset int) ([]Post, error) {
-	posts := []Post{}
-
-	// run the correct sql query
-	var query string
-	if limit == -1 {
-		query = "SELECT * FROM posts WHERE user_id = ?"
-		err := DBConn.Select(&posts, query, u.ID)
-		if err != nil {
-			return posts, err
-		}
-	} else {
-		query = "SELECT * FROM posts WHERE user_id = ? LIMIT ? OFFSET ?"
-		err := DBConn.Select(&posts, query, u.ID, limit, offset)
-		if err != nil {
-			return posts, err
-		}
-	}
-
-	return posts, nil
-}
-
-// MyVotes will return every posttag the user has voted on.
-func (u *User) MyVotes() ([]PostTagVote, error) {
-	votes := []PostTagVote{}
-
-	// run the correct sql query
-	var query = "SELECT * FROM posts_tags_votes WHERE voter_id = ?"
-	err := DBConn.Select(&votes, query, u.ID)
-	if err != nil {
-		return votes, err
-	}
-
-	return votes, nil
-}
-
-// MySubscriptions will return the user's tag subscriptions
-func (u *User) MySubscriptions() ([]Subscription, error) {
-	subscriptions := []Subscription{}
-
-	// run the correct sql query
-	var query = "SELECT * FROM subscriptions WHERE user_id = ?"
-	err := DBConn.Select(&subscriptions, query, u.ID)
-	if err != nil {
-		return subscriptions, err
-	}
-
-	return subscriptions, nil
-}
-
-type FinancialData struct {
-	SubscriptionAmount float64 `db:"subscription_amount" json:"subscription_amount"`
-	Cash               float64 `db:"cash" json:"cash"`
-}
-
-// GetFinancialData will return the user's tag subscriptions
-func (u *User) GetFinancialData() (FinancialData, error) {
-	financialData := FinancialData{}
-
-	// run the correct sql query
-	var query = "SELECT cash, subscription_amount FROM users WHERE id = ?"
-	err := DBConn.Get(&financialData, query, u.ID)
-	if err != nil {
-		return financialData, err
-	}
-
-	return financialData, nil
 }

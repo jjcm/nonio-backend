@@ -12,7 +12,7 @@ func GetVotes(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	votes, err := u.MyVotes()
+	votes, err := u.GetVotes()
 	if err != nil {
 		SendResponse(w, utils.MakeError(err.Error()), 500)
 		return

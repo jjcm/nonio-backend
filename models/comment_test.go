@@ -12,7 +12,7 @@ func TestWeCanCreateComments(t *testing.T) {
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	// create comment
-	comment, err := author.CommentOnPost(post, nil, "This is a dumb post")
+	comment, err := author.CreateComment(post, nil, "This is a dumb post")
 
 	if err != nil {
 		t.Errorf("We should have been able to create a comment. Error recieved: %s", err)
@@ -30,8 +30,8 @@ func TestWeCanGetCommentsForAPost(t *testing.T) {
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	// create comment
-	comment, _ := author.CommentOnPost(post, nil, "This is a dumb post")
-	author.CommentOnPost(post, &comment, "This is a reply")
+	comment, _ := author.CreateComment(post, nil, "This is a dumb post")
+	author.CreateComment(post, &comment, "This is a reply")
 
 	comments, err := GetCommentsByPost(post.ID)
 
@@ -52,7 +52,7 @@ func TestWeCanDeleteComments(t *testing.T) {
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	// create comment
-	comment, _ := author.CommentOnPost(post, nil, "This is a dumb post")
+	comment, _ := author.CreateComment(post, nil, "This is a dumb post")
 	err := author.DeleteComment(&comment)
 
 	if err != nil {
@@ -68,7 +68,7 @@ func TestWeCanAbandonComments(t *testing.T) {
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	// create comment
-	comment, _ := author.CommentOnPost(post, nil, "This is a dumb post")
+	comment, _ := author.CreateComment(post, nil, "This is a dumb post")
 	err := author.AbandonComment(&comment)
 
 	if err != nil {

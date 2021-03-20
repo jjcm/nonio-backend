@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -23,18 +24,6 @@ type Comment struct {
 	DownVotes              []Vote        `db:"-" json:"downvotes"`
 	LineageScore           int           `db:"lineage_score" json:"lineage_score"`
 	DescendentCommentCount int           `db:"descendent_comment_count" json:"descendent_comment_count"`
-}
-
-// GetCommentsByPost returns the comments for one post order by lineage score
-func GetCommentsByPost(id int) ([]*Comment, error) {
-	comments := []*Comment{}
-
-	if err := DBConn.Select(&comments, "SELECT * FROM comments where post_id = ? order by lineage_score desc limit 100", id); err != nil {
-		fmt.Println("this turned out bad")
-		return nil, err
-	}
-
-	return comments, nil
 }
 
 // MarshalJSON custom JSON builder for Comment structs
@@ -79,6 +68,41 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 	})
 }
 
+/************************************************/
+/******************** CREATE ********************/
+/************************************************/
+
+// CreateComment will try and create a comment in the database
+func (u *User) CreateComment(post Post, parent *Comment, content string) (Comment, error) {
+	c := Comment{}
+	now := time.Now().Format("2006-01-02 15:04:05")
+
+	if u.ID == 0 || post.ID == 0 {
+		return c, errors.New("Can't create a comment for an invalid user or post")
+	}
+
+	var commentParentID int
+	if parent != nil {
+		commentParentID = parent.ID
+	}
+
+	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, content, parent_id) VALUES (?, ?, ?, ?, ?)", u.ID, post.ID, now, content, commentParentID)
+	if err != nil {
+		return c, err
+	}
+	insertID, err := result.LastInsertId()
+	if err != nil {
+		return c, err
+	}
+
+	c.FindByID(int(insertID))
+	return c, err
+}
+
+/************************************************/
+/********************* READ *********************/
+/************************************************/
+
 // FindByID - find a given comment in the database by its primary key
 func (c *Comment) FindByID(id int) error {
 	Log.Info(fmt.Sprintf("finding comment %v", id))
@@ -93,6 +117,32 @@ func (c *Comment) FindByID(id int) error {
 	*c = dbComment
 	return nil
 }
+
+// GetCommentsByPost returns the comments for one post order by lineage score
+func GetCommentsByPost(id int) ([]*Comment, error) {
+	comments := []*Comment{}
+
+	if err := DBConn.Select(&comments, "SELECT * FROM comments where post_id = ? order by lineage_score desc limit 100", id); err != nil {
+		fmt.Println("this turned out bad")
+		return nil, err
+	}
+
+	return comments, nil
+}
+
+// GetComments will return comments associated with the current post
+func (p *Post) GetComments(depthLimit int) ([]Comment, error) {
+	var err error
+	var comments []Comment
+
+	// this is a temporary work around to let front end dev get back at it...
+	err = DBConn.Select(&comments, "SELECT * FROM comments WHERE post_id = ?", p.ID)
+	return comments, err
+}
+
+/************************************************/
+/******************** UPDATE ********************/
+/************************************************/
 
 // IncrementLineageScoreWithTx - increment the lineage score by comment id
 func (c *Comment) IncrementLineageScoreWithTx(tx Transaction, id int) error {
@@ -110,4 +160,36 @@ func (c *Comment) DecrementLineageScoreWithTx(tx Transaction, id int) error {
 func (c *Comment) IncrementDescendentComment(id int) error {
 	_, err := DBConn.Exec("update comments set descendent_comment_count=descendent_comment_count+1 where id = ?", id)
 	return err
+}
+
+/************************************************/
+/******************** DELETE ********************/
+/************************************************/
+
+// AbandonComment removes the user from the comment, but leaves the content
+func (u *User) AbandonComment(comment *Comment) error {
+	if u.ID == 0 || comment.ID == 0 {
+		return errors.New("Can't abandon a comment for an invalid user or comment")
+	}
+
+	_, err := DBConn.Exec("UPDATE comments SET author_id = NULL WHERE id = ?", comment.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteComment removes it from the db
+func (u *User) DeleteComment(comment *Comment) error {
+	if u.ID == 0 || comment.ID == 0 {
+		return errors.New("Can't delete a comment for an invalid user or comment")
+	}
+
+	_, err := DBConn.Exec("DELETE FROM comments WHERE id = ?", comment.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

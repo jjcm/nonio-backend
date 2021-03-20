@@ -40,6 +40,10 @@ func (s *Subscription) ToJSON() string {
 	return string(jsonData)
 }
 
+/************************************************/
+/******************** CREATE ********************/
+/************************************************/
+
 // CreateSubscription - create a subscription in the database for a tag
 func (u *User) CreateSubscription(tag Tag) (Subscription, error) {
 	s := Subscription{}
@@ -54,11 +58,9 @@ func (u *User) CreateSubscription(tag Tag) (Subscription, error) {
 	return s, err
 }
 
-// DeleteSubscription - create a subscription in the database for a tag
-func (u *User) DeleteSubscription(tag Tag) error {
-	_, err := DBConn.Exec("DELETE FROM subscriptions WHERE tag_id = ? AND user_id = ?", tag.ID, u.ID)
-	return err
-}
+/************************************************/
+/********************* READ *********************/
+/************************************************/
 
 // FindSubscription - find a given tag in the database by the tag/user pairing
 func (s *Subscription) FindSubscription(tagID int, userID int) error {
@@ -70,4 +72,33 @@ func (s *Subscription) FindSubscription(tagID int, userID int) error {
 
 	*s = dbSubscription
 	return nil
+}
+
+// GetSubscriptions will return the user's tag subscriptions
+func (u *User) GetSubscriptions() ([]Subscription, error) {
+	subscriptions := []Subscription{}
+
+	// run the correct sql query
+	var query = "SELECT * FROM subscriptions WHERE user_id = ?"
+	err := DBConn.Select(&subscriptions, query, u.ID)
+	if err != nil {
+		return subscriptions, err
+	}
+
+	return subscriptions, nil
+}
+
+/************************************************/
+/******************** UPDATE ********************/
+/************************************************/
+// Not needed
+
+/************************************************/
+/******************** DELETE ********************/
+/************************************************/
+
+// DeleteSubscription - create a subscription in the database for a tag
+func (u *User) DeleteSubscription(tag Tag) error {
+	_, err := DBConn.Exec("DELETE FROM subscriptions WHERE tag_id = ? AND user_id = ?", tag.ID, u.ID)
+	return err
 }
