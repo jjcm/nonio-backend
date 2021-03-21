@@ -145,15 +145,65 @@ func (p *Post) GetComments(depthLimit int) ([]Comment, error) {
 /************************************************/
 
 // IncrementLineageScoreWithTx - increment the lineage score by comment id
-func (c *Comment) IncrementLineageScoreWithTx(tx Transaction, id int) error {
-	_, err := tx.Exec("update comments set lineage_score=lineage_score+1 where id = ?", id)
-	return err
+func (c *Comment) IncrementLineageScoreWithTx(tx Transaction) error {
+	id := c.ID
+
+	for {
+		comment := Comment{}
+		err := comment.FindByID(id)
+		if err != nil {
+			return err
+		}
+
+		if comment.ID == 0 {
+			err = fmt.Errorf("Comment does not exist")
+			return err
+		}
+
+		_, err = tx.Exec("update comments set lineage_score=lineage_score+1 where id = ?", id)
+		if err != nil {
+			return fmt.Errorf("Error incrementing lineage score: %v", err)
+		}
+
+		if comment.ParentID == 0 {
+			break
+		}
+
+		id = comment.ParentID
+	}
+
+	return nil
 }
 
 // DecrementLineageScoreWithTx - decrement the lineage score by comment id
-func (c *Comment) DecrementLineageScoreWithTx(tx Transaction, id int) error {
-	_, err := tx.Exec("update comments set lineage_score=lineage_score-1 where id = ?", id)
-	return err
+func (c *Comment) DecrementLineageScoreWithTx(tx Transaction) error {
+	id := c.ID
+
+	for {
+		comment := Comment{}
+		err := comment.FindByID(id)
+		if err != nil {
+			return err
+		}
+
+		if comment.ID == 0 {
+			err = fmt.Errorf("Comment does not exist")
+			return err
+		}
+
+		_, err = tx.Exec("update comments set lineage_score=lineage_score-1 where id = ?", id)
+		if err != nil {
+			return fmt.Errorf("Error incrementing lineage score: %v", err)
+		}
+
+		if comment.ParentID == 0 {
+			break
+		}
+
+		id = comment.ParentID
+	}
+
+	return nil
 }
 
 // IncrementDescendentComment - increment the descendent comment count

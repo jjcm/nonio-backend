@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -25,25 +26,50 @@ type CommentVote struct {
 /************************************************/
 
 // CreateCommentVote adds a vote for the user for a comment. It will change the lineage score for the comment and its ancestors.
-func (u *User) CreateCommentVote(commentID int, upvote bool) (CommentVote, error) {
+func (u *User) CreateCommentVoteWithTx(tx Transaction, commentID int, upvote bool) error {
 	vote := CommentVote{}
 	// Check if a vote already exists
 	vote.FindByUK(commentID, u.ID)
 	if vote.ID != 0 {
 		if vote.Upvote == upvote {
 			// it's the same type of vote, so we don't need to do anything
-			return vote, nil
+			return nil
 		} else {
 			// the vote is different, so lets remove the other vote first then add the new one
-			u.DeleteCommentVote(commentID)
-			return vote, nil
+			u.DeleteCommentVoteWithTx(tx, commentID)
+			return u.CreateCommentVoteWithTx(tx, commentID, upvote)
 		}
 	} else {
-		// The comment vote doesn't yet exist
+		// The comment vote doesn't yet exist, so we need to create it.
+
+		// Find the comment we're voting on
+		comment := Comment{}
+
+		if err := comment.FindByID(commentID); comment.ID == 0 {
+			// Comment does not exist, so throw an error
+			return fmt.Errorf("Comment does not exist: %v", err)
+		}
+
+		// Create the comment vote, return if there's an error
+		if _, err := tx.Exec("INSERT INTO comment_votes (comment_id, voter_id, upvote, post_id) VALUES (?, ?, ?, ?)", commentID, u.ID, upvote, comment.PostID); err != nil {
+			return err
+		}
+
+		// We need to update the ancestor chain
+		if upvote {
+			// The comment vote is an upvote, so we need to decrement the ancestor chain when we remove it
+			if err := comment.IncrementLineageScoreWithTx(tx); err != nil {
+				return err
+			}
+		} else {
+			// The comment vote is a downvote, so we need to increment the ancestor chain when we remove it
+			if err := comment.DecrementLineageScoreWithTx(tx); err != nil {
+				return err
+			}
+		}
 	}
 
-	// TODO
-	return vote, nil
+	return nil
 }
 
 /************************************************/
@@ -84,9 +110,7 @@ func (v *CommentVote) FindByUK(commentID int, userID int) error {
 func (u *User) GetCommentVotesForPost(postID int) ([]CommentVote, error) {
 	votes := []CommentVote{}
 
-	// run the correct sql query
-	var query = "SELECT * FROM comment_votes WHERE voter_id = ? AND post_id = ?"
-	err := DBConn.Select(&votes, query, u.ID, postID)
+	err := DBConn.Select(&votes, "SELECT * FROM comment_votes WHERE voter_id = ? AND post_id = ?", u.ID, postID)
 	if err != nil {
 		return votes, err
 	}
@@ -97,19 +121,34 @@ func (u *User) GetCommentVotesForPost(postID int) ([]CommentVote, error) {
 /************************************************/
 /******************** UPDATE ********************/
 /************************************************/
-// TODO
+// Not needed
 
 /************************************************/
 /******************** DELETE ********************/
 /************************************************/
 
-// RemoveVote removes a user's vote on a comment, if it exists. It will change the lineage score for the comment and its ancestors.
-func (u *User) DeleteCommentVote(commentID int) error {
-	return nil
-}
+// RemoveVote removes a user's vote on a comment, if it exists, via a transaction. It will change the lineage score for the comment and its ancestors.
+func (u *User) DeleteCommentVoteWithTx(tx Transaction, commentID int) error {
+	// Select the comment vote
+	commentVote := CommentVote{}
+	commentVote.FindByUK(commentID, u.ID)
 
-// DeleteByUKWithTx - delete a PostTagVote in the database by unique keys
-func (v *CommentVote) DeleteByUKWithTx(tx Transaction, commentID int, userID int) error {
-	_, err := tx.Exec("delete from posts_tags_votes where post_id = ? and tag_id = ? and voter_id = ?", commentID, userID)
+	comment := Comment{}
+	comment.FindByID(commentID)
+
+	if commentVote.Upvote {
+		// The comment vote is an upvote, so we need to decrement the ancestor chain when we remove it
+		if err := comment.DecrementLineageScoreWithTx(tx); err != nil {
+			return err
+		}
+	} else {
+		// The comment vote is a downvote, so we need to increment the ancestor chain when we remove it
+		if err := comment.IncrementLineageScoreWithTx(tx); err != nil {
+			return err
+		}
+	}
+
+	// Then delete the comment
+	_, err := tx.Exec("delete from comment_votes where comment_id = ? and voter_id = ?", commentID, u.ID)
 	return err
 }
