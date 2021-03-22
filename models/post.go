@@ -2,6 +2,8 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -99,6 +101,13 @@ func (u *User) CreatePost(title, url, content, postType string, width int, heigh
 	postTitle := title
 	if len(title) > 256 {
 		postTitle = title[0:255]
+	}
+
+	// If the URL has invalid characters, throw an error
+	validURL := regexp.MustCompile(`^[a-zA-Z0-9\-\._]*$`)
+	if !validURL.MatchString(url) {
+		return p, fmt.Errorf("url contains invalid characters")
+
 	}
 
 	// set the type if it's blank
@@ -272,13 +281,4 @@ func (p *Post) DecrementScoreWithTx(tx Transaction, id int) error {
 // GetCreatedAtTimestamp - get the created at timestamp in the predetermined format
 func (p *Post) GetCreatedAtTimestamp() int64 {
 	return p.CreatedAt.UnixNano() / int64(time.Millisecond)
-}
-
-func intSlice2Str(vals []int) string {
-	var s []string
-
-	for _, v := range vals {
-		s = append(s, strconv.Itoa(v))
-	}
-	return strings.TrimSuffix(strings.Join(s, ","), ",")
 }

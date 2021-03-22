@@ -78,7 +78,7 @@ func (u *User) CreateComment(post Post, parent *Comment, content string) (Commen
 	now := time.Now().Format("2006-01-02 15:04:05")
 
 	if u.ID == 0 || post.ID == 0 {
-		return c, errors.New("Can't create a comment for an invalid user or post")
+		return c, errors.New("can't create a comment for an invalid user or post")
 	}
 
 	var commentParentID int
@@ -105,7 +105,6 @@ func (u *User) CreateComment(post Post, parent *Comment, content string) (Commen
 
 // FindByID - find a given comment in the database by its primary key
 func (c *Comment) FindByID(id int) error {
-	Log.Info(fmt.Sprintf("finding comment %v", id))
 	dbComment := Comment{}
 	if err := DBConn.Get(&dbComment, "SELECT * FROM comments WHERE id = ?", id); err != nil {
 		if err == sql.ErrNoRows {
@@ -123,7 +122,6 @@ func GetCommentsByPost(id int) ([]*Comment, error) {
 	comments := []*Comment{}
 
 	if err := DBConn.Select(&comments, "SELECT * FROM comments where post_id = ? order by lineage_score desc limit 100", id); err != nil {
-		fmt.Println("this turned out bad")
 		return nil, err
 	}
 
@@ -156,13 +154,13 @@ func (c *Comment) IncrementLineageScoreWithTx(tx Transaction) error {
 		}
 
 		if comment.ID == 0 {
-			err = fmt.Errorf("Comment does not exist")
+			err = fmt.Errorf("comment does not exist")
 			return err
 		}
 
 		_, err = tx.Exec("update comments set lineage_score=lineage_score+1 where id = ?", id)
 		if err != nil {
-			return fmt.Errorf("Error incrementing lineage score: %v", err)
+			return fmt.Errorf("error incrementing lineage score: %v", err)
 		}
 
 		if comment.ParentID == 0 {
@@ -193,7 +191,7 @@ func (c *Comment) DecrementLineageScoreWithTx(tx Transaction) error {
 
 		_, err = tx.Exec("update comments set lineage_score=lineage_score-1 where id = ?", id)
 		if err != nil {
-			return fmt.Errorf("Error incrementing lineage score: %v", err)
+			return fmt.Errorf("error incrementing lineage score: %v", err)
 		}
 
 		if comment.ParentID == 0 {
@@ -219,7 +217,7 @@ func (c *Comment) IncrementDescendentComment(id int) error {
 // AbandonComment removes the user from the comment, but leaves the content
 func (u *User) AbandonComment(comment *Comment) error {
 	if u.ID == 0 || comment.ID == 0 {
-		return errors.New("Can't abandon a comment for an invalid user or comment")
+		return errors.New("can't abandon a comment for an invalid user or comment")
 	}
 
 	_, err := DBConn.Exec("UPDATE comments SET author_id = NULL WHERE id = ?", comment.ID)
@@ -233,7 +231,7 @@ func (u *User) AbandonComment(comment *Comment) error {
 // DeleteComment removes it from the db
 func (u *User) DeleteComment(comment *Comment) error {
 	if u.ID == 0 || comment.ID == 0 {
-		return errors.New("Can't delete a comment for an invalid user or comment")
+		return errors.New("can't delete a comment for an invalid user or comment")
 	}
 
 	_, err := DBConn.Exec("DELETE FROM comments WHERE id = ?", comment.ID)

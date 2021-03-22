@@ -33,6 +33,9 @@ type User struct {
 func createUser(email, username, password string, subscriptionAmount float64) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	hashedPassword, err := hashPassword(password)
+	if err != nil {
+		return err
+	}
 	_, err = DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", email, username, hashedPassword, subscriptionAmount, now, now)
 	if err != nil {
 		return err
@@ -143,25 +146,25 @@ func (u *User) GetFinancialData() (FinancialData, error) {
 func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPassword string) error {
 	// Check if both the new password and its confirmation password matches
 	if newPassword != confirmPassword {
-		return errors.New("New password and confirmation do not match")
+		return errors.New("new password and confirmation do not match")
 	}
 
 	// Check if the password has the required amount of entropy. In this case the min is 2^40 combinations
 	const minEntropy float64 = 40
 	passwordEntropy := getEntropy(newPassword)
 	if passwordEntropy < minEntropy {
-		return fmt.Errorf("New password does not meet the entropy requirement. Password entropy: %v. Required: %v. Password: %v", passwordEntropy, minEntropy, newPassword)
+		return fmt.Errorf("new password does not meet the entropy requirement. Password entropy: %v. Required: %v. Password: %v", passwordEntropy, minEntropy, newPassword)
 	}
 
 	// Make sure the old password isn't incorrect
 	if !checkPasswordHash(oldPassword, u.Password) {
-		return errors.New("Old password is incorrect")
+		return errors.New("old password is incorrect")
 	}
 
 	// Generate a hash from the new password
 	hashedPassword, err := hashPassword(newPassword)
 	if err != nil {
-		return errors.New("Error hashing password")
+		return errors.New("error hashing password")
 	}
 
 	// If the checks look good, change the password
@@ -212,7 +215,7 @@ func (u *User) GetDisplayName() string {
 // Login a user if their password matches the stored hash
 func (u *User) Login(password string) error {
 	if !checkPasswordHash(password, u.Password) {
-		return errors.New("Incorrect password")
+		return errors.New("incorrect password")
 	}
 	u.LastLogin = time.Now()
 	err := u.update()

@@ -23,6 +23,17 @@ func TestWeCanCreateAPost(t *testing.T) {
 	}
 }
 
+func TestWeCantCreateAPostWithAnInvalidURL(t *testing.T) {
+	setupTestingDB()
+
+	// create an author for post
+	author, _ := UserFactory("example@example.com", "", "password", 0)
+	_, err := author.CreatePost("Post Title", "post title", "lorem ipsum", "image", 0, 0)
+	if err == nil {
+		t.Errorf("Posts should not be able to be made with spaces in the url")
+	}
+}
+
 func TestWeCanIncrementScoreForPost(t *testing.T) {
 	setupTestingDB()
 

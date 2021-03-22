@@ -72,19 +72,19 @@ func TestWeCanAllocatePayouts(t *testing.T) {
 		t.Errorf("User 1's cash was incorrect. Got %v expected 2.", financialData1.Cash)
 	}
 
-	financialData2, err := user2.GetFinancialData()
+	financialData2, _ := user2.GetFinancialData()
 	if financialData2.Cash != 7 {
 		t.Errorf("User 2's cash was incorrect. Got %v expected 7.", financialData2.Cash)
 	}
 
-	financialData3, err := user3.GetFinancialData()
+	financialData3, _ := user3.GetFinancialData()
 	if financialData3.Cash != 25 {
 		t.Errorf("User 3's cash was incorrect. Got %v expected 25.", financialData3.Cash)
 	}
 
 	// try allocating again to ensure double counts arent happening
 	AllocatePayouts()
-	financialData1, err = user1.GetFinancialData()
+	financialData1, _ = user1.GetFinancialData()
 	if err != nil {
 		t.Errorf("Couldn't get financial data: %v", err)
 	}
