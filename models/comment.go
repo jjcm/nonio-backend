@@ -20,8 +20,8 @@ type Comment struct {
 	User                   string        `db:"-" json:"user"`
 	Author                 User          `db:"-" json:"-"`
 	AuthorID               sql.NullInt32 `db:"author_id" json:"-"`
-	Upvotes                int           `db:"-" json:"upvotes"`
-	Downvotes              int           `db:"-" json:"downvotes"`
+	Upvotes                int           `db:"upvotes" json:"upvotes"`
+	Downvotes              int           `db:"downvotes" json:"downvotes"`
 	LineageScore           int           `db:"lineage_score" json:"lineage_score"`
 	DescendentCommentCount int           `db:"descendent_comment_count" json:"descendent_comment_count"`
 }
@@ -95,7 +95,7 @@ func (u *User) CreateComment(post Post, parent *Comment, content string) (Commen
 		return c, err
 	}
 
-	c.FindByID(int(insertID))
+	err = c.FindByID(int(insertID))
 	return c, err
 }
 
@@ -142,6 +142,28 @@ func (p *Post) GetComments(depthLimit int) ([]Comment, error) {
 /******************** UPDATE ********************/
 /************************************************/
 
+// AddUpvoteWithTx increases the upvotes, and also increases the lineage score of the comment
+func (c *Comment) AddUpvoteWithTx(tx Transaction) error {
+	if _, err := tx.Exec("update comments set upvotes=upvotes+1 where id = ?", c.ID); err != nil {
+		return err
+	}
+	if err := c.IncrementLineageScoreWithTx(tx); err != nil {
+		return err
+	}
+	return nil
+}
+
+// RemoveUpvoteWithTx decreases the upvotes, and also decreases the lineage score of the comment
+func (c *Comment) RemoveUpvoteWithTx(tx Transaction) error {
+	if _, err := tx.Exec("update comments set upvotes=upvotes-1 where id = ?", c.ID); err != nil {
+		return err
+	}
+	if err := c.DecrementLineageScoreWithTx(tx); err != nil {
+		return err
+	}
+	return nil
+}
+
 // IncrementLineageScoreWithTx - increment the lineage score by comment id
 func (c *Comment) IncrementLineageScoreWithTx(tx Transaction) error {
 	id := c.ID
@@ -170,6 +192,28 @@ func (c *Comment) IncrementLineageScoreWithTx(tx Transaction) error {
 		id = comment.ParentID
 	}
 
+	return nil
+}
+
+// AddDownvoteWithTx increases the downvotes, and also decreases the lineage score of the comment
+func (c *Comment) AddDownvoteWithTx(tx Transaction) error {
+	if _, err := tx.Exec("update comments set downvotes=downvotes+1 where id = ?", c.ID); err != nil {
+		return err
+	}
+	if err := c.DecrementLineageScoreWithTx(tx); err != nil {
+		return err
+	}
+	return nil
+}
+
+// RemoveDownvoteWithTx decreases the downvotes, and also increases the lineage score of the comment
+func (c *Comment) RemoveDownvoteWithTx(tx Transaction) error {
+	if _, err := tx.Exec("update comments set downvotes=downvotes-1 where id = ?", c.ID); err != nil {
+		return err
+	}
+	if err := c.IncrementLineageScoreWithTx(tx); err != nil {
+		return err
+	}
 	return nil
 }
 

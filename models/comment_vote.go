@@ -55,15 +55,14 @@ func (u *User) CreateCommentVoteWithTx(tx Transaction, commentID int, upvote boo
 			return err
 		}
 
-		// We need to update the ancestor chain
 		if upvote {
-			// The comment vote is an upvote, so we need to decrement the ancestor chain when we remove it
-			if err := comment.IncrementLineageScoreWithTx(tx); err != nil {
+			// The comment vote is an upvote
+			if err := comment.AddUpvoteWithTx(tx); err != nil {
 				return err
 			}
 		} else {
-			// The comment vote is a downvote, so we need to increment the ancestor chain when we remove it
-			if err := comment.DecrementLineageScoreWithTx(tx); err != nil {
+			// The comment vote is a downvote
+			if err := comment.AddDownvoteWithTx(tx); err != nil {
 				return err
 			}
 		}
@@ -137,18 +136,18 @@ func (u *User) DeleteCommentVoteWithTx(tx Transaction, commentID int) error {
 	comment.FindByID(commentID)
 
 	if commentVote.Upvote {
-		// The comment vote is an upvote, so we need to decrement the ancestor chain when we remove it
-		if err := comment.DecrementLineageScoreWithTx(tx); err != nil {
+		// The comment vote is an upvote
+		if err := comment.RemoveUpvoteWithTx(tx); err != nil {
 			return err
 		}
 	} else {
-		// The comment vote is a downvote, so we need to increment the ancestor chain when we remove it
-		if err := comment.IncrementLineageScoreWithTx(tx); err != nil {
+		// The comment vote is a downvote
+		if err := comment.RemoveDownvoteWithTx(tx); err != nil {
 			return err
 		}
 	}
 
-	// Then delete the comment
+	// Then delete the comment vote
 	_, err := tx.Exec("delete from comment_votes where comment_id = ? and voter_id = ?", commentID, u.ID)
 	return err
 }

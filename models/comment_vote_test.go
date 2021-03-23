@@ -119,7 +119,7 @@ func TestWeCanAdjustLineageScore(t *testing.T) {
 	}
 }
 
-func TestWeCanGetUpvotesAndDownvotes(t *testing.T) {
+func TestWeCanGetUpvotes(t *testing.T) {
 	setupTestingDB()
 
 	bob, _ := UserFactory("example1@example.com", "bob", "password", 0)
@@ -144,5 +144,85 @@ func TestWeCanGetUpvotesAndDownvotes(t *testing.T) {
 		return nil
 	}); err != nil {
 		t.Errorf("Couldn't perform a transactional update of the comment votes: %v\n", err)
+	}
+
+	comment1.FindByID(comment1.ID)
+
+	if comment1.Upvotes != 3 {
+		t.Errorf("Expected comment to have 3 upvotes. Got %v instead.", comment1.Upvotes)
+	}
+}
+
+func TestWeCanGetDownvotes(t *testing.T) {
+	setupTestingDB()
+
+	bob, _ := UserFactory("example1@example.com", "bob", "password", 0)
+	ralph, _ := UserFactory("example2@example.com", "ralph", "password", 0)
+	joe, _ := UserFactory("example3@example.com", "joe", "password", 0)
+	wanda, _ := UserFactory("example4@example.com", "wanda", "password", 0)
+
+	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+
+	comment1, _ := ralph.CreateComment(post, nil, "Test comment from ralph on bob's post")
+
+	if err := WithTransaction(func(tx Transaction) error {
+		if err := bob.CreateCommentVoteWithTx(tx, comment1.ID, false); err != nil {
+			return err
+		}
+		if err := joe.CreateCommentVoteWithTx(tx, comment1.ID, false); err != nil {
+			return err
+		}
+		if err := wanda.CreateCommentVoteWithTx(tx, comment1.ID, false); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		t.Errorf("Couldn't perform a transactional update of the comment votes: %v\n", err)
+	}
+
+	comment1.FindByID(comment1.ID)
+
+	if comment1.Downvotes != 3 {
+		t.Errorf("Expected comment to have 3 downvotes. Got %v instead.", comment1.Upvotes)
+	}
+}
+
+func TestWeCanChangeVotes(t *testing.T) {
+	setupTestingDB()
+
+	bob, _ := UserFactory("example1@example.com", "bob", "password", 0)
+	ralph, _ := UserFactory("example2@example.com", "ralph", "password", 0)
+	joe, _ := UserFactory("example3@example.com", "joe", "password", 0)
+	wanda, _ := UserFactory("example4@example.com", "wanda", "password", 0)
+
+	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+
+	comment1, _ := ralph.CreateComment(post, nil, "Test comment from ralph on bob's post")
+
+	if err := WithTransaction(func(tx Transaction) error {
+		// downvote first
+		if err := bob.CreateCommentVoteWithTx(tx, comment1.ID, false); err != nil {
+			return err
+		}
+		if err := joe.CreateCommentVoteWithTx(tx, comment1.ID, false); err != nil {
+			return err
+		}
+		if err := wanda.CreateCommentVoteWithTx(tx, comment1.ID, false); err != nil {
+			return err
+		}
+
+		// try the same vote
+		if err := wanda.CreateCommentVoteWithTx(tx, comment1.ID, true); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		t.Errorf("Couldn't perform a transactional update of the comment votes: %v\n", err)
+	}
+
+	comment1.FindByID(comment1.ID)
+
+	if comment1.Downvotes != 3 {
+		t.Errorf("Expected comment to have 3 downvotes. Got %v instead.", comment1.Upvotes)
 	}
 }
