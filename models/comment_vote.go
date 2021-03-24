@@ -26,45 +26,44 @@ type CommentVote struct {
 /************************************************/
 
 // CreateCommentVote adds a vote for the user for a comment. It will change the lineage score for the comment and its ancestors.
-func (u *User) CreateCommentVoteWithTx(tx Transaction, commentID int, upvote bool) error {
+func (u *User) CreateCommentVote(commentID int, upvote bool) error {
 	vote := CommentVote{}
 	// Check if a vote already exists
 	vote.FindByUK(commentID, u.ID)
 	if vote.ID != 0 {
-		if vote.Upvote == upvote {
-			// it's the same type of vote, so we don't need to do anything
-			return nil
-		} else {
-			// the vote is different, so lets remove the other vote first then add the new one
-			u.DeleteCommentVoteWithTx(tx, commentID)
-			return u.CreateCommentVoteWithTx(tx, commentID, upvote)
-		}
+		// The vote exists, so we need to update the existing one
+		return u.UpdateCommentVote(commentID, upvote)
 	} else {
 		// The comment vote doesn't yet exist, so we need to create it.
 
 		// Find the comment we're voting on
 		comment := Comment{}
-
 		if err := comment.FindByID(commentID); comment.ID == 0 {
 			// Comment does not exist, so throw an error
 			return fmt.Errorf("Comment does not exist: %v", err)
 		}
 
-		// Create the comment vote, return if there's an error
-		if _, err := tx.Exec("INSERT INTO comment_votes (comment_id, voter_id, upvote, post_id) VALUES (?, ?, ?, ?)", commentID, u.ID, upvote, comment.PostID); err != nil {
-			return err
-		}
+		if err := WithTransaction(func(tx Transaction) error {
+			// Create the comment vote, return if there's an error
+			if _, err := tx.Exec("INSERT INTO comment_votes (comment_id, voter_id, upvote, post_id) VALUES (?, ?, ?, ?)", commentID, u.ID, upvote, comment.PostID); err != nil {
+				return err
+			}
 
-		if upvote {
-			// The comment vote is an upvote
-			if err := comment.AddUpvoteWithTx(tx); err != nil {
-				return err
+			if upvote {
+				// The comment vote is an upvote
+				if err := comment.AddUpvoteWithTx(tx); err != nil {
+					return err
+				}
+			} else {
+				// The comment vote is a downvote
+				if err := comment.AddDownvoteWithTx(tx); err != nil {
+					return err
+				}
 			}
-		} else {
-			// The comment vote is a downvote
-			if err := comment.AddDownvoteWithTx(tx); err != nil {
-				return err
-			}
+
+			return nil
+		}); err != nil {
+			return err
 		}
 	}
 
@@ -120,14 +119,61 @@ func (u *User) GetCommentVotesForPost(postID int) ([]CommentVote, error) {
 /************************************************/
 /******************** UPDATE ********************/
 /************************************************/
-// Not needed
+func (u *User) UpdateCommentVote(commentID int, upvote bool) error {
+	// Select the comment vote
+	vote := CommentVote{}
+	vote.FindByUK(commentID, u.ID)
+
+	comment := Comment{}
+	comment.FindByID(commentID)
+
+	if vote.ID != 0 {
+		if vote.Upvote == upvote {
+			// it's the same type of vote, so we don't need to do anything
+			return nil
+		} else {
+			if err := WithTransaction(func(tx Transaction) error {
+				// the vote is different, so lets change the vote first then update the lineage score
+				if _, err := tx.Exec("update comment_votes set upvote = ? where comment_id = ? and voter_id = ?", upvote, commentID, u.ID); err != nil {
+					return err
+				}
+
+				if upvote {
+					// we're upvoting the comment, so we need to remove the downvote and add an upvote
+					if err := comment.RemoveDownvoteWithTx(tx); err != nil {
+						return err
+					}
+					if err := comment.AddUpvoteWithTx(tx); err != nil {
+						return err
+					}
+				} else {
+					// we're downvoting the comment, so we need to remove the upvote and add a downvote
+					if err := comment.RemoveUpvoteWithTx(tx); err != nil {
+						return err
+					}
+					if err := comment.AddDownvoteWithTx(tx); err != nil {
+						return err
+					}
+				}
+
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+	} else {
+		return fmt.Errorf("vote for comment not found. Comment ID: %v, User ID: %v", commentID, u.ID)
+	}
+
+	return nil
+}
 
 /************************************************/
 /******************** DELETE ********************/
 /************************************************/
 
 // RemoveVote removes a user's vote on a comment, if it exists, via a transaction. It will change the lineage score for the comment and its ancestors.
-func (u *User) DeleteCommentVoteWithTx(tx Transaction, commentID int) error {
+func (u *User) DeleteCommentVote(commentID int) error {
 	// Select the comment vote
 	commentVote := CommentVote{}
 	commentVote.FindByUK(commentID, u.ID)
@@ -135,19 +181,28 @@ func (u *User) DeleteCommentVoteWithTx(tx Transaction, commentID int) error {
 	comment := Comment{}
 	comment.FindByID(commentID)
 
-	if commentVote.Upvote {
-		// The comment vote is an upvote
-		if err := comment.RemoveUpvoteWithTx(tx); err != nil {
+	if err := WithTransaction(func(tx Transaction) error {
+		if commentVote.Upvote {
+			// The comment vote is an upvote
+			if err := comment.RemoveUpvoteWithTx(tx); err != nil {
+				return err
+			}
+		} else {
+			// The comment vote is a downvote
+			if err := comment.RemoveDownvoteWithTx(tx); err != nil {
+				return err
+			}
+		}
+
+		// Then delete the comment vote
+		if _, err := tx.Exec("delete from comment_votes where comment_id = ? and voter_id = ?", commentID, u.ID); err != nil {
 			return err
 		}
-	} else {
-		// The comment vote is a downvote
-		if err := comment.RemoveDownvoteWithTx(tx); err != nil {
-			return err
-		}
+
+		return nil
+	}); err != nil {
+		return err
 	}
 
-	// Then delete the comment vote
-	_, err := tx.Exec("delete from comment_votes where comment_id = ? and voter_id = ?", commentID, u.ID)
-	return err
+	return nil
 }
