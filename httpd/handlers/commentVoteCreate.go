@@ -16,7 +16,7 @@ func AddCommentVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to AddCommentVote route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to AddCommentVote route"), 405)
 		return
 	}
 

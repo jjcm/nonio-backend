@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"fmt"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
@@ -11,7 +12,7 @@ import (
 // CreateSubscription adds a sub for a tag
 func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the create subscription route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to the create subscription route"), 405)
 		return
 	}
 
@@ -42,7 +43,8 @@ func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	// otherwise, let's make a subscription!
 	subscription, err := user.CreateSubscription(tag)
 	if err != nil {
-
+		sendSystemError(w, fmt.Errorf("couldn't create a subscription: %v", err))
+		return
 	}
 
 	SendResponse(w, true, 200)

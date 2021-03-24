@@ -13,7 +13,7 @@ import (
 // the user associated with the passed auth token can create a new post-tag
 func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to AddPostTagVote route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to AddPostTagVote route"), 405)
 		return
 	}
 
@@ -37,24 +37,24 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	postTag := &models.PostTag{}
-	// check if the PostTag is existed in database
+	// check if the PostTag exists
 	if err := postTag.FindByUK(post.ID, tag.ID); err != nil {
-		sendSystemError(w, fmt.Errorf("Query post-tag: %v", err))
+		sendSystemError(w, fmt.Errorf("query post-tag: %v", err))
 		return
 	}
-	// if the PostTag is not existed, return error
+	// if the PostTag doesn't exist, return an error
 	if postTag.ID == 0 {
-		sendSystemError(w, fmt.Errorf("PostTag is not existed"))
+		sendSystemError(w, fmt.Errorf("PostTag does not exist"))
 		return
 	}
 
 	// find the PostTagVote by post id, tag id, user id
 	postTagVote := &models.PostTagVote{}
 	if err := postTagVote.FindByUK(post.ID, tag.ID, user.ID); err != nil {
-		sendSystemError(w, fmt.Errorf("Query post-tag-vote: %v", err))
+		sendSystemError(w, fmt.Errorf("query post-tag-vote: %v", err))
 		return
 	}
-	// if there is existed vote rows, just return directly
+	// if there exists vote rows, return directly
 	if postTagVote.ID > 0 {
 		postTagVote.PostURL = post.URL
 		postTagVote.TagName = tag.Name
@@ -67,7 +67,7 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	// check if this is the first PostTagVote by user for the specific post
 	votes, err := postTagVote.GetVotesByPostUser(post.ID, user.ID)
 	if err != nil {
-		sendSystemError(w, fmt.Errorf("Query votes: %v", err))
+		sendSystemError(w, fmt.Errorf("query votes: %v", err))
 		return
 	}
 	needUpdatePost := true
@@ -86,23 +86,22 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	postTagVote.VoterID = user.ID
 	postTagVote.VoterName = user.Name
 
-	// do many database operations with transaction
 	if err = models.WithTransaction(func(tx models.Transaction) error {
 		// insert the PostTagVote to database
 		if err := postTagVote.CreatePostTagVoteWithTx(tx); err != nil {
-			return fmt.Errorf("Create PostTagVote: %v", err)
+			return fmt.Errorf("create PostTagVote: %v", err)
 		}
 
 		// increment the score for PostTag
 		if err := postTag.IncrementScoreWithTx(tx, post.ID, tag.ID); err != nil {
-			return fmt.Errorf("Increment PostTag's score: %v", err)
+			return fmt.Errorf("increment PostTag's score: %v", err)
 		}
 
 		// check if it needs to increment the score of post
 		if needUpdatePost {
 			// increment the score of Post
 			if err := post.IncrementScoreWithTx(tx, post.ID); err != nil {
-				return fmt.Errorf("Increment Post's score: %v", err)
+				return fmt.Errorf("increment Post's score: %v", err)
 			}
 		}
 

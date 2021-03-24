@@ -18,7 +18,7 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the registration route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to the registration route"), 405)
 		return
 	}
 
@@ -27,7 +27,7 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&payload)
 	// before we even check for the existance of the related items, let's verify this comment payload is even valid
 	if payload.Content == "" {
-		sendSystemError(w, errors.New("Can not send us an empty comment. `content` key is required"))
+		sendSystemError(w, errors.New("can not send us an empty comment. `content` key is required"))
 	}
 
 	// first, find the post we are commenting on
@@ -50,14 +50,14 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 
 	comment, err := u.CreateComment(post, &parentComment, payload.Content)
 	if err != nil {
-		sendSystemError(w, fmt.Errorf("Create comment: %v", err))
+		sendSystemError(w, fmt.Errorf("create comment: %v", err))
 		return
 	}
 
 	// if the parent comment is not nil, increment the descendentCommentCount
 	if parentComment.ID > 0 {
 		if err := parentComment.IncrementDescendentComment(parentComment.ID); err != nil {
-			sendSystemError(w, fmt.Errorf("Increment descendent comment: %v", err))
+			sendSystemError(w, fmt.Errorf("increment descendent comment: %v", err))
 			return
 		}
 	}

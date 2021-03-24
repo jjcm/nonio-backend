@@ -11,7 +11,7 @@ import (
 // Register saves a new user in the DB
 func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the registration route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to the registration route"), 405)
 		return
 	}
 
@@ -36,14 +36,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	err := u.FindByEmail(payload.Email)
 	if err == nil {
 		// err is nil, meaning there was not a problem looking up this user, so one was found
-		SendResponse(w, utils.MakeError("This email has already been registered"), 500)
+		SendResponse(w, utils.MakeError("this email has already been registered"), 500)
 		return
 	}
 	// let's check and see if the registered username is already taken
 	err = u.FindByUsername(payload.Username)
 	if err == nil {
 		// err is nil, meaning there was not a problem looking up this user, so one was found
-		SendResponse(w, utils.MakeError("This username has already been registered"), 500)
+		SendResponse(w, utils.MakeError("this username has already been registered"), 500)
 		return
 	}
 
@@ -51,14 +51,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	_, err = models.UserFactory(payload.Email, payload.Username, payload.Password, payload.SubscriptionAmount)
 	if err != nil {
 		// err is nil, meaning there was not a problem looking up this user, so one was found
-		SendResponse(w, utils.MakeError("Error registering user: "+err.Error()), 500)
+		SendResponse(w, utils.MakeError("error registering user: "+err.Error()), 500)
 		return
 	}
 
 	// send a token
 	token, err := utils.TokenCreator(payload.Email)
 	if err != nil {
-		SendResponse(w, utils.MakeError("There was an error signing your JWT token: "+err.Error()), 500)
+		SendResponse(w, utils.MakeError("there was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 

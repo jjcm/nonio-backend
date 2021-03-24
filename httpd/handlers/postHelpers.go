@@ -14,7 +14,7 @@ import (
 func CheckIfURLIsAvailable(w http.ResponseWriter, r *http.Request) {
 	requestedURL := utils.ParseRouteParameter(r.URL.Path, "/posts/url-is-available/")
 	if strings.TrimSpace(requestedURL) == "" {
-		sendSystemError(w, errors.New("Please pass a valid URL for us to get you your requested content"))
+		sendSystemError(w, errors.New("please pass a valid URL for us to get you your requested content"))
 		return
 	}
 

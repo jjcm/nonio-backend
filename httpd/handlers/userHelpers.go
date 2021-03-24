@@ -15,7 +15,7 @@ import (
 func CheckIfUsernameIsAvailable(w http.ResponseWriter, r *http.Request) {
 	requestedUsername := utils.ParseRouteParameter(r.URL.Path, "/users/username-is-available/")
 	if strings.TrimSpace(requestedUsername) == "" {
-		sendSystemError(w, errors.New("Please pass a valid username for us to get you your requested content"))
+		sendSystemError(w, errors.New("please pass a valid username for us to get you your requested content"))
 		return
 	}
 
@@ -31,7 +31,7 @@ func CheckIfUsernameIsAvailable(w http.ResponseWriter, r *http.Request) {
 // ChangePassword changes the password of the user as long as the checks on the new/old passwords go through
 func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the password change route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to the password change route"), 405)
 		return
 	}
 

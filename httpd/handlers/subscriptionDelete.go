@@ -12,7 +12,7 @@ import (
 // DeleteSubscription removes a sub for a tag
 func DeleteSubscription(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the delete subscription route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to the delete subscription route"), 405)
 		return
 	}
 
@@ -34,7 +34,7 @@ func DeleteSubscription(w http.ResponseWriter, r *http.Request) {
 
 	// check if the Subscription exists in the db
 	if err := user.DeleteSubscription(tag); err != nil {
-		sendSystemError(w, fmt.Errorf("Error deleting the subscription: %v", err))
+		sendSystemError(w, fmt.Errorf("error deleting the subscription: %v", err))
 		return
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -21,15 +20,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
 		if strings.TrimSpace(token) == "" || strings.TrimSpace(token) == "Bearer" {
-			if os.Getenv("ALON") == "true" {
-				// local test code <TODO it needs to remove this piece of code in production>
-				user := os.Getenv("USER")
-				id, _ := strconv.Atoi(user)
-				ctx := context.WithValue(context.Background(), "user_id", int(id))
-				next(w, r.WithContext(ctx))
-			} else {
-				handlers.SendResponse(w, "Authorization required", http.StatusUnauthorized)
-			}
+			handlers.SendResponse(w, "Authorization required", http.StatusUnauthorized)
 			return
 		}
 
@@ -41,7 +32,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		goodies, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 			// Don't forget to validate the alg is what you expect:
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 
 			// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
@@ -50,7 +41,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 
 		claims, ok := goodies.Claims.(jwt.MapClaims)
 		if !ok || !goodies.Valid || err != nil {
-			handlers.SendResponse(w, utils.MakeError("Error working with your token"), 500)
+			handlers.SendResponse(w, utils.MakeError("error working with your token"), 500)
 			return
 		}
 
@@ -60,7 +51,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		ts := time.Unix(i, 0)
 		now := time.Now()
 		if now.After(ts) {
-			handlers.SendResponse(w, utils.MakeError("Your token is expired"), http.StatusUnauthorized)
+			handlers.SendResponse(w, utils.MakeError("your token is expired"), http.StatusUnauthorized)
 			return
 		}
 		secondsRemaining := int(ts.Sub(now).Seconds())
@@ -69,7 +60,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		user := models.User{}
 		user.FindByEmail(claims["email"].(string))
 		if user.ID == 0 {
-			handlers.SendResponse(w, utils.MakeError("Your user is no longer valid"), http.StatusUnauthorized)
+			handlers.SendResponse(w, utils.MakeError("your user is no longer valid"), http.StatusUnauthorized)
 			return
 		}
 		ctx := context.WithValue(r.Context(), "user_email", user.Email)

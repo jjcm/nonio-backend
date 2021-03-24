@@ -14,25 +14,25 @@ func findUserPostTag(userID int, postURL string, tagName string) (*models.User, 
 	// query the user by user id
 	user := models.User{}
 	if err := user.FindByID(userID); err != nil {
-		return nil, nil, nil, fmt.Errorf("Query user: %v", err)
+		return nil, nil, nil, fmt.Errorf("query user: %v", err)
 	}
 
 	// query the post by post id
 	post := models.Post{}
 	if err := post.FindByURL(postURL); err != nil {
-		return nil, nil, nil, fmt.Errorf("Query post: %v", err)
+		return nil, nil, nil, fmt.Errorf("query post: %v", err)
 	}
 
 	// query the tag by tag id
 	tag := models.Tag{}
 	if err := tag.FindByTagName(tagName); err != nil {
-		return nil, nil, nil, fmt.Errorf("Query tag: %v", err)
+		return nil, nil, nil, fmt.Errorf("query tag: %v", err)
 	}
 	// if there is no rows about the tag name, insert a new one
 	if tag.ID == 0 {
 		tempTag, err := models.TagFactory(tagName, user)
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("Create tag: %v", err)
+			return nil, nil, nil, fmt.Errorf("create tag: %v", err)
 		}
 
 		tag = tempTag
@@ -45,7 +45,7 @@ func findUserPostTag(userID int, postURL string, tagName string) (*models.User, 
 // the user associated with the passed auth token can create a new post-tag
 func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("You can only POST to the CreatePostTag route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to the CreatePostTag route"), 405)
 		return
 	}
 
@@ -71,12 +71,12 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	postTag := &models.PostTag{}
 	// check if the PostTag is existed in database
 	if err := postTag.FindByUK(post.ID, tag.ID); err != nil {
-		sendSystemError(w, fmt.Errorf("Query PostTag: %v", err))
+		sendSystemError(w, fmt.Errorf("query PostTag: %v", err))
 		return
 	}
 	// if the PostTag is existed, return error
 	if postTag.PostID > 0 {
-		sendSystemError(w, fmt.Errorf("PostTag exists"))
+		sendSystemError(w, fmt.Errorf("postTag exists"))
 		return
 	}
 
@@ -84,7 +84,7 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	// check if this is the first PostTagVote by user for the specific post
 	votes, err := postTagVote.GetVotesByPostUser(post.ID, user.ID)
 	if err != nil {
-		sendSystemError(w, fmt.Errorf("Query votes: %v", err))
+		sendSystemError(w, fmt.Errorf("query votes: %v", err))
 		return
 	}
 	needUpdatePost := true
@@ -111,19 +111,19 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		postTag.PostID = post.ID
 		postTag.TagID = tag.ID
 		if err := postTag.CreatePostTagWithTx(tx); err != nil {
-			return fmt.Errorf("Create PostTag: %v", err)
+			return fmt.Errorf("create PostTag: %v", err)
 		}
 
 		// insert the PostTagVote to database
 		if err := postTagVote.CreatePostTagVoteWithTx(tx); err != nil {
-			return fmt.Errorf("Create PostTagVote: %v", err)
+			return fmt.Errorf("create PostTagVote: %v", err)
 		}
 
 		// check if it needs to increment the score of post
 		if needUpdatePost {
 			// increment the score of Post
 			if err := post.IncrementScoreWithTx(tx, post.ID); err != nil {
-				return fmt.Errorf("Increment Post's score: %v", err)
+				return fmt.Errorf("increment Post's score: %v", err)
 			}
 		}
 

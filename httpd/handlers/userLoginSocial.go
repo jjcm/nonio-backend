@@ -66,7 +66,7 @@ func LoginSocialCallback(w http.ResponseWriter, r *http.Request) {
 	// they won't have a real password if they log in this way.
 	token, err := utils.TokenCreator(user.Email)
 	if err != nil {
-		SendResponse(w, utils.MakeError("There was an error signing your JWT token: "+err.Error()), 500)
+		SendResponse(w, utils.MakeError("there was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 

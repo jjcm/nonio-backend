@@ -17,7 +17,7 @@ import (
 func GetPostByURL(w http.ResponseWriter, r *http.Request) {
 	url := utils.ParseRouteParameter(r.URL.Path, "/posts/")
 	if strings.TrimSpace(url) == "" {
-		sendSystemError(w, errors.New("Please pass a valid URL for us to get you your requested content"))
+		sendSystemError(w, errors.New("please pass a valid URL for us to get you your requested content"))
 		return
 	}
 
@@ -58,7 +58,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	if formOffset != "" {
 		offset, err := strconv.Atoi(formOffset)
 		if err != nil {
-			sendSystemError(w, fmt.Errorf("String to int: %v", err))
+			sendSystemError(w, fmt.Errorf("string to int: %v", err))
 			return
 		}
 		params.Offset = offset
@@ -88,7 +88,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		t := &models.Tag{}
 		err := t.FindByTagName(tag)
 		if err != nil {
-			sendSystemError(w, fmt.Errorf("Query posts by tag %s: %v", tag, err))
+			sendSystemError(w, fmt.Errorf("query posts by tag %s: %v", tag, err))
 			return
 		}
 		params.TagID = t.ID
@@ -104,7 +104,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		// query the user by user id
 		user := &models.User{}
 		if err := user.FindByID(userID); err != nil {
-			sendSystemError(w, fmt.Errorf("Query user: %v", err))
+			sendSystemError(w, fmt.Errorf("query user: %v", err))
 			return
 		}
 
@@ -127,11 +127,11 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		author := models.User{}
 		// query the user by user name
 		if err := author.FindByUsername(formUser); err != nil {
-			sendSystemError(w, fmt.Errorf("Query user by name %s: %v", formUser, err))
+			sendSystemError(w, fmt.Errorf("query user by name %s: %v", formUser, err))
 			return
 		}
 		if author.ID == 0 {
-			sendNotFound(w, errors.New("User's name: "+formUser))
+			sendNotFound(w, errors.New("user's name: "+formUser))
 			return
 		}
 		params.UserID = author.ID
@@ -140,13 +140,13 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	// query the posts by the url parameters
 	posts, err := models.GetPostsByParams(params)
 	if err != nil {
-		sendSystemError(w, fmt.Errorf("Query posts by parameters: %v", err))
+		sendSystemError(w, fmt.Errorf("query posts by parameters: %v", err))
 		return
 	}
 
 	// fill the tags for the posts
 	if err := fillPostTags(posts); err != nil {
-		sendSystemError(w, fmt.Errorf("Query tags by posts: %v", err))
+		sendSystemError(w, fmt.Errorf("query tags by posts: %v", err))
 		return
 	}
 
@@ -154,5 +154,4 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		"posts": posts,
 	}
 	SendResponse(w, output, 200)
-	return
 }
