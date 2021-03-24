@@ -65,6 +65,9 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		// VOTES ROUTES
 		"/votes": handlers.GetVotes,
+
+		// COMMENT VOTES ROUTES
+		"/comment-votes/post/": handlers.GetCommentVotesForPost,
 	}
 
 	return routes
