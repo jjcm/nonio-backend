@@ -14,7 +14,7 @@ type CommentVote struct {
 	Voter     *User     `db:"-" json:"-"`
 	VoterName string    `db:"-" json:"-"`
 	VoterID   int       `db:"voter_id" json:"-"`
-	Upvote    bool      `db:"upvote" json:"-"`
+	Upvote    bool      `db:"upvote" json:"upvote"`
 	Post      *Post     `db:"-" json:"-"`
 	PostID    int       `db:"post_id" json:"-"`
 	PostURL   string    `db:"-" json:"-"`
