@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
@@ -57,6 +58,11 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
+
+	if strings.ContainsAny(payload.TagName, " ") {
+		sendSystemError(w, fmt.Errorf("PostTag cannot contain spaces"))
+		return
+	}
 
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)

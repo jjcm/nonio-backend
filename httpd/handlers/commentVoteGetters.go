@@ -11,6 +11,7 @@ import (
 
 // GetCommentVotesForPost - gets a user's votes for a post.
 func GetCommentVotesForPost(w http.ResponseWriter, r *http.Request) {
+	Log.Info("getting comment votes")
 	url := utils.ParseRouteParameter(r.URL.Path, "/comment-votes/post/")
 	if strings.TrimSpace(url) == "" {
 		sendSystemError(w, errors.New("a post url is needed to get the comment votes for it"))
