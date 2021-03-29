@@ -34,6 +34,17 @@ func TestWeCantCreateAPostWithAnInvalidURL(t *testing.T) {
 	}
 }
 
+func TestWeCantCreateAPostWithAnInvalidTitle(t *testing.T) {
+	setupTestingDB()
+
+	// create an author for post
+	author, _ := UserFactory("example@example.com", "", "password", 0)
+	_, err := author.CreatePost("", "post", "lorem ipsum", "image", 0, 0)
+	if err == nil {
+		t.Errorf("Posts should not be able to be made with no title")
+	}
+}
+
 func TestWeCanIncrementScoreForPost(t *testing.T) {
 	setupTestingDB()
 

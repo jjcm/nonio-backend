@@ -94,6 +94,14 @@ func (u *User) CreatePost(title, url, content, postType string, width int, heigh
 	p := Post{}
 	now := time.Now().Format("2006-01-02 15:04:05")
 
+	if len(title) == 0 {
+		return p, fmt.Errorf("post must contain a title")
+	}
+
+	if len(url) == 0 {
+		return p, fmt.Errorf("post must contain a url")
+	}
+
 	postURL := url
 	// TODO: this needs some backend verification that it's only /^[0-9A-Za-z-_]+$/
 
