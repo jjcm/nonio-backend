@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
+
+	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -30,4 +33,20 @@ func GetFinancials(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendResponse(w, &financialData, 200)
+}
+
+// GetUser gets details for a specific user
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	username := strings.ToLower(utils.ParseRouteParameter(r.URL.Path, "/users/"))
+	// get the user from context
+	user := models.User{}
+	user.FindByUsername(username)
+
+	info, err := user.GetInfo()
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
+	SendResponse(w, &info, 200)
 }

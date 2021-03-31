@@ -18,6 +18,7 @@ type User struct {
 	Username           string    `db:"username" json:"username"`
 	Name               string    `db:"name" json:"name"`
 	Password           string    `db:"password" json:"password"`
+	Description        string    `db:"description" json:"description"`
 	SubscriptionAmount float64   `db:"subscription_amount" json:"subscriptionAmount"`
 	Cash               float64   `db:"cash" json:"cash"`
 	LastLogin          time.Time `db:"last_login" json:"-"`
@@ -119,14 +120,14 @@ func (u *User) GetAll() ([]User, error) {
 	return users, nil
 }
 
-type FinancialData struct {
+type UserFinancialData struct {
 	SubscriptionAmount float64 `db:"subscription_amount" json:"subscription_amount"`
 	Cash               float64 `db:"cash" json:"cash"`
 }
 
 // GetFinancialData will return the user's tag subscriptions
-func (u *User) GetFinancialData() (FinancialData, error) {
-	financialData := FinancialData{}
+func (u *User) GetFinancialData() (UserFinancialData, error) {
+	financialData := UserFinancialData{}
 
 	// run the correct sql query
 	var query = "SELECT cash, subscription_amount FROM users WHERE id = ?"
@@ -136,6 +137,52 @@ func (u *User) GetFinancialData() (FinancialData, error) {
 	}
 
 	return financialData, nil
+}
+
+type UserInfo struct {
+	Description  string `db:"description" json:"description"`
+	Posts        int    `db:"-" json:"posts"`
+	Karma        int    `db:"-" json:"karma"`
+	Comments     int    `db:"-" json:"comments"`
+	CommentKarma int    `db:"-" json:"comment_karma"`
+}
+
+// GetFinancialData will return the user's tag subscriptions
+func (u *User) GetInfo() (UserInfo, error) {
+	userInfo := UserInfo{}
+
+	// get our description first
+	var query = "SELECT description FROM users WHERE id = ?"
+	err := DBConn.Get(&userInfo, query, u.ID)
+	if err != nil {
+		return userInfo, err
+	}
+
+	// get the number of posts for the user
+	err = DBConn.Get(&userInfo.Posts, "SELECT COUNT(*) FROM posts WHERE user_id = ?", u.ID)
+	if err != nil {
+		return userInfo, err
+	}
+
+	// get the karma for the user
+	err = DBConn.Get(&userInfo.Karma, "SELECT SUM(score) FROM posts WHERE user_id = ?", u.ID)
+	if err != nil {
+		return userInfo, err
+	}
+
+	// get the number of comments for the user
+	err = DBConn.Get(&userInfo.Comments, "SELECT COUNT(*) FROM comments WHERE author_id = ?", u.ID)
+	if err != nil {
+		return userInfo, err
+	}
+
+	// get the karma for the user
+	err = DBConn.Get(&userInfo.CommentKarma, "SELECT SUM(upvotes - downvotes) FROM comments WHERE author_id = ?", u.ID)
+	if err != nil {
+		return userInfo, err
+	}
+
+	return userInfo, err
 }
 
 /************************************************/
