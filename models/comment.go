@@ -14,6 +14,7 @@ type Comment struct {
 	Post                   Post          `db:"-" json:"-"`
 	PostID                 int           `db:"post_id" json:"-"`
 	PostURL                string        `db:"-" json:"post"`
+	PostTitle              string        `db:"-" json:"post_title"`
 	CreatedAt              time.Time     `db:"created_at" json:"date"`
 	Content                string        `db:"content" json:"content"`
 	ParentID               int           `db:"parent_id" json:"-"`
@@ -47,6 +48,7 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 		ID                     int    `json:"id"`
 		Date                   int64  `json:"date"`
 		Post                   string `json:"post"`
+		PostTitle              string `json:"post_title"`
 		Content                string `json:"content"`
 		User                   string `json:"user"`
 		Upvotes                int    `json:"upvotes"`
@@ -58,6 +60,7 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 		ID:                     c.ID,
 		Date:                   c.CreatedAt.UnixNano() / int64(time.Millisecond),
 		Post:                   c.Post.URL,
+		PostTitle:              c.Post.Title,
 		Content:                c.Content,
 		User:                   c.Author.GetDisplayName(),
 		Upvotes:                c.Upvotes,
@@ -122,6 +125,17 @@ func GetCommentsByPost(id int) ([]*Comment, error) {
 	comments := []*Comment{}
 
 	if err := DBConn.Select(&comments, "SELECT * FROM comments where post_id = ? order by lineage_score desc limit 100", id); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
+}
+
+// GetCommentsByUser returns the comments for one post order by lineage score
+func (u *User) GetComments() ([]*Comment, error) {
+	comments := []*Comment{}
+
+	if err := DBConn.Select(&comments, "SELECT * FROM comments where author_id = ? order by lineage_score desc limit 100", u.ID); err != nil {
 		return nil, err
 	}
 
