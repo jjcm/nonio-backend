@@ -179,10 +179,15 @@ func (u *User) GetInfo() (UserInfo, error) {
 	// get the karma for the user
 	err = DBConn.Get(&userInfo.CommentKarma, "SELECT SUM(upvotes - downvotes) FROM comments WHERE author_id = ?", u.ID)
 	if err != nil {
-		return userInfo, err
+		if err.Error() == "sql: Scan error on column index 0, name \"SUM(upvotes - downvotes)\": converting NULL to int is unsupported" {
+			// they don't yet have any comments, so their comment karma should just be 0
+			userInfo.CommentKarma = 0
+		} else {
+			return userInfo, err
+		}
 	}
 
-	return userInfo, err
+	return userInfo, nil
 }
 
 /************************************************/
@@ -217,6 +222,13 @@ func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPas
 	// If the checks look good, change the password
 	u.Password = hashedPassword
 	err = u.update()
+
+	return err
+}
+
+// UpdateDescription updates the description for the user
+func (u *User) UpdateDescription(description string) error {
+	_, err := DBConn.Exec("UPDATE users SET description = ? WHERE id = ?", description, u.ID)
 
 	return err
 }
