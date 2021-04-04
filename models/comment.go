@@ -172,38 +172,6 @@ func GetCommentsByParams(params *CommentQueryParams) ([]*Comment, error) {
 	return comments, nil
 }
 
-// GetCommentsByPost returns the comments for one post order by lineage score
-func GetCommentsByPost(id int) ([]*Comment, error) {
-	comments := []*Comment{}
-
-	if err := DBConn.Select(&comments, "SELECT * FROM comments where post_id = ? order by lineage_score desc limit 100", id); err != nil {
-		return nil, err
-	}
-
-	return comments, nil
-}
-
-// GetCommentsByUser returns the comments for one post order by lineage score
-func (u *User) GetComments() ([]*Comment, error) {
-	comments := []*Comment{}
-
-	if err := DBConn.Select(&comments, "SELECT * FROM comments where author_id = ? order by lineage_score desc limit 100", u.ID); err != nil {
-		return nil, err
-	}
-
-	return comments, nil
-}
-
-// GetComments will return comments associated with the current post
-func (p *Post) GetComments(depthLimit int) ([]Comment, error) {
-	var err error
-	var comments []Comment
-
-	// this is a temporary work around to let front end dev get back at it...
-	err = DBConn.Select(&comments, "SELECT * FROM comments WHERE post_id = ?", p.ID)
-	return comments, err
-}
-
 /************************************************/
 /******************** UPDATE ********************/
 /************************************************/

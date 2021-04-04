@@ -23,10 +23,6 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/users/":                      handlers.GetUser,
 
 		"/comments": handlers.GetComments,
-		//"/comments/post/": handlers.GetCommentsForPost,
-		//"/comments/user/": handlers.GetCommentsForUser,
-		// TODO "/comments/user/":               handlers.GetCommentsForUser,
-		// TODO "/comments/comment/":            handlers.GetCommentsForComment,
 	}
 
 	return routes
