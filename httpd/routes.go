@@ -15,15 +15,16 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/login-social":          handlers.LoginSocial,
 		"/login-social/callback": handlers.LoginSocialCallback,
 		"/info":                  handlers.Info,
-		"/posts/":                handlers.GetPostByURL,
 
+		"/posts/":                 handlers.GetPostByURL,
 		"/post/url-is-available/": handlers.CheckIfURLIsAvailable,
 
 		"/user/username-is-available/": handlers.CheckIfUsernameIsAvailable,
 		"/users/":                      handlers.GetUser,
 
-		"/comments/post/": handlers.GetCommentsForPost,
-		"/comments/user/": handlers.GetCommentsForUser,
+		"/comments": handlers.GetComments,
+		//"/comments/post/": handlers.GetCommentsForPost,
+		//"/comments/user/": handlers.GetCommentsForUser,
 		// TODO "/comments/user/":               handlers.GetCommentsForUser,
 		// TODO "/comments/comment/":            handlers.GetCommentsForComment,
 	}

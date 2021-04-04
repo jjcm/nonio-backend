@@ -82,3 +82,62 @@ func TestWeCanAbandonComments(t *testing.T) {
 	}
 
 }
+
+func TestWeCanGetCommentsByParams(t *testing.T) {
+	setupTestingDB()
+
+	bill, _ := UserFactory("bill@example.com", "bill", "password", 0)
+	joe, _ := UserFactory("joe@example.com", "joe", "password", 0)
+
+	post1, _ := bill.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post2, _ := bill.CreatePost("Post Title", "post-title-2", "lorem ipsum", "image", 0, 0)
+
+	// create comments on the first post
+	comment1, _ := joe.CreateComment(post1, nil, "This is a dumb post")
+	bill.CreateComment(post1, &comment1, "This is a reply")
+
+	// create comment on the second post
+	joe.CreateComment(post2, nil, "This is even worse")
+
+	commentQueryParams := CommentQueryParams{}
+	var params *CommentQueryParams = &commentQueryParams
+
+	// try getting all comments
+	comments, err := GetCommentsByParams(params)
+	if err != nil {
+		t.Errorf("We should have been able to get comments. Error recieved: %s", err)
+	}
+	if len(comments) != 3 {
+		t.Errorf("Should have found three comments. Instead recieved: %v", len(comments))
+	}
+
+	// try getting all of Joe's comments
+	params.UserID = joe.ID
+	comments, err = GetCommentsByParams(params)
+	if err != nil {
+		t.Errorf("We should have been able to get comments. Error recieved: %s", err)
+	}
+	if len(comments) != 2 {
+		t.Errorf("Should have found two comments from Joe. Instead recieved: %v", len(comments))
+	}
+
+	// try getting all of Joe's comments, but only for the first post
+	params.PostID = post1.ID
+	comments, err = GetCommentsByParams(params)
+	if err != nil {
+		t.Errorf("We should have been able to get comments. Error recieved: %s", err)
+	}
+	if len(comments) != 1 {
+		t.Errorf("Should have found one comment from Joe. Instead recieved: %v", len(comments))
+	}
+
+	// try getting all of post 1's comments
+	params.UserID = 0
+	comments, err = GetCommentsByParams(params)
+	if err != nil {
+		t.Errorf("We should have been able to get comments. Error recieved: %s", err)
+	}
+	if len(comments) != 2 {
+		t.Errorf("Should have found two comments. Instead recieved: %v", len(comments))
+	}
+}

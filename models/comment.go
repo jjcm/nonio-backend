@@ -27,6 +27,14 @@ type Comment struct {
 	DescendentCommentCount int           `db:"descendent_comment_count" json:"descendent_comment_count"`
 }
 
+type CommentQueryParams struct {
+	UserID int
+	PostID int
+	Offset int
+	Sort   string
+	Since  string
+}
+
 // MarshalJSON custom JSON builder for Comment structs
 func (c *Comment) MarshalJSON() ([]byte, error) {
 	// populate user if it currently isn't hydrated
@@ -118,6 +126,50 @@ func (c *Comment) FindByID(id int) error {
 
 	*c = dbComment
 	return nil
+}
+
+// GetCommentsByParams - get the posts by parameters
+func GetCommentsByParams(params *CommentQueryParams) ([]*Comment, error) {
+	args := []interface{}{}
+
+	query := "select * from comments where true"
+	if params.Since != "" {
+		query = query + " and created_at > ?"
+		// time range
+		args = append(args, params.Since)
+	}
+
+	// user
+	if params.UserID > 0 {
+		query = query + " and author_id = ?"
+		args = append(args, params.UserID)
+	}
+
+	// post
+	if params.PostID > 0 {
+		query = query + " and post_id = ?"
+		args = append(args, params.PostID)
+	}
+
+	// orders
+	if params.Sort == "popular" || params.Sort == "top" {
+		query = query + " order by (upvotes - downvotes) desc"
+	}
+	if params.Sort == "new" {
+		query = query + " order by created_at desc"
+	}
+
+	// offset
+	query = query + " limit 100 offset ?"
+	args = append(args, params.Offset)
+
+	comments := []*Comment{}
+	// exec the query string
+	if err := DBConn.Select(&comments, query, args...); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
 }
 
 // GetCommentsByPost returns the comments for one post order by lineage score
