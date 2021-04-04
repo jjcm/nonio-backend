@@ -63,6 +63,7 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 			handlers.SendResponse(w, utils.MakeError("your user is no longer valid"), http.StatusUnauthorized)
 			return
 		}
+		Log.Info(fmt.Sprintf("%v is accessing %v", user.Username, r.RequestURI))
 		ctx := context.WithValue(r.Context(), "user_email", user.Email)
 		ctx = context.WithValue(ctx, "user_id", user.ID)
 		ctx = context.WithValue(ctx, "user_username", user.Username)

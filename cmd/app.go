@@ -18,7 +18,7 @@ func runApp(c *cli.Context) error {
 		http.HandleFunc(path, middleware.OpenCors(handler))
 	}
 	for path, handler := range httpd.ProtectedRoutes() {
-		http.HandleFunc(path, middleware.OpenCors(middleware.CheckToken(handler)))
+		http.HandleFunc(path, middleware.ClosedCors(middleware.CheckToken(handler)))
 	}
 
 	schedule := gocron.NewScheduler(time.UTC)
