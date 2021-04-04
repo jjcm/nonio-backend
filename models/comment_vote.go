@@ -21,6 +21,11 @@ type CommentVote struct {
 	CreatedAt time.Time `db:"created_at" json:"-"`
 }
 
+type CommentVoteQueryParams struct {
+	UserID int
+	PostID int
+}
+
 /************************************************/
 /******************** CREATE ********************/
 /************************************************/
@@ -114,6 +119,36 @@ func (u *User) GetCommentVotesForPost(postID int) ([]CommentVote, error) {
 	}
 
 	return votes, nil
+}
+
+// GetCommentVotesByParams - get the comment votes by parameters
+func GetCommentVotesByParams(user *User, params *CommentVoteQueryParams) ([]*CommentVote, error) {
+	args := []interface{}{}
+
+	var query string
+	args = append(args, user.ID)
+
+	// user
+	if params.UserID > 0 {
+		query = "select comment_id, upvote from comment_votes INNER JOIN comments ON comment_votes.comment_id = comments.id where voter_id = ? and author_id = ?"
+		args = append(args, params.UserID)
+	} else {
+		query = "select comment_id, upvote from comment_votes where voter_id = ?"
+	}
+
+	// post
+	if params.PostID > 0 {
+		query = query + " and comment_votes.post_id = ?"
+		args = append(args, params.PostID)
+	}
+
+	commentVotes := []*CommentVote{}
+	// exec the query string
+	if err := DBConn.Select(&commentVotes, query, args...); err != nil {
+		return nil, err
+	}
+
+	return commentVotes, nil
 }
 
 /************************************************/

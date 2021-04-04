@@ -64,6 +64,11 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.ContainsAny(payload.TagName, "#") {
+		sendSystemError(w, fmt.Errorf("PostTag cannot contain hashes"))
+		return
+	}
+
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)
 

@@ -230,3 +230,70 @@ func TestWeCanDeleteVotes(t *testing.T) {
 		t.Errorf("Expected comment to have 0 upvotes. Got %v instead.", comment1.Upvotes)
 	}
 }
+
+func TestWeCanGetCommentVotesByParams(t *testing.T) {
+	setupTestingDB()
+
+	bob, _ := UserFactory("bob@example.com", "bob", "password", 0)
+	ralph, _ := UserFactory("ralph@example.com", "ralph", "password", 0)
+	joe, _ := UserFactory("joe@example.com", "joe", "password", 0)
+
+	bobsPost, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	ralphsPost, _ := ralph.CreatePost("Post Title", "post-title-2", "lorem ipsum", "image", 0, 0)
+
+	comment1, _ := ralph.CreateComment(bobsPost, nil, "Test comment from user 2 on user 1's post")
+	comment2, _ := ralph.CreateComment(bobsPost, &comment1, "Test comment replying to comment 1")
+	comment3, _ := joe.CreateComment(bobsPost, &comment2, "Test comment replying to comment 2")
+	comment4, _ := joe.CreateComment(ralphsPost, nil, "Test comment")
+
+	if err := bob.CreateCommentVote(comment1.ID, true); err != nil {
+		t.Errorf("Error creating vote")
+	}
+	if err := bob.CreateCommentVote(comment2.ID, false); err != nil {
+		t.Errorf("Error creating vote")
+	}
+	if err := bob.CreateCommentVote(comment3.ID, true); err != nil {
+		t.Errorf("Error creating vote")
+	}
+	if err := bob.CreateCommentVote(comment4.ID, false); err != nil {
+		t.Errorf("Error creating vote")
+	}
+
+	commentVoteQueryParams := CommentVoteQueryParams{}
+	var params *CommentVoteQueryParams = &commentVoteQueryParams
+
+	commentVotes, err := GetCommentVotesByParams(&bob, params)
+	if err != nil {
+		t.Errorf("We should have been able to get comment votes. Error recieved: %s", err)
+	}
+	if len(commentVotes) != 4 {
+		t.Errorf("Should have found four votes from Bob. Instead recieved: %v", len(commentVotes))
+	}
+
+	params.UserID = joe.ID
+	commentVotes, err = GetCommentVotesByParams(&bob, params)
+	if err != nil {
+		t.Errorf("We should have been able to get comment votes. Error recieved: %s", err)
+	}
+	if len(commentVotes) != 2 {
+		t.Errorf("Should have found two votes from Bob on Joe's comments. Instead recieved: %v", len(commentVotes))
+	}
+
+	params.PostID = bobsPost.ID
+	commentVotes, err = GetCommentVotesByParams(&bob, params)
+	if err != nil {
+		t.Errorf("We should have been able to get comment votes. Error recieved: %s", err)
+	}
+	if len(commentVotes) != 1 {
+		t.Errorf("Should have found one vote from Bob on Joe's comments on Bob's post. Instead recieved: %v", len(commentVotes))
+	}
+
+	params.UserID = 0
+	commentVotes, err = GetCommentVotesByParams(&bob, params)
+	if err != nil {
+		t.Errorf("We should have been able to get comment votes. Error recieved: %s", err)
+	}
+	if len(commentVotes) != 3 {
+		t.Errorf("Should have found three votes from Bob on Bob's post. Instead recieved: %v", len(commentVotes))
+	}
+}
