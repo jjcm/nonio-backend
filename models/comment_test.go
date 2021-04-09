@@ -38,6 +38,60 @@ func TestWeCanDeleteComments(t *testing.T) {
 	}
 }
 
+func TestWeCanEditComments(t *testing.T) {
+	setupTestingDB()
+
+	author, _ := UserFactory("example@example.com", "", "password", 0)
+
+	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+
+	// create comment
+	comment, _ := author.CreateComment(post, nil, "This is a dumb post")
+	comment.Content = "This is an excellent post!"
+	err := author.EditComment(&comment)
+	if err != nil {
+		t.Errorf("We should have been able to edit a comment. Error recieved: %s", err)
+	}
+
+	// update the comment and see if it has been updated in the DB
+	comment.FindByID(comment.ID)
+	if comment.Content != "This is an excellent post!" {
+		t.Errorf("Expected 'This is an excellent post!' for comment content, got %v instead", comment.Content)
+	}
+	if comment.Edited {
+		t.Errorf("Comment should not have an edit flag, as the edit happened within the 5 minute grace period")
+	}
+
+	// Add a reply to the comment, then see if the edited flag gets triggered.
+	author.CreateComment(post, &comment, "This is a dumb comment")
+
+	comment.Content = "This is an edit to a parent comment."
+	err = author.EditComment(&comment)
+	if err != nil {
+		t.Errorf("We should have been able to edit a comment. Error recieved: %s", err)
+	}
+
+	// update the comment and see if it has an edited flag
+	comment.FindByID(comment.ID)
+	if !comment.Edited {
+		t.Errorf("Comment should have an edit flag as it has a reply. Edited however was set to false.")
+	}
+
+	/* This is disabled by default as it takes 6 minutes to run
+	// Check if the comment has an edit flag if it has been edited after the 5 minute grace period
+	time.Sleep(6 * time.Minute)
+	var comment2 Comment
+	comment2.FindByID(2)
+	comment2.Content = "Slow comment update"
+	author.EditComment(&comment2)
+	comment2.FindByID(2)
+	if !comment.Edited {
+		t.Errorf("Comment should have an edit flag as it has been longer than 5 minutes. Edited however was set to false.")
+	}
+	*/
+
+}
+
 func TestWeCanAbandonComments(t *testing.T) {
 	setupTestingDB()
 

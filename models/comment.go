@@ -17,6 +17,7 @@ type Comment struct {
 	PostTitle              string        `db:"-" json:"post_title"`
 	CreatedAt              time.Time     `db:"created_at" json:"date"`
 	Content                string        `db:"content" json:"content"`
+	Edited                 bool          `db:"edited" json:"edited"`
 	ParentID               int           `db:"parent_id" json:"-"`
 	User                   string        `db:"-" json:"user"`
 	Author                 User          `db:"-" json:"-"`
@@ -176,6 +177,38 @@ func GetCommentsByParams(params *CommentQueryParams) ([]*Comment, error) {
 /******************** UPDATE ********************/
 /************************************************/
 
+// EditComment edits the content of the comment, and flags it as edited.
+func (u *User) EditComment(comment *Comment) error {
+	if u.ID == 0 || comment.ID == 0 {
+		return errors.New("can't edit a comment for an invalid user or comment")
+	}
+
+	// double check we actually own this comment
+	var dbComment Comment
+	dbComment.FindByID(comment.ID)
+	if int(dbComment.AuthorID.Int32) != u.ID {
+		return errors.New("can't edit a comment that you don't own")
+	}
+
+	edited := false
+	var replies int
+	// if the comment has replies, or it if was made more than five mintues ago, set edited to be true
+	DBConn.Get(&replies, "SELECT COUNT(*) FROM comments WHERE parent_id = ?", comment.ID)
+	if replies > 0 {
+		edited = true
+	}
+	if time.Now().Add(time.Minute * -5).After(comment.CreatedAt) {
+		edited = true
+	}
+
+	_, err := DBConn.Exec("UPDATE comments SET content = ?, edited = ? WHERE id = ?", comment.Content, edited, comment.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // AddUpvoteWithTx increases the upvotes, and also increases the lineage score of the comment
 func (c *Comment) AddUpvoteWithTx(tx Transaction) error {
 	if _, err := tx.Exec("update comments set upvotes=upvotes+1 where id = ?", c.ID); err != nil {
@@ -286,37 +319,6 @@ func (c *Comment) DecrementLineageScoreWithTx(tx Transaction) error {
 func (c *Comment) IncrementDescendentComment(id int) error {
 	_, err := DBConn.Exec("update comments set descendent_comment_count=descendent_comment_count+1 where id = ?", id)
 	return err
-}
-
-// EditComment edits the content of the comment, and flags it as edited.
-func (u *User) EditComment(comment *Comment) error {
-	if u.ID == 0 || comment.ID == 0 {
-		return errors.New("can't edit a comment for an invalid user or comment")
-	}
-
-	// double check we actually own this comment
-	var authorID int
-	DBConn.Get(authorID, "SELECT author_id FROM comments WHERE id = ?", comment.ID)
-	if authorID != u.ID {
-		return errors.New("can't edit a comment that you don't own")
-	}
-
-	edited := false
-	var replies int
-	DBConn.Get(&replies, "SELECT COUNT(*) FROM comments WHERE parent_id = ?", comment.ID)
-	if replies > 0 {
-		edited = true
-	}
-	if time.Now().Add(time.Minute * 5).After(comment.CreatedAt) {
-		edited = true
-	}
-
-	_, err := DBConn.Exec("UPDATE comments SET content = ? and edited = ? WHERE id = ?", comment.Content, edited, comment.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 /************************************************/
