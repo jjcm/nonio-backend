@@ -39,4 +39,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendResponse(w, &newPost, 200)
+
+	// Nuke the cache
+	PostCache = make(map[string]PostQueryResponse)
 }

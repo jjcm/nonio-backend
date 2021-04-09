@@ -288,6 +288,37 @@ func (c *Comment) IncrementDescendentComment(id int) error {
 	return err
 }
 
+// EditComment edits the content of the comment, and flags it as edited.
+func (u *User) EditComment(comment *Comment) error {
+	if u.ID == 0 || comment.ID == 0 {
+		return errors.New("can't edit a comment for an invalid user or comment")
+	}
+
+	// double check we actually own this comment
+	var authorID int
+	DBConn.Get(authorID, "SELECT author_id FROM comments WHERE id = ?", comment.ID)
+	if authorID != u.ID {
+		return errors.New("can't edit a comment that you don't own")
+	}
+
+	edited := false
+	var replies int
+	DBConn.Get(&replies, "SELECT COUNT(*) FROM comments WHERE parent_id = ?", comment.ID)
+	if replies > 0 {
+		edited = true
+	}
+	if time.Now().Add(time.Minute * 5).After(comment.CreatedAt) {
+		edited = true
+	}
+
+	_, err := DBConn.Exec("UPDATE comments SET content = ? and edited = ? WHERE id = ?", comment.Content, edited, comment.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 /************************************************/
 /******************** DELETE ********************/
 /************************************************/

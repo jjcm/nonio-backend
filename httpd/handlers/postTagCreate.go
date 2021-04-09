@@ -145,4 +145,7 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendResponse(w, postTagVote, 200)
+
+	// Nuke the cache
+	PostCache = make(map[string]PostQueryResponse)
 }

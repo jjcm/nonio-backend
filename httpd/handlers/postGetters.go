@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,6 +12,13 @@ import (
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
+
+type PostQueryResponse struct {
+	Response  []byte
+	CreatedAt time.Time
+}
+
+var PostCache map[string]PostQueryResponse = make(map[string]PostQueryResponse)
 
 // GetPostByURL find a specific post in the database and send back a JSON
 // representation of it
@@ -47,6 +55,18 @@ func fillPostTags(posts []*models.Post) error {
 
 // GetPosts - get the posts from database with different url parameters
 func GetPosts(w http.ResponseWriter, r *http.Request) {
+
+	// check our cache first
+	var cacheResponse PostQueryResponse
+	// Use if we ever want to invalidate the cache after a period of time.
+	//if cacheResponse, ok := PostCache[r.URL.String()]; ok && time.Now().Add(time.Minute*-1).Before(cacheResponse.CreatedAt) {
+	if cacheResponse, ok := PostCache[r.URL.String()]; ok {
+		Log.Info("cache hit")
+		Log.Info(r.URL)
+		SendJSONResponse(w, cacheResponse.Response, 200)
+		return
+	}
+
 	Log.Info(r.URL)
 	params := &models.PostQueryParams{}
 	// parse the url parameters
@@ -156,5 +176,16 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	output := map[string]interface{}{
 		"posts": posts,
 	}
-	SendResponse(w, output, 200)
+
+	jsonData, err := json.Marshal(output)
+	if err != nil {
+		SendResponse(w, err.Error(), 500)
+		return
+	}
+	SendJSONResponse(w, jsonData, 200)
+
+	// Add the query to our cache
+	cacheResponse.Response = jsonData
+	cacheResponse.CreatedAt = time.Now()
+	PostCache[r.URL.String()] = cacheResponse
 }
