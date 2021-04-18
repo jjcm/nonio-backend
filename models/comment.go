@@ -65,6 +65,7 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 		Parent                 int    `json:"parent"`
 		LineageScore           int    `json:"lineage_score"`
 		DescendentCommentCount int    `json:"descendent_comment_count"`
+		Edited                 bool   `json:"edited"`
 	}{
 		ID:                     c.ID,
 		Date:                   c.CreatedAt.UnixNano() / int64(time.Millisecond),
@@ -77,6 +78,7 @@ func (c *Comment) MarshalJSON() ([]byte, error) {
 		Parent:                 c.ParentID,
 		LineageScore:           c.LineageScore,
 		DescendentCommentCount: c.DescendentCommentCount,
+		Edited:                 c.Edited,
 	})
 }
 
