@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	bs "soci-backend/bootstrap"
 	"soci-backend/httpd/handlers"
 	"soci-backend/httpd/middleware"
@@ -29,6 +30,9 @@ func bootstrap() {
 	handlers.DBConn = sociConfig.DBConn
 	handlers.Log = sociConfig.Logger
 	utils.HmacSampleSecret = sociConfig.HMACKey
+	utils.AdminEmail = sociConfig.AdminEmail
+	utils.AdminEmailPassword = sociConfig.AdminEmailPassword
+	fmt.Println(sociConfig.AdminEmail)
 
 	// let's now hydrate a few things in the middleware package
 	middleware.Log = sociConfig.Logger
