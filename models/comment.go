@@ -100,16 +100,29 @@ func (u *User) CreateComment(post Post, parent *Comment, content string) (Commen
 		commentParentID = parent.ID
 	}
 
-	result, err := DBConn.Exec("INSERT INTO comments (author_id, post_id, created_at, content, parent_id) VALUES (?, ?, ?, ?, ?)", u.ID, post.ID, now, content, commentParentID)
-	if err != nil {
-		return c, err
-	}
-	insertID, err := result.LastInsertId()
-	if err != nil {
+	var insertID int64
+	if err := WithTransaction(func(tx Transaction) error {
+		// Create the comment, return if there's an error
+		result, err := tx.Exec("INSERT INTO comments (author_id, post_id, created_at, content, parent_id) VALUES (?, ?, ?, ?, ?)", u.ID, post.ID, now, content, commentParentID)
+		if err != nil {
+			return err
+		}
+		insertID, err = result.LastInsertId()
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec("UPDATE posts set comment_count = comment_count + 1 WHERE id = ?", post.ID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return c, err
 	}
 
-	err = c.FindByID(int(insertID))
+	err := c.FindByID(int(insertID))
 	return c, err
 }
 
@@ -347,8 +360,19 @@ func (u *User) DeleteComment(comment *Comment) error {
 		return errors.New("can't delete a comment for an invalid user or comment")
 	}
 
-	_, err := DBConn.Exec("DELETE FROM comments WHERE id = ?", comment.ID)
-	if err != nil {
+	if err := WithTransaction(func(tx Transaction) error {
+		_, err := tx.Exec("DELETE FROM comments WHERE id = ?", comment.ID)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec("UPDATE posts set comment_count = comment_count - 1 WHERE id = ?", comment.PostID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return err
 	}
 

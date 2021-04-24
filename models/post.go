@@ -11,20 +11,21 @@ import (
 
 // Post - struct representation of a single post
 type Post struct {
-	ID        int       `db:"id" json:"ID"`
-	Title     string    `db:"title" json:"title"`
-	URL       string    `db:"url" json:"url"`
-	Author    User      `db:"-" json:"user"`
-	AuthorID  int       `db:"user_id" json:"-"`
-	Thumbnail string    `db:"thumbnail" json:"thumbnail"`
-	Score     int       `db:"score" json:"score"`
-	Content   string    `db:"content" json:"content"`
-	Type      string    `db:"type" json:"type"`
-	CreatedAt time.Time `db:"created_at" json:"date"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
-	Tags      []PostTag `db:"-"`
-	Width     int       `db:"width" json:"width"`
-	Height    int       `db:"height" json:"height"`
+	ID           int       `db:"id" json:"ID"`
+	Title        string    `db:"title" json:"title"`
+	URL          string    `db:"url" json:"url"`
+	Author       User      `db:"-" json:"user"`
+	AuthorID     int       `db:"user_id" json:"-"`
+	Thumbnail    string    `db:"thumbnail" json:"thumbnail"`
+	Score        int       `db:"score" json:"score"`
+	CommentCount int       `db:"comment_count" json:"commentCount"`
+	Content      string    `db:"content" json:"content"`
+	Type         string    `db:"type" json:"type"`
+	CreatedAt    time.Time `db:"created_at" json:"date"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+	Tags         []PostTag `db:"-"`
+	Width        int       `db:"width" json:"width"`
+	Height       int       `db:"height" json:"height"`
 }
 
 // PostQueryParams - structure represents the parameters for querying posts
@@ -50,29 +51,31 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
-		ID        int       `json:"ID"`
-		Title     string    `json:"title"`
-		UserName  string    `json:"user"`
-		TimeStamp int64     `json:"time"`
-		URL       string    `json:"url"`
-		Content   string    `json:"content"`
-		Type      string    `json:"type"`
-		Score     int       `json:"score"`
-		Tags      []PostTag `json:"tags"`
-		Width     int       `json:"width"`
-		Height    int       `json:"height"`
+		ID           int       `json:"ID"`
+		Title        string    `json:"title"`
+		UserName     string    `json:"user"`
+		TimeStamp    int64     `json:"time"`
+		URL          string    `json:"url"`
+		Content      string    `json:"content"`
+		Type         string    `json:"type"`
+		Score        int       `json:"score"`
+		CommentCount int       `json:"commentCount"`
+		Tags         []PostTag `json:"tags"`
+		Width        int       `json:"width"`
+		Height       int       `json:"height"`
 	}{
-		ID:        p.ID,
-		Title:     p.Title,
-		UserName:  p.Author.GetDisplayName(),
-		TimeStamp: p.CreatedAt.UnixNano() / int64(time.Millisecond),
-		URL:       p.URL,
-		Content:   p.Content,
-		Type:      p.Type,
-		Score:     p.Score,
-		Tags:      p.Tags,
-		Width:     p.Width,
-		Height:    p.Height,
+		ID:           p.ID,
+		Title:        p.Title,
+		UserName:     p.Author.GetDisplayName(),
+		TimeStamp:    p.CreatedAt.UnixNano() / int64(time.Millisecond),
+		URL:          p.URL,
+		Content:      p.Content,
+		Type:         p.Type,
+		Score:        p.Score,
+		CommentCount: p.CommentCount,
+		Tags:         p.Tags,
+		Width:        p.Width,
+		Height:       p.Height,
 	})
 }
 
