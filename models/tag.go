@@ -3,33 +3,29 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
 // Tag - code representation of a single tag
 type Tag struct {
-	ID                     int       `db:"id" json:"id"`
-	Name                   string    `db:"name" json:"name"`
-	Author                 User      `db:"-" json:"createdBy"`
-	UserID                 int       `db:"user_id" json:"-"`
-	Score                  int       `db:"-"`
-	CreatedAt              time.Time `db:"created_at" json:"createdAt"`
-	DateAssociatedWithPost time.Time `db:"-" json:"-"`
+	ID        int       `db:"id" json:"id"`
+	Name      string    `db:"name" json:"name"`
+	UserID    int       `db:"user_id" json:"-"`
+	Count     int       `db:"count" json:"count"`
+	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 }
 
 // MarshalJSON custom JSON builder for Tag structs
 func (t *Tag) MarshalJSON() ([]byte, error) {
 	// return the custom JSON for this post
+	fmt.Println(t.Count)
 	return json.Marshal(&struct {
-		Tag       string    `json:"tag"`
-		UpVotes   int       `json:"upvotes"`
-		DownVotes int       `json:"downvotes"`
-		Date      time.Time `json:"date"`
+		Tag   string `json:"tag"`
+		Count int    `json:"count"`
 	}{
-		Tag:       t.Name,
-		UpVotes:   0,                        // TODO - get this correctly
-		DownVotes: 0,                        // TODO - get this correctly
-		Date:      t.DateAssociatedWithPost, // TODO - figure this out
+		Tag:   t.Name,
+		Count: t.Count,
 	})
 }
 
@@ -103,7 +99,7 @@ func (t *Tag) FindByTagName(name string) error {
 // GetTags - get tags out of the database offset by an integer
 func GetTags(offset int, limit int) ([]Tag, error) {
 	tags := []Tag{}
-	err := DBConn.Select(&tags, "SELECT id, name FROM tags LIMIT ? OFFSET ?", limit, offset)
+	err := DBConn.Select(&tags, "SELECT id, name, count FROM tags WHERE count > 0 ORDER BY count DESC LIMIT ? OFFSET ?", limit, offset)
 	if err != nil {
 		return tags, err
 	}

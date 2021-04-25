@@ -96,6 +96,12 @@ func (p *PostTag) CreatePostTagWithTx(tx Transaction) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("updating the count for tag %v\n", p.TagID)
+	_, err = tx.Exec("UPDATE tags SET count = count + 1 WHERE id = ?", p.TagID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -209,5 +215,12 @@ func (p *PostTag) DecrementScoreWithTx(tx Transaction, postID int, tagID int) er
 // DeleteByUKWithTx - delete a PostTag in the database by unique keys
 func (p *PostTag) DeleteByUKWithTx(tx Transaction, postID int, tagID int) error {
 	_, err := tx.Exec("delete from posts_tags where post_id = ? and tag_id = ?", postID, tagID)
-	return err
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec("UPDATE tags SET count = count - 1 WHERE id = ?", tagID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

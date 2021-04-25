@@ -80,12 +80,12 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	postTag := &models.PostTag{}
-	// check if the PostTag is existed in database
+	// check if the PostTag exists in the database
 	if err := postTag.FindByUK(post.ID, tag.ID); err != nil {
 		sendSystemError(w, fmt.Errorf("query PostTag: %v", err))
 		return
 	}
-	// if the PostTag is existed, return error
+	// if the PostTag exists, return error
 	if postTag.PostID > 0 {
 		sendSystemError(w, fmt.Errorf("postTag exists"))
 		return
