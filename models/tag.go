@@ -19,7 +19,6 @@ type Tag struct {
 // MarshalJSON custom JSON builder for Tag structs
 func (t *Tag) MarshalJSON() ([]byte, error) {
 	// return the custom JSON for this post
-	fmt.Println(t.Count)
 	return json.Marshal(&struct {
 		Tag   string `json:"tag"`
 		Count int    `json:"count"`
@@ -100,6 +99,17 @@ func (t *Tag) FindByTagName(name string) error {
 func GetTags(offset int, limit int) ([]Tag, error) {
 	tags := []Tag{}
 	err := DBConn.Select(&tags, "SELECT id, name, count FROM tags WHERE count > 0 ORDER BY count DESC LIMIT ? OFFSET ?", limit, offset)
+	if err != nil {
+		return tags, err
+	}
+
+	return tags, nil
+}
+
+// GetTagsByPrefix - get tags that match a specific prefix
+func GetTagsByPrefix(prefix string) ([]Tag, error) {
+	tags := []Tag{}
+	err := DBConn.Select(&tags, "SELECT name, count FROM tags WHERE name LIKE ? ORDER BY count DESC LIMIT 100", fmt.Sprintf("%v%%", prefix))
 	if err != nil {
 		return tags, err
 	}

@@ -39,7 +39,8 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		// TODO "/post/delete/": handlers.DeletePost,
 
 		// TAG ROUTES
-		"/tags": handlers.GetTags,
+		"/tags":  handlers.GetTags,
+		"/tags/": handlers.GetTagsByPrefix,
 
 		// COMMENT ROUTES
 		"/comment/create":      handlers.CommentOnPost,
