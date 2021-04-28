@@ -89,3 +89,32 @@ func UpdateDescription(w http.ResponseWriter, r *http.Request) {
 
 	SendResponse(w, user.Description, 200)
 }
+
+func ForgotPasswordRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		SendResponse(w, utils.MakeError("you can only POST to the forgot password request route"), 405)
+		return
+	}
+
+	type requestPayload struct {
+		Email string `json:"email"`
+	}
+
+	var payload requestPayload
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&payload)
+
+	if payload.Email == "" {
+		SendResponse(w, utils.MakeError("Email is required to initiate a forgot password request"), 400)
+		return
+	}
+
+	user := models.User{}
+	err := user.ForgotPasswordRequest(payload.Email)
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
+	SendResponse(w, true, 200)
+}

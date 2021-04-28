@@ -4,9 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"regexp"
+	"soci-backend/httpd/utils"
 	"strconv"
 	"time"
+
+	b64 "encoding/base64"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,6 +28,13 @@ type User struct {
 	LastLogin          time.Time `db:"last_login" json:"-"`
 	CreatedAt          time.Time `db:"created_at" json:"createdAt"`
 	UpdatedAt          time.Time `db:"updated_at" json:"updatedAt"`
+}
+
+type TempPassword struct {
+	ID                 int       `db:"id" json:"-"`
+	Email              string    `db:"email" json:"-"`
+	TempPassword       string    `db:"temp_password" json:"-"`
+	TempPasswordExpiry time.Time `db:"temp_password_expiry" json:"-"`
 }
 
 /************************************************/
@@ -336,4 +347,44 @@ func getEntropy(password string) float64 {
 
 	var entropy = math.Log2(math.Pow(float64(entropyBase), float64(len(password))))
 	return entropy
+}
+
+func (u *User) ForgotPasswordRequest(email string) error {
+	user := User{}
+	user.FindByEmail(email)
+
+	// If the email isn't associated with an account, do nothing
+	if user.ID == 0 {
+		return nil
+	}
+
+	token := make([]byte, 16)
+	rand.Seed(time.Now().UnixNano())
+	rand.Read(token)
+	encodedToken := b64.StdEncoding.EncodeToString(token)
+
+	// Remove the + / = from the string to keep it URL safe
+	re, err := regexp.Compile(`[^\w]`)
+	if err != nil {
+		Log.Errorf("Regex failed to compile: %v\n", err)
+		return err
+	}
+
+	encodedToken = re.ReplaceAllString(encodedToken, "")
+	expiry := time.Now().Add(time.Hour).Format("2006-01-02 15:04:05")
+
+	_, err = DBConn.Exec("INSERT INTO user_temp_passwords (email, temp_password, temp_password_expiry) VALUES (?, ?, ?)", email, encodedToken, expiry)
+	if err != nil {
+		Log.Errorf("Error inserting temp password: %v\n", err)
+		return err
+	}
+
+	// TODO - make the host an environment variable
+	utils.SendEmail(
+		email,
+		"Nonio - Forgot Password Request",
+		fmt.Sprintf("Please click the following link to set a new password: https://localhost:4200/admin/change-forgotten-password?token=%v", encodedToken),
+	)
+
+	return nil
 }

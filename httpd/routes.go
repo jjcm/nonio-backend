@@ -19,8 +19,9 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posts/":                 handlers.GetPostByURL,
 		"/post/url-is-available/": handlers.CheckIfURLIsAvailable,
 
-		"/user/username-is-available/": handlers.CheckIfUsernameIsAvailable,
-		"/users/":                      handlers.GetUser,
+		"/user/username-is-available/":  handlers.CheckIfUsernameIsAvailable,
+		"/user/forgot-password-request": handlers.ForgotPasswordRequest,
+		"/users/":                       handlers.GetUser,
 
 		"/comments": handlers.GetComments,
 	}
