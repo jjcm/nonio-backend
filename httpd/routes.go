@@ -11,15 +11,11 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
 		"/": handlers.Home,
 
-		// these should be user routes
-		"/register": handlers.Register,
-		"/login":    handlers.Login,
-		//"/login-social":          handlers.LoginSocial,
-		//"/login-social/callback": handlers.LoginSocialCallback,
-
 		"/posts/":                 handlers.GetPostByURL,
 		"/post/url-is-available/": handlers.CheckIfURLIsAvailable,
 
+		"/user/register":                handlers.Register,
+		"/user/login":                   handlers.Login,
 		"/user/username-is-available/":  handlers.CheckIfUsernameIsAvailable,
 		"/user/forgot-password-request": handlers.ForgotPasswordRequest,
 		"/users/":                       handlers.GetUser,
