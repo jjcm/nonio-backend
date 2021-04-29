@@ -9,12 +9,13 @@ import (
 // OpenRoutes - routes that don't require auth
 func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
-		"/":                      handlers.Home,
-		"/register":              handlers.Register,
-		"/login":                 handlers.Login,
-		"/login-social":          handlers.LoginSocial,
-		"/login-social/callback": handlers.LoginSocialCallback,
-		"/info":                  handlers.Info,
+		"/": handlers.Home,
+
+		// these should be user routes
+		"/register": handlers.Register,
+		"/login":    handlers.Login,
+		//"/login-social":          handlers.LoginSocial,
+		//"/login-social/callback": handlers.LoginSocialCallback,
 
 		"/posts/":                 handlers.GetPostByURL,
 		"/post/url-is-available/": handlers.CheckIfURLIsAvailable,

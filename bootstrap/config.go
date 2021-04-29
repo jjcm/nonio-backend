@@ -31,8 +31,6 @@ type Config struct {
 func InitConfig() (Config, error) {
 	requiredVars := []string{
 		"APP_KEY",
-		"OAUTH_ID",
-		"OAUTH_SECRET",
 	}
 	for _, v := range requiredVars {
 		if os.Getenv(v) == "" {

@@ -55,7 +55,7 @@ Start up the Go API (if you're on OSX, the example below needs to run the socid-
 
 ```
 # from the project root
-APP_KEY=asdfasdfasdfasdf DB_USER=root DB_PASSWORD=secret OAUTH_ID=1234 OAUTH_SECRET=12345678 dist/socid &
+APP_KEY=asdfasdfasdfasdf DB_USER=root DB_PASSWORD=secret dist/socid &
 
 cd example/
 php -S localhost:8888
