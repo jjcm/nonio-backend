@@ -118,3 +118,30 @@ func ForgotPasswordRequest(w http.ResponseWriter, r *http.Request) {
 
 	SendResponse(w, true, 200)
 }
+
+// ChangeForgottenPassword changes the password of the user as long as the checks on the new/old passwords go through
+func ChangeForgottenPassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		SendResponse(w, utils.MakeError("you can only POST to the forgotten password change route"), 405)
+		return
+	}
+
+	type requestPayload struct {
+		Token           string `json:"token"`
+		NewPassword     string `json:"newPassword"`
+		ConfirmPassword string `json:"confirmPassword"`
+	}
+
+	var payload requestPayload
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&payload)
+
+	user := models.User{}
+	err := user.ChangeForgottenPassword(payload.Token, payload.NewPassword, payload.ConfirmPassword)
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
+	SendResponse(w, true, 200)
+}
