@@ -41,6 +41,7 @@ func bootstrap() {
 	models.DBConn = sociConfig.DBConn
 	models.Log = sociConfig.Logger
 	models.ServerFee, err = strconv.ParseFloat(sociConfig.ServerFee, 64)
+	models.WebHost = sociConfig.WebHost
 
 	if err != nil {
 		logError(err)

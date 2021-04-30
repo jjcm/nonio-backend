@@ -283,6 +283,16 @@ func (u *User) ChangeForgottenPassword(token string, newPassword string, confirm
 	// If the checks look good, change the password
 	u.Password = hashedPassword
 	err = u.update()
+	if err != nil {
+		Log.Errorf("Error updating user password: %v\n", err)
+		return err
+	}
+
+	_, err = DBConn.Exec("DELETE FROM user_temp_passwords WHERE email = ?", u.Email)
+	if err != nil {
+		Log.Errorf("Error removing previous forgot password request: %v\n", err)
+		return err
+	}
 
 	return err
 }
@@ -416,6 +426,13 @@ func (u *User) ForgotPasswordRequest(email string) error {
 	encodedToken = re.ReplaceAllString(encodedToken, "")
 	expiry := time.Now().Add(time.Hour).Format("2006-01-02 15:04:05")
 
+	// delete any previous request
+	_, err = DBConn.Exec("DELETE FROM user_temp_passwords WHERE email = ?", email)
+	if err != nil {
+		Log.Errorf("Error removing previous forgot password request: %v\n", err)
+		return err
+	}
+
 	_, err = DBConn.Exec("INSERT INTO user_temp_passwords (email, temp_password, temp_password_expiry) VALUES (?, ?, ?)", email, encodedToken, expiry)
 	if err != nil {
 		Log.Errorf("Error inserting temp password: %v\n", err)
@@ -426,7 +443,7 @@ func (u *User) ForgotPasswordRequest(email string) error {
 	utils.SendEmail(
 		email,
 		"Nonio - Forgot Password Request",
-		fmt.Sprintf("Please click the following link to set a new password: https://localhost:4200/admin/change-forgotten-password?token=%v", encodedToken),
+		fmt.Sprintf("Please click the following link to set a new password: %v/admin/change-forgotten-password?token=%v", WebHost, encodedToken),
 	)
 
 	return nil

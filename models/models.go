@@ -14,3 +14,6 @@ var Log *logrus.Logger
 
 // The fee for the server
 var ServerFee float64
+
+// The url for the frontend being used
+var WebHost string

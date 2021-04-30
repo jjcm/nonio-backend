@@ -21,6 +21,7 @@ type Config struct {
 	ServerFee          string
 	AdminEmail         string
 	AdminEmailPassword string
+	WebHost            string
 	HMACKey            []byte
 	Logger             *logrus.Logger
 	DBConn             *sqlx.DB
@@ -50,6 +51,7 @@ func InitConfig() (Config, error) {
 		ServerFee:          os.Getenv("SERVER_FEE"),
 		AdminEmail:         os.Getenv("ADMIN_EMAIL"),
 		AdminEmailPassword: os.Getenv("ADMIN_EMAIL_PASSWORD"),
+		WebHost:            os.Getenv("WEB_HOST"),
 		HMACKey:            []byte(os.Getenv("APP_KEY")),
 	}
 	// now that we've tried to pull the env values, let's set defaults if any of them are empty
@@ -73,6 +75,9 @@ func InitConfig() (Config, error) {
 	}
 	if c.ServerFee == "" {
 		c.ServerFee = "1"
+	}
+	if c.WebHost == "" {
+		c.WebHost = "http://localhost:4200"
 	}
 
 	// initialize logging to stdout, maybe later we can extend this to
