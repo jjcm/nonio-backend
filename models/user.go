@@ -244,6 +244,49 @@ func (u *User) UpdateDescription(description string) error {
 	return err
 }
 
+// ChangeForgottenPassword changes the password of the user, using an emailed token as verification
+func (u *User) ChangeForgottenPassword(token string, newPassword string, confirmPassword string) error {
+	// Check if both the new password and its confirmation password matches
+	if newPassword != confirmPassword {
+		return errors.New("new password and confirmation do not match")
+	}
+
+	// Check if the password has the required amount of entropy. In this case the min is 2^40 combinations
+	const minEntropy float64 = 40
+	passwordEntropy := getEntropy(newPassword)
+	if passwordEntropy < minEntropy {
+		return fmt.Errorf("new password does not meet the entropy requirement. Password entropy: %v. Required: %v. Password: %v", passwordEntropy, minEntropy, newPassword)
+	}
+
+	// Check everything is kosher
+	tempPassword := TempPassword{}
+	err := DBConn.Get(&tempPassword, "SELECT * from user_temp_passwords where temp_password = ?", token)
+	if err != nil {
+		return errors.New("error retrieving temp password from DB")
+	}
+	if tempPassword.ID == 0 {
+		return errors.New("token not found in db")
+	}
+	if tempPassword.TempPasswordExpiry.Before(time.Now()) {
+		return errors.New("token found but expired")
+	}
+
+	// If all is good, then find our user and update their password
+	u.FindByEmail(tempPassword.Email)
+
+	// Generate a hash from the new password
+	hashedPassword, err := hashPassword(newPassword)
+	if err != nil {
+		return errors.New("error hashing password")
+	}
+
+	// If the checks look good, change the password
+	u.Password = hashedPassword
+	err = u.update()
+
+	return err
+}
+
 /************************************************/
 /******************** DELETE ********************/
 /************************************************/
