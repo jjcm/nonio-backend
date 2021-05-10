@@ -22,7 +22,8 @@ require (
 	github.com/urfave/cli v1.22.3
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
+	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
+	google.golang.org/api v0.46.0
 	gopkg.in/danilopolani/gocialite.v1 v1.0.2
 	gopkg.in/oleiade/reflections.v1 v1.0.0 // indirect
 )
