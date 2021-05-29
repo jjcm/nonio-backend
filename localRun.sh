@@ -10,6 +10,10 @@ export DB_PASSWORD="password"
 export APP_PORT="4201"
 export ADMIN_EMAIL="test@example.com"
 export ADMIN_EMAIL_PASSWORD="password"
+export EMAIL_ACCESS_TOKEN=""
+export EMAIL_REFRESH_TOKEN=""
+export EMAIL_CLIENT_ID=""
+export EMAIL_CLIENT_SECRET=""
 
 cd ../migrations
 goose mysql "${DB_USER}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_DATABASE}" up

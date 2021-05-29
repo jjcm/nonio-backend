@@ -1,3 +1,4 @@
+// Tutorial followed: https://medium.com/wesionary-team/sending-emails-with-go-golang-using-smtp-gmail-and-oauth2-185ee12ab306
 package utils
 
 import (
@@ -21,6 +22,7 @@ var AdminEmailPassword string
 func SendEmail(to string, subject string, body string) {
 	fmt.Printf("App Email: %v\n", AdminEmail)
 	fmt.Printf("App Password: %v\n", AdminEmailPassword)
+	fmt.Println("normie time")
 	msg := "From: " + AdminEmail + "\n" +
 		"To: " + to + "\n" +
 		"Subject: " + subject + "\n\n" +
@@ -71,15 +73,16 @@ func OAuthGmailService() {
 	}
 }
 
-func SendEmailOAUTH2(to string, body string) (bool, error) {
+func SendEmailOAUTH2(to string, subject string, body string) (bool, error) {
 	OAuthGmailService()
+	fmt.Println("oauthin'")
 
 	var message gmail.Message
 
-	emailTo := "To: " + to + "\r\n"
-	subject := "Subject: " + "Test Email form Gmail API using OAuth" + "\n"
+	emailHeader := "To: " + to + "\r\n"
+	subjectHeader := "Subject: " + subject + "\n"
 	mime := "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
-	msg := []byte(emailTo + subject + mime + "\n" + body)
+	msg := []byte(emailHeader + subjectHeader + mime + "\n" + body)
 
 	message.Raw = base64.URLEncoding.EncodeToString(msg)
 

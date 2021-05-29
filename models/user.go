@@ -440,7 +440,7 @@ func (u *User) ForgotPasswordRequest(email string) error {
 	}
 
 	// TODO - make the host an environment variable
-	utils.SendEmail(
+	utils.SendEmailOAUTH2(
 		email,
 		"Nonio - Forgot Password Request",
 		fmt.Sprintf("Please click the following link to set a new password: %v/admin/change-forgotten-password?token=%v", WebHost, encodedToken),
