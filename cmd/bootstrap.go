@@ -8,6 +8,8 @@ import (
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
 	"strconv"
+
+	"github.com/stripe/stripe-go/v72"
 )
 
 var sociConfig bs.Config
@@ -43,7 +45,6 @@ func bootstrap() {
 	models.ServerFee, err = strconv.ParseFloat(sociConfig.ServerFee, 64)
 	models.WebHost = sociConfig.WebHost
 
-	if err != nil {
-		logError(err)
-	}
+	// init the stripe secret key
+	stripe.Key = sociConfig.StripeSecretKey
 }

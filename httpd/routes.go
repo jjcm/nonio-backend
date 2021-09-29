@@ -23,11 +23,12 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		"/comments": handlers.GetComments,
 
-		"/stripe/create-customer": handlers.StripeCreateCustomer,
-		// "/stripe/create-subscription": handlers.StripeCreateSubscription,
-		// "/stripe/cancel-subscription": handlers.StripeCancelSubscription,
-		// "/stripe/update-subscription": handlers.StripeUpdateSubscription,
-		// "/stripe/subscriptions":       handlers.StripeListSubscriptions,
+		"/stripe/price-config":        handlers.StripeGetPriceConfig,
+		"/stripe/create-customer":     handlers.StripeCreateCustomer,
+		"/stripe/create-subscription": handlers.StripeCreateSubscription,
+		"/stripe/cancel-subscription": handlers.StripeCancelSubscription,
+		"/stripe/update-subscription": handlers.StripeUpdateSubscription,
+		"/stripe/subscriptions":       handlers.StripeListSubscriptions,
 	}
 
 	return routes

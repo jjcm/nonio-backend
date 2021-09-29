@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"soci-backend/httpd/utils"
 
-	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/customer"
+	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/customer"
 )
 
-// StripeCreateCustomer adds a sub for a tag
+// StripeCreateCustomer create a new customer for user
 func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		SendResponse(w, utils.MakeError("you can only POST to the stripe create customer route"), 405)
+		SendResponse(w, utils.MakeError("you can only POST to the stripe create customer route"), http.StatusMethodNotAllowed)
 		return
 	}
 
