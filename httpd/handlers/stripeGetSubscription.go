@@ -11,10 +11,10 @@ import (
 	"github.com/stripe/stripe-go/v72/sub"
 )
 
-// StripeListSubscriptions list the subscriptions
-func StripeListSubscriptions(w http.ResponseWriter, r *http.Request) {
+// StripeGetSubscription returns the user's subscription
+func StripeGetSubscription(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		SendResponse(w, utils.MakeError("you can only GET to the list subscriptions route"), http.StatusMethodNotAllowed)
+		SendResponse(w, utils.MakeError("you can only GET to the get subscription route"), http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -37,8 +37,14 @@ func StripeListSubscriptions(w http.ResponseWriter, r *http.Request) {
 	params.AddExpand("data.default_payment_method")
 
 	iter := sub.List(params)
+	subscriptions := iter.SubscriptionList().Data
+	if len(subscriptions) == 0 {
+		sendSystemError(w, errors.New("no subscription for the user"))
+		return
+	}
+
 	output := map[string]interface{}{
-		"subscriptions": iter.SubscriptionList(),
+		"subscription": iter.Subscription(),
 	}
 	SendResponse(w, output, 200)
 }

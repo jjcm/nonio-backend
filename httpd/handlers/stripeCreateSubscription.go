@@ -41,7 +41,21 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create subscription
+	// check if the subscription is existed
+	listParams := &stripe.SubscriptionListParams{
+		Customer: u.StripeCustomerID,
+		Status:   "all",
+	}
+	listParams.AddExpand("data.default_payment_method")
+
+	iter := sub.List(listParams)
+	subscriptions := iter.SubscriptionList().Data
+	if len(subscriptions) > 0 {
+		sendSystemError(w, errors.New("subscription already exists"))
+		return
+	}
+
+	// create subscription
 	subscriptionParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(u.StripeCustomerID),
 		Items: []*stripe.SubscriptionItemsParams{
