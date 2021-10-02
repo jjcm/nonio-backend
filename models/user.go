@@ -22,6 +22,7 @@ type User struct {
 	Username           string    `db:"username" json:"username"`
 	Name               string    `db:"name" json:"name"`
 	Password           string    `db:"password" json:"password"`
+	StripeCustomerID   string    `db:"stripe_customer_id" json:"stripe_customer_id"`
 	Description        string    `db:"description" json:"description"`
 	SubscriptionAmount float64   `db:"subscription_amount" json:"subscriptionAmount"`
 	Cash               float64   `db:"cash" json:"cash"`
@@ -240,6 +241,13 @@ func (u *User) ChangePassword(oldPassword string, newPassword string, confirmPas
 // UpdateDescription updates the description for the user
 func (u *User) UpdateDescription(description string) error {
 	_, err := DBConn.Exec("UPDATE users SET description = ? WHERE id = ?", description, u.ID)
+
+	return err
+}
+
+// UpdateStripCustomerID updates the stripe customer id for the user
+func (u *User) UpdateStripCustomerID(id string) error {
+	_, err := DBConn.Exec("UPDATE users SET strip_customer_id = ? WHERE id = ?", id, u.ID)
 
 	return err
 }

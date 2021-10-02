@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"soci-backend/httpd/utils"
+	"soci-backend/models"
 
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/customer"
@@ -26,22 +27,38 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 		sendSystemError(w, fmt.Errorf("decode request payload: %v", err))
 		return
 	}
+
+	u := models.User{}
+	if err := u.FindByEmail(payload.Email); err != nil {
+		sendSystemError(w, fmt.Errorf("find user by email: %v", err))
+		return
+	}
+
 	params := &stripe.CustomerParams{
 		Email: stripe.String(payload.Email),
 	}
 
-	c, err := customer.New(params)
-	if err != nil {
-		sendSystemError(w, fmt.Errorf("new customer: %v", err))
-		return
-	}
+	var c *stripe.Customer
+	var err error
+	if u.StripeCustomerID != "" {
+		c, err = customer.Get(u.StripeCustomerID, params)
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("get customer: %v", err))
+			return
+		}
+	} else {
+		c, err = customer.New(params)
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("new customer: %v", err))
+			return
+		}
 
-	// You should store the ID of the customer in your database alongside your
-	// users. This sample uses cookies to simulate auth.
-	http.SetCookie(w, &http.Cookie{
-		Name:  "customer",
-		Value: c.ID,
-	})
+		// update the customer id to user
+		if err := u.UpdateStripCustomerID(u.StripeCustomerID); err != nil {
+			sendSystemError(w, fmt.Errorf("update strip customer id: %v", err))
+			return
+		}
+	}
 
 	output := map[string]interface{}{
 		"customer": c,

@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"soci-backend/httpd/utils"
+	"soci-backend/models"
 
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/sub"
@@ -27,11 +29,21 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read customer from cookie to simulate auth
-	cookie, _ := r.Cookie("customer")
+	uid := r.Context().Value("user_id").(int)
+
+	u := models.User{}
+	if err := u.FindByID(uid); err != nil {
+		sendSystemError(w, fmt.Errorf("find user by id: %v", err))
+		return
+	}
+	if u.StripeCustomerID == "" {
+		sendSystemError(w, errors.New("no customer for the user"))
+		return
+	}
+
 	// Create subscription
 	subscriptionParams := &stripe.SubscriptionParams{
-		Customer: stripe.String(cookie.Value),
+		Customer: stripe.String(u.StripeCustomerID),
 		Items: []*stripe.SubscriptionItemsParams{
 			{
 				Price: stripe.String(payload.PriceID),
