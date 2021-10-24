@@ -12,19 +12,21 @@ import (
 // Config this is a general purpose struct where we can keep all the app
 // configuration items in a singleton style object
 type Config struct {
-	AppPort            string
-	DBHost             string
-	DBPort             string
-	DBDatabase         string
-	DBUsername         string
-	DBPassword         string
-	ServerFee          string
-	AdminEmail         string
-	AdminEmailPassword string
-	WebHost            string
-	HMACKey            []byte
-	Logger             *logrus.Logger
-	DBConn             *sqlx.DB
+	AppPort              string
+	DBHost               string
+	DBPort               string
+	DBDatabase           string
+	DBUsername           string
+	DBPassword           string
+	ServerFee            string
+	AdminEmail           string
+	AdminEmailPassword   string
+	WebHost              string
+	HMACKey              []byte
+	Logger               *logrus.Logger
+	DBConn               *sqlx.DB
+	StripeSecretKey      string
+	StripePublishableKey string
 }
 
 // InitConfig this function will run and log out all the different environment
@@ -32,6 +34,8 @@ type Config struct {
 func InitConfig() (Config, error) {
 	requiredVars := []string{
 		"APP_KEY",
+		"STRIPE_SECRET_KEY",
+		"STRIPE_PUBLISHABLE_KEY",
 	}
 	for _, v := range requiredVars {
 		if os.Getenv(v) == "" {
@@ -42,17 +46,19 @@ func InitConfig() (Config, error) {
 	fmt.Printf("DB ENV: %v\n", os.Getenv("ADMIN_EMAIL"))
 
 	c := Config{
-		DBHost:             os.Getenv("DB_HOST"),
-		DBPort:             os.Getenv("DB_PORT"),
-		DBDatabase:         os.Getenv("DB_DATABASE"),
-		DBUsername:         os.Getenv("DB_USER"),
-		DBPassword:         os.Getenv("DB_PASSWORD"),
-		AppPort:            os.Getenv("APP_PORT"),
-		ServerFee:          os.Getenv("SERVER_FEE"),
-		AdminEmail:         os.Getenv("ADMIN_EMAIL"),
-		AdminEmailPassword: os.Getenv("ADMIN_EMAIL_PASSWORD"),
-		WebHost:            os.Getenv("WEB_HOST"),
-		HMACKey:            []byte(os.Getenv("APP_KEY")),
+		DBHost:               os.Getenv("DB_HOST"),
+		DBPort:               os.Getenv("DB_PORT"),
+		DBDatabase:           os.Getenv("DB_DATABASE"),
+		DBUsername:           os.Getenv("DB_USER"),
+		DBPassword:           os.Getenv("DB_PASSWORD"),
+		AppPort:              os.Getenv("APP_PORT"),
+		ServerFee:            os.Getenv("SERVER_FEE"),
+		AdminEmail:           os.Getenv("ADMIN_EMAIL"),
+		AdminEmailPassword:   os.Getenv("ADMIN_EMAIL_PASSWORD"),
+		WebHost:              os.Getenv("WEB_HOST"),
+		HMACKey:              []byte(os.Getenv("APP_KEY")),
+		StripeSecretKey:      os.Getenv("STRIPE_SECRET_KEY"),
+		StripePublishableKey: os.Getenv("STRIPE_PUBLISHABLE_KEY"),
 	}
 	// now that we've tried to pull the env values, let's set defaults if any of them are empty
 	if c.DBHost == "" {
