@@ -20,7 +20,9 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		PriceID string `json:"priceId"`
+		customerId      string `json:"customerId"`
+		PaymentMethodID string `json:"paymentMethodId"`
+		PriceID         string `json:"priceId"`
 	}
 
 	var payload requestPayload

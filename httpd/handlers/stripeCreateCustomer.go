@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"soci-backend/httpd/utils"
@@ -18,24 +17,16 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type requestPayload struct {
-		Email string `json:"email"`
-	}
-
-	var payload requestPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		sendSystemError(w, fmt.Errorf("decode request payload: %v", err))
-		return
-	}
+	uid := r.Context().Value("user_id").(int)
 
 	u := models.User{}
-	if err := u.FindByEmail(payload.Email); err != nil {
-		sendSystemError(w, fmt.Errorf("find user by email: %v", err))
+	if err := u.FindByID(uid); err != nil {
+		sendSystemError(w, fmt.Errorf("find user by id: %v", err))
 		return
 	}
 
 	params := &stripe.CustomerParams{
-		Email: stripe.String(payload.Email),
+		Email: stripe.String(u.Email),
 	}
 
 	var c *stripe.Customer
@@ -54,8 +45,8 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// update the customer id to user
-		if err := u.UpdateStripCustomerID(u.StripeCustomerID); err != nil {
-			sendSystemError(w, fmt.Errorf("update strip customer id: %v", err))
+		if err := u.UpdateStripeCustomerID(u.StripeCustomerID); err != nil {
+			sendSystemError(w, fmt.Errorf("update stripe customer id: %v", err))
 			return
 		}
 	}

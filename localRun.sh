@@ -14,6 +14,7 @@ export EMAIL_ACCESS_TOKEN=""
 export EMAIL_REFRESH_TOKEN=""
 export EMAIL_CLIENT_ID=""
 export EMAIL_CLIENT_SECRET=""
+export STRIPE_KEY=""
 
 cd ../migrations
 goose mysql "${DB_USER}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_DATABASE}" up

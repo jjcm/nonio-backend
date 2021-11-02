@@ -245,9 +245,9 @@ func (u *User) UpdateDescription(description string) error {
 	return err
 }
 
-// UpdateStripCustomerID updates the stripe customer id for the user
-func (u *User) UpdateStripCustomerID(id string) error {
-	_, err := DBConn.Exec("UPDATE users SET strip_customer_id = ? WHERE id = ?", id, u.ID)
+// UpdateStripeCustomerID updates the stripe customer id for the user
+func (u *User) UpdateStripeCustomerID(id string) error {
+	_, err := DBConn.Exec("UPDATE users SET stripe_customer_id = ? WHERE id = ?", id, u.ID)
 
 	return err
 }
