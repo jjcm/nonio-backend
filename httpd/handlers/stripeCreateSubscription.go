@@ -20,7 +20,6 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		customerId      string `json:"customerId"`
 		PaymentMethodID string `json:"paymentMethodId"`
 		PriceID         string `json:"priceId"`
 	}
@@ -43,7 +42,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the subscription is existed
+	// check if the subscription exists
 	listParams := &stripe.SubscriptionListParams{
 		Customer: u.StripeCustomerID,
 		Status:   "all",
