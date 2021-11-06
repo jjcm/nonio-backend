@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
+	"time"
 
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/sub"
@@ -42,7 +43,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the subscription exists
+	// check if the user has any active subscriptions
 	listParams := &stripe.SubscriptionListParams{
 		Customer: u.StripeCustomerID,
 		Status:   "all",
@@ -52,8 +53,20 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 	iter := sub.List(listParams)
 	subscriptions := iter.SubscriptionList().Data
 	if len(subscriptions) > 0 {
-		sendSystemError(w, errors.New("subscription already exists"))
-		return
+		Log.Info(fmt.Sprintf("%v subscriptions found for %v. Cancelling...", len(subscriptions), u.Username))
+		for i := 0; i < len(subscriptions); i++ {
+			if subscriptions[i].Status != "canceled" && subscriptions[i].Status != "incomplete_expired" {
+				Log.Info(fmt.Sprintf("Cancelling %v. Status %v", subscriptions[i].ID, subscriptions[i].Status))
+				subscription, err := sub.Cancel(subscriptions[i].ID, nil)
+				if err != nil {
+					sendSystemError(w, fmt.Errorf("cancel subscription: %v", err))
+					return
+				}
+				Log.Info(fmt.Sprintf("Cancelled %v", subscription.ID))
+			}
+		}
+		Log.Info("Old subscriptions cancelled.")
+		time.Sleep(5 * time.Second)
 	}
 
 	// create subscription
@@ -64,7 +77,8 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 				Price: stripe.String(payload.PriceID),
 			},
 		},
-		PaymentBehavior: stripe.String("default_incomplete"),
+		PaymentBehavior:      stripe.String("default_incomplete"),
+		DefaultPaymentMethod: stripe.String(payload.PaymentMethodID),
 	}
 	subscriptionParams.AddExpand("latest_invoice.payment_intent")
 	newSub, err := sub.New(subscriptionParams)

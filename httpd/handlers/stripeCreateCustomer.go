@@ -32,7 +32,7 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 	var c *stripe.Customer
 	var err error
 	if u.StripeCustomerID != "" {
-		_, err = customer.Get(u.StripeCustomerID, nil)
+		c, err = customer.Get(u.StripeCustomerID, nil)
 		if err != nil {
 			sendSystemError(w, fmt.Errorf("get customer: %v", err))
 			return
@@ -44,7 +44,7 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// update the customer id to user
+		// update the customer id for the user
 		if err := u.UpdateStripeCustomerID(c.ID); err != nil {
 			sendSystemError(w, fmt.Errorf("update stripe customer id: %v", err))
 			return

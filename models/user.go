@@ -135,6 +135,7 @@ func (u *User) GetAll() ([]User, error) {
 type UserFinancialData struct {
 	SubscriptionAmount float64 `db:"subscription_amount" json:"subscription_amount"`
 	Cash               float64 `db:"cash" json:"cash"`
+	StripeCustomerID   float64 `db:"stripe_customer_id" json:"stripe_customer_id"`
 }
 
 // GetFinancialData will return the user's tag subscriptions
@@ -142,7 +143,7 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 	financialData := UserFinancialData{}
 
 	// run the correct sql query
-	var query = "SELECT cash, subscription_amount FROM users WHERE id = ?"
+	var query = "SELECT cash, subscription_amount, stripe_customer_id FROM users WHERE id = ?"
 	err := DBConn.Get(&financialData, query, u.ID)
 	if err != nil {
 		return financialData, err
