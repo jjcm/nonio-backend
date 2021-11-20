@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/paymentmethod"
 	"github.com/stripe/stripe-go/v72/sub"
 )
 
@@ -20,6 +21,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Decode the JSON payload
 	type requestPayload struct {
 		PaymentMethodID string `json:"paymentMethodId"`
 		PriceID         string `json:"priceId"`
@@ -31,6 +33,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the user from the context of who made the request
 	uid := r.Context().Value("user_id").(int)
 
 	u := models.User{}
@@ -43,7 +46,21 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the user has any active subscriptions
+	// Attach the payment method to the customer
+	paymentParams := &stripe.PaymentMethodAttachParams{
+		Customer: stripe.String(u.StripeCustomerID),
+	}
+
+	_, err := paymentmethod.Attach(
+		payload.PaymentMethodID,
+		paymentParams,
+	)
+
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("attaching payment method failed: %v", err))
+	}
+
+	// Check if the user has any active subscriptions, and cancel the others if they're adding one.
 	listParams := &stripe.SubscriptionListParams{
 		Customer: u.StripeCustomerID,
 		Status:   "all",
@@ -69,7 +86,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(5 * time.Second)
 	}
 
-	// create subscription
+	// Create subscription
 	subscriptionParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(u.StripeCustomerID),
 		Items: []*stripe.SubscriptionItemsParams{
@@ -87,6 +104,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If everything looks good, then send some info back to the user
 	output := map[string]interface{}{
 		"subscriptionId": newSub.ID,
 		"clientSecret":   newSub.LatestInvoice.PaymentIntent.ClientSecret,
