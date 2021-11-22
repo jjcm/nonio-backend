@@ -94,7 +94,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 				Price: stripe.String(payload.PriceID),
 			},
 		},
-		PaymentBehavior:      stripe.String("default_incomplete"),
+		PaymentBehavior:      stripe.String("error_if_incomplete"),
 		DefaultPaymentMethod: stripe.String(payload.PaymentMethodID),
 	}
 	subscriptionParams.AddExpand("latest_invoice.payment_intent")

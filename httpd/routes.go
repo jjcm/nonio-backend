@@ -22,6 +22,8 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/users/":                         handlers.GetUser,
 
 		"/comments": handlers.GetComments,
+
+		// TODO "/stripe/webhook":        handlers.StripeWebhook,
 	}
 
 	return routes
@@ -72,9 +74,9 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		//"/comment-votes/post/": handlers.GetCommentVotesForPost,
 		// TODO "/comment-votes/user/":               handlers.GetCommentVotesForUser,
 
-		"/stripe/create-subscription": handlers.StripeCreateSubscription,
-		"/stripe/cancel-subscription": handlers.StripeCancelSubscription,
-		"/stripe/update-subscription": handlers.StripeUpdateSubscription,
+		"/stripe/subscription/create": handlers.StripeCreateSubscription,
+		"/stripe/subscription/delete": handlers.StripeCancelSubscription,
+		"/stripe/subscription/edit":   handlers.StripeEditSubscription,
 		"/stripe/subscription":        handlers.StripeGetSubscription,
 		"/stripe/price-config":        handlers.StripeGetPriceConfig,
 		"/stripe/create-customer":     handlers.StripeCreateCustomer,

@@ -10,8 +10,8 @@ import (
 	"github.com/stripe/stripe-go/v72/sub"
 )
 
-// StripeUpdateSubscription update a subscription
-func StripeUpdateSubscription(w http.ResponseWriter, r *http.Request) {
+// StripeEditSubscription update a subscription
+func StripeEditSubscription(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		SendResponse(w, utils.MakeError("you can only POST to the update subscription route"), http.StatusMethodNotAllowed)
 		return
