@@ -23,7 +23,7 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		"/comments": handlers.GetComments,
 
-		// TODO "/stripe/webhook":        handlers.StripeWebhook,
+		"/stripe/webhooks": handlers.StripeWebhook,
 	}
 
 	return routes
