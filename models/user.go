@@ -43,13 +43,13 @@ type TempPassword struct {
 /************************************************/
 
 // createUser try and create a new user
-func createUser(email, username, password string, subscriptionAmount float64) error {
+func createUser(email, username, password string) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	hashedPassword, err := hashPassword(password)
 	if err != nil {
 		return err
 	}
-	_, err = DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", email, username, hashedPassword, subscriptionAmount, now, now)
+	_, err = DBConn.Exec("INSERT INTO users (email, username, password, subscription_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", email, username, hashedPassword, 0, now, now)
 	if err != nil {
 		return err
 	}
@@ -57,9 +57,9 @@ func createUser(email, username, password string, subscriptionAmount float64) er
 }
 
 // UserFactory will create and return an instance of a user
-func UserFactory(email, username, password string, subscriptionAmount float64) (User, error) {
+func UserFactory(email, username, password string) (User, error) {
 	u := User{}
-	err := createUser(email, username, password, subscriptionAmount)
+	err := createUser(email, username, password)
 	if err != nil {
 		return u, err
 	}
