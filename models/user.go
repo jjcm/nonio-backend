@@ -17,18 +17,19 @@ import (
 
 // User this is a standard struct that represents a user in the system
 type User struct {
-	ID                 int       `db:"id" json:"id"`
-	Email              string    `db:"email" json:"email"`
-	Username           string    `db:"username" json:"username"`
-	Name               string    `db:"name" json:"name"`
-	Password           string    `db:"password" json:"password"`
-	StripeCustomerID   string    `db:"stripe_customer_id" json:"stripe_customer_id"`
-	Description        string    `db:"description" json:"description"`
-	SubscriptionAmount float64   `db:"subscription_amount" json:"subscriptionAmount"`
-	Cash               float64   `db:"cash" json:"cash"`
-	LastLogin          time.Time `db:"last_login" json:"-"`
-	CreatedAt          time.Time `db:"created_at" json:"createdAt"`
-	UpdatedAt          time.Time `db:"updated_at" json:"updatedAt"`
+	ID                     int       `db:"id" json:"id"`
+	Email                  string    `db:"email" json:"email"`
+	Username               string    `db:"username" json:"username"`
+	Name                   string    `db:"name" json:"name"`
+	Password               string    `db:"password" json:"password"`
+	StripeCustomerID       string    `db:"stripe_customer_id" json:"stripe_customer_id"`
+	StripeConnectAccountID string    `db:"stripe_connect_account_id" json:"stripe_connect_account_id"`
+	Description            string    `db:"description" json:"description"`
+	SubscriptionAmount     float64   `db:"subscription_amount" json:"subscriptionAmount"`
+	Cash                   float64   `db:"cash" json:"cash"`
+	LastLogin              time.Time `db:"last_login" json:"-"`
+	CreatedAt              time.Time `db:"created_at" json:"createdAt"`
+	UpdatedAt              time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 type TempPassword struct {
@@ -251,6 +252,21 @@ func (u *User) UpdateStripeCustomerID(id string) error {
 	_, err := DBConn.Exec("UPDATE users SET stripe_customer_id = ? WHERE id = ?", id, u.ID)
 
 	return err
+}
+
+func (u *User) UpdateStripeConnectAccountId(id string) error {
+	_, err := DBConn.Exec("UPDATE users SET stripe_connect_account_id = ? where id = ?", id, u.ID)
+	return err
+}
+
+func (u *User) GetStripeConnectAccountId() (string, error) {
+	var accountId string
+	row := DBConn.QueryRow("SELECT stripe_connect_account_id from users where id=?", u.ID)
+	err := row.Scan(&accountId)
+	if err != nil {
+		return "", err
+	}
+	return accountId, nil
 }
 
 // ChangeForgottenPassword changes the password of the user, using an emailed token as verification

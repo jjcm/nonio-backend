@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/stripe/stripe-go/v72/account"
 	"net/http"
+	"os"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
 
@@ -48,6 +50,19 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 		// update the customer id for the user
 		if err := u.UpdateStripeCustomerID(c.ID); err != nil {
 			sendSystemError(w, fmt.Errorf("update stripe customer id: %v", err))
+			return
+		}
+
+		stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+
+		expressAccountParams := &stripe.AccountParams{
+			Email: stripe.String(u.Email),
+			Type:  stripe.String("express"),
+		}
+		result, _ := account.New(expressAccountParams)
+
+		if err := u.UpdateStripeConnectAccountId(result.ID); err != nil {
+			sendSystemError(w, fmt.Errorf("update express account id: %v", err))
 			return
 		}
 	}

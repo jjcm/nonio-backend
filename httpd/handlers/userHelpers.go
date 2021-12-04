@@ -13,7 +13,7 @@ import (
 // CheckIfUsernameIsAvailable - return a boolean value to see if a given username is
 // already taken
 func CheckIfUsernameIsAvailable(w http.ResponseWriter, r *http.Request) {
-	requestedUsername := utils.ParseRouteParameter(r.URL.Path, "/users/username-is-available/")
+	requestedUsername := utils.ParseRouteParameter(r.URL.Path, "/user/username-is-available/")
 	if strings.TrimSpace(requestedUsername) == "" {
 		sendSystemError(w, errors.New("please pass a valid username for us to get you your requested content"))
 		return
