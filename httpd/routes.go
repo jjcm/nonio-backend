@@ -62,10 +62,10 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/subscription/delete": handlers.DeleteSubscription,
 
 		// USER ROUTES
-		"/user/change-password":    handlers.ChangePassword,
-		"/user/update-description": handlers.UpdateDescription,
-		"/user/get-financials":     handlers.GetFinancials,
-		"/user/choose-free-account":     handlers.ChooseFreeAccount
+		"/user/change-password":     handlers.ChangePassword,
+		"/user/update-description":  handlers.UpdateDescription,
+		"/user/get-financials":      handlers.GetFinancials,
+		"/user/choose-free-account": handlers.ChooseFreeAccount,
 
 		// VOTES ROUTES
 		"/votes": handlers.GetVotes,
