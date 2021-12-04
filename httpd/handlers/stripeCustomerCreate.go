@@ -60,7 +60,7 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 		}
 		result, _ := account.New(expressAccountParams)
 
-		if err := u.UpdateExpressAccountId(result.ID); err != nil {
+		if err := u.UpdateStripeConnectAccountId(result.ID); err != nil {
 			sendSystemError(w, fmt.Errorf("update express account id: %v", err))
 			return
 		}

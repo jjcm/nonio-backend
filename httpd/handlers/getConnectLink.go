@@ -24,7 +24,7 @@ func GetConnectLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expressAccountId, err := u.GetStripeExpressAccountId()
+	expressAccountId, err := u.GetStripeConnectAccountId()
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("get exress account error: %v", err))
 		return
