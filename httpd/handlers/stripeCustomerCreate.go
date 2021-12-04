@@ -44,6 +44,7 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		Log.Info(fmt.Sprintf("Customer ID: %v", c.ID))
 		// update the customer id for the user
 		if err := u.UpdateStripeCustomerID(c.ID); err != nil {
 			sendSystemError(w, fmt.Errorf("update stripe customer id: %v", err))
