@@ -23,6 +23,7 @@ type User struct {
 	Name               string    `db:"name" json:"name"`
 	Password           string    `db:"password" json:"password"`
 	StripeCustomerID   string    `db:"stripe_customer_id" json:"stripe_customer_id"`
+	ExpressAccountID   string    `db:"express_account_id" json:"express_account_id"`
 	Description        string    `db:"description" json:"description"`
 	SubscriptionAmount float64   `db:"subscription_amount" json:"subscriptionAmount"`
 	Cash               float64   `db:"cash" json:"cash"`
@@ -250,6 +251,11 @@ func (u *User) UpdateDescription(description string) error {
 func (u *User) UpdateStripeCustomerID(id string) error {
 	_, err := DBConn.Exec("UPDATE users SET stripe_customer_id = ? WHERE id = ?", id, u.ID)
 
+	return err
+}
+
+func (u *User) UpdateExpressAccountId(id string) error {
+	_, err := DBConn.Exec("UPDATE users SET express_account_id = ? where id = ?", id, u.ID)
 	return err
 }
 
