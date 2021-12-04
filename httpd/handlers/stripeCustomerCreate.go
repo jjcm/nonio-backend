@@ -55,8 +55,8 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 		stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
 		expressAccountParams := &stripe.AccountParams{
-			Params: stripe.Params{},
-			Type:   stripe.String("express"),
+			Email: stripe.String(u.Email),
+			Type:  stripe.String("express"),
 		}
 		result, _ := account.New(expressAccountParams)
 

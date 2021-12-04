@@ -80,6 +80,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/stripe/subscription":        handlers.StripeGetSubscription,
 		"/stripe/price-config":        handlers.StripeGetPriceConfig,
 		"/stripe/create-customer":     handlers.StripeCreateCustomer,
+		"/stripe/get-connect-link":    handlers.GetConnectLink,
 	}
 
 	return routes

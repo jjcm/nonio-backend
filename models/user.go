@@ -259,6 +259,16 @@ func (u *User) UpdateExpressAccountId(id string) error {
 	return err
 }
 
+func (u *User) GetStripeExpressAccountId() (string, error) {
+	var accountId string
+	row := DBConn.QueryRow("SELECT express_account_id from users where id=?", u.ID)
+	err := row.Scan(&accountId)
+	if err != nil {
+		return "", err
+	}
+	return accountId, nil
+}
+
 // ChangeForgottenPassword changes the password of the user, using an emailed token as verification
 func (u *User) ChangeForgottenPassword(token string, newPassword string, confirmPassword string) error {
 	// Check if both the new password and its confirmation password matches
