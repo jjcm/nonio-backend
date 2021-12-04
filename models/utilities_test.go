@@ -35,7 +35,7 @@ func TestWeCanGetTheParentIDsFromAListOfComments(t *testing.T) {
 		t.Error("The default output of the parent ID getter should be \"0\"")
 	}
 
-	person, _ := UserFactory("person@example.com", "friendlyPerson", "password", 0)
+	person, _ := UserFactory("person@example.com", "friendlyPerson", "password")
 	// create a post and a weird comment thread
 	post, _ := person.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	topLevelComment1, _ := person.CreateComment(post, nil, "text")

@@ -17,6 +17,8 @@ import (
 func setupTestingDB() error {
 	var testingDBName = "socidb_testing"
 	os.Setenv("APP_KEY", "secret")
+	os.Setenv("STRIPE_SECRET_KEY", "secret")
+	os.Setenv("STRIPE_PUBLISHABLE_KEY", "secret")
 	os.Setenv("DB_HOST", "localhost")
 	os.Setenv("DB_PORT", "3306")
 	os.Setenv("DB_USER", "dbtestuser")

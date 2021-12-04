@@ -25,6 +25,7 @@ type User struct {
 	StripeCustomerID       string    `db:"stripe_customer_id" json:"stripe_customer_id"`
 	StripeConnectAccountID string    `db:"stripe_connect_account_id" json:"stripe_connect_account_id"`
 	Description            string    `db:"description" json:"description"`
+	AccountType            string    `db:"account_type" json:"account_type"`
 	SubscriptionAmount     float64   `db:"subscription_amount" json:"subscriptionAmount"`
 	Cash                   float64   `db:"cash" json:"cash"`
 	LastLogin              time.Time `db:"last_login" json:"-"`
@@ -256,6 +257,11 @@ func (u *User) UpdateStripeCustomerID(id string) error {
 
 func (u *User) UpdateStripeConnectAccountId(id string) error {
 	_, err := DBConn.Exec("UPDATE users SET stripe_connect_account_id = ? where id = ?", id, u.ID)
+	return err
+}
+
+func (u *User) UpdateAccountType(accountType string) error {
+	_, err := DBConn.Exec("UPDATE users SET account_type = ? where id = ?", accountType, u.ID)
 	return err
 }
 

@@ -5,12 +5,16 @@ import (
 	"time"
 )
 
+// TODO need to update the users to set the subscription level correctly
 func TestWeCanCalculatePayouts(t *testing.T) {
 	setupTestingDB()
 
-	user1, _ := UserFactory("example1@example.com", "ralph", "password", 10+ServerFee)
-	user2, _ := UserFactory("example2@example.com", "joey", "password", 20+ServerFee)
-	user3, _ := UserFactory("example3@example.com", "bobby", "password", 4+ServerFee)
+	//user1, _ := UserFactory("example1@example.com", "ralph", "password", 10+ServerFee)
+	//user2, _ := UserFactory("example2@example.com", "joey", "password", 20+ServerFee)
+	//user3, _ := UserFactory("example3@example.com", "bobby", "password", 4+ServerFee)
+	user1, _ := UserFactory("example1@example.com", "ralph", "password")
+	user2, _ := UserFactory("example2@example.com", "joey", "password")
+	user3, _ := UserFactory("example3@example.com", "bobby", "password")
 
 	post1, _ := user1.CreatePost("Post Title", "test-post-1", "lorem ipsum", "image", 0, 0)
 	post2, _ := user2.CreatePost("Post Title", "test-post-2", "lorem ipsum", "image", 0, 0)
@@ -41,9 +45,12 @@ func TestWeCanCalculatePayouts(t *testing.T) {
 
 func TestWeCanAllocatePayouts(t *testing.T) {
 	setupTestingDB()
-	user1, _ := UserFactory("example1@example.com", "ralph", "password", 10+ServerFee)
-	user2, _ := UserFactory("example2@example.com", "joey", "password", 20+ServerFee)
-	user3, _ := UserFactory("example3@example.com", "bobby", "password", 4+ServerFee)
+	//user1, _ := UserFactory("example1@example.com", "ralph", "password", 10+ServerFee)
+	//user2, _ := UserFactory("example2@example.com", "joey", "password", 20+ServerFee)
+	//user3, _ := UserFactory("example3@example.com", "bobby", "password", 4+ServerFee)
+	user1, _ := UserFactory("example1@example.com", "ralph", "password")
+	user2, _ := UserFactory("example2@example.com", "joey", "password")
+	user3, _ := UserFactory("example3@example.com", "bobby", "password")
 
 	post1, _ := user1.CreatePost("Post Title", "test-post-1", "lorem ipsum", "image", 0, 0)
 	post2, _ := user2.CreatePost("Post Title", "test-post-2", "lorem ipsum", "image", 0, 0)

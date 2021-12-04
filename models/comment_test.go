@@ -7,7 +7,7 @@ import (
 func TestWeCanCreateComments(t *testing.T) {
 	setupTestingDB()
 
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -25,7 +25,7 @@ func TestWeCanCreateComments(t *testing.T) {
 func TestWeCanDeleteComments(t *testing.T) {
 	setupTestingDB()
 
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -41,7 +41,7 @@ func TestWeCanDeleteComments(t *testing.T) {
 func TestWeCanEditComments(t *testing.T) {
 	setupTestingDB()
 
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -95,7 +95,7 @@ func TestWeCanEditComments(t *testing.T) {
 func TestWeCanAbandonComments(t *testing.T) {
 	setupTestingDB()
 
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 
 	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -121,8 +121,8 @@ func TestWeCanAbandonComments(t *testing.T) {
 func TestWeCanGetCommentsByParams(t *testing.T) {
 	setupTestingDB()
 
-	bill, _ := UserFactory("bill@example.com", "bill", "password", 0)
-	joe, _ := UserFactory("joe@example.com", "joe", "password", 0)
+	bill, _ := UserFactory("bill@example.com", "bill", "password")
+	joe, _ := UserFactory("joe@example.com", "joe", "password")
 
 	post1, _ := bill.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	post2, _ := bill.CreatePost("Post Title", "post-title-2", "lorem ipsum", "image", 0, 0)

@@ -145,3 +145,25 @@ func ChangeForgottenPassword(w http.ResponseWriter, r *http.Request) {
 
 	SendResponse(w, true, 200)
 }
+
+// ChooseFreeAccount sets the account type to free
+func ChooseFreeAccount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		SendResponse(w, utils.MakeError("you can only POST to the choose free account route"), 405)
+		return
+	}
+
+	// get the user from context
+	user := models.User{}
+	user.FindByID(r.Context().Value("user_id").(int))
+
+	err := user.UpdateAccountType("free")
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
+	user.FindByID(r.Context().Value("user_id").(int))
+
+	SendResponse(w, true, 200)
+}

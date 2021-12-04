@@ -7,8 +7,8 @@ import (
 func TestWeCanVoteOnComments(t *testing.T) {
 	setupTestingDB()
 
-	user1, _ := UserFactory("example1@example.com", "bob", "password", 0)
-	user2, _ := UserFactory("example2@example.com", "ralph", "password", 0)
+	user1, _ := UserFactory("example1@example.com", "bob", "password")
+	user2, _ := UserFactory("example2@example.com", "ralph", "password")
 
 	post, _ := user1.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -22,8 +22,8 @@ func TestWeCanVoteOnComments(t *testing.T) {
 func TestWeCanAdjustLineageScore(t *testing.T) {
 	setupTestingDB()
 
-	user1, _ := UserFactory("example1@example.com", "bob", "password", 0)
-	user2, _ := UserFactory("example2@example.com", "ralph", "password", 0)
+	user1, _ := UserFactory("example1@example.com", "bob", "password")
+	user2, _ := UserFactory("example2@example.com", "ralph", "password")
 
 	post, _ := user1.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -104,10 +104,10 @@ func TestWeCanAdjustLineageScore(t *testing.T) {
 func TestWeCanGetUpvotes(t *testing.T) {
 	setupTestingDB()
 
-	bob, _ := UserFactory("example1@example.com", "bob", "password", 0)
-	ralph, _ := UserFactory("example2@example.com", "ralph", "password", 0)
-	joe, _ := UserFactory("example3@example.com", "joe", "password", 0)
-	wanda, _ := UserFactory("example4@example.com", "wanda", "password", 0)
+	bob, _ := UserFactory("example1@example.com", "bob", "password")
+	ralph, _ := UserFactory("example2@example.com", "ralph", "password")
+	joe, _ := UserFactory("example3@example.com", "joe", "password")
+	wanda, _ := UserFactory("example4@example.com", "wanda", "password")
 
 	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -133,10 +133,10 @@ func TestWeCanGetUpvotes(t *testing.T) {
 func TestWeCanGetDownvotes(t *testing.T) {
 	setupTestingDB()
 
-	bob, _ := UserFactory("example1@example.com", "bob", "password", 0)
-	ralph, _ := UserFactory("example2@example.com", "ralph", "password", 0)
-	joe, _ := UserFactory("example3@example.com", "joe", "password", 0)
-	wanda, _ := UserFactory("example4@example.com", "wanda", "password", 0)
+	bob, _ := UserFactory("example1@example.com", "bob", "password")
+	ralph, _ := UserFactory("example2@example.com", "ralph", "password")
+	joe, _ := UserFactory("example3@example.com", "joe", "password")
+	wanda, _ := UserFactory("example4@example.com", "wanda", "password")
 
 	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -162,10 +162,10 @@ func TestWeCanGetDownvotes(t *testing.T) {
 func TestWeCanChangeVotes(t *testing.T) {
 	setupTestingDB()
 
-	bob, _ := UserFactory("example1@example.com", "bob", "password", 0)
-	ralph, _ := UserFactory("example2@example.com", "ralph", "password", 0)
-	joe, _ := UserFactory("example3@example.com", "joe", "password", 0)
-	wanda, _ := UserFactory("example4@example.com", "wanda", "password", 0)
+	bob, _ := UserFactory("example1@example.com", "bob", "password")
+	ralph, _ := UserFactory("example2@example.com", "ralph", "password")
+	joe, _ := UserFactory("example3@example.com", "joe", "password")
+	wanda, _ := UserFactory("example4@example.com", "wanda", "password")
 
 	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -201,8 +201,8 @@ func TestWeCanChangeVotes(t *testing.T) {
 func TestWeCanDeleteVotes(t *testing.T) {
 	setupTestingDB()
 
-	bob, _ := UserFactory("example1@example.com", "bob", "password", 0)
-	ralph, _ := UserFactory("example2@example.com", "ralph", "password", 0)
+	bob, _ := UserFactory("example1@example.com", "bob", "password")
+	ralph, _ := UserFactory("example2@example.com", "ralph", "password")
 
 	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
@@ -234,9 +234,9 @@ func TestWeCanDeleteVotes(t *testing.T) {
 func TestWeCanGetCommentVotesByParams(t *testing.T) {
 	setupTestingDB()
 
-	bob, _ := UserFactory("bob@example.com", "bob", "password", 0)
-	ralph, _ := UserFactory("ralph@example.com", "ralph", "password", 0)
-	joe, _ := UserFactory("joe@example.com", "joe", "password", 0)
+	bob, _ := UserFactory("bob@example.com", "bob", "password")
+	ralph, _ := UserFactory("ralph@example.com", "ralph", "password")
+	joe, _ := UserFactory("joe@example.com", "joe", "password")
 
 	bobsPost, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	ralphsPost, _ := ralph.CreatePost("Post Title", "post-title-2", "lorem ipsum", "image", 0, 0)

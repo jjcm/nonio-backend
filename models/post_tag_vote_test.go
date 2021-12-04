@@ -68,8 +68,8 @@ func TestWeCanGetPostTagVotesByPostUser(t *testing.T) {
 func TestWeCanGetCreatorFromPostTagVote(t *testing.T) {
 	setupTestingDB()
 
-	user1, _ := UserFactory("example1@example.com", "ralph", "password", 10+ServerFee)
-	user2, _ := UserFactory("example2@example.com", "joey", "password", 20+ServerFee)
+	user1, _ := UserFactory("example1@example.com", "ralph", "password")
+	user2, _ := UserFactory("example2@example.com", "joey", "password")
 
 	post, _ := user1.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	// create the PostTagVote first
@@ -87,8 +87,8 @@ func TestWeCanGetCreatorFromPostTagVote(t *testing.T) {
 func TestWeCanGetUntalliedVotesForAUser(t *testing.T) {
 	setupTestingDB()
 
-	user1, _ := UserFactory("example1@example.com", "ralph", "password", 10+ServerFee)
-	user2, _ := UserFactory("example2@example.com", "joey", "password", 20+ServerFee)
+	user1, _ := UserFactory("example1@example.com", "ralph", "password")
+	user2, _ := UserFactory("example2@example.com", "joey", "password")
 
 	post1, _ := user1.CreatePost("Post Title", "post-title-1", "lorem ipsum", "image", 0, 0)
 	post2, _ := user2.CreatePost("Post Title", "post-title-2", "lorem ipsum", "image", 0, 0)

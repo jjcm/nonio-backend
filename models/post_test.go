@@ -10,7 +10,7 @@ func TestWeCanCreateAPost(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
@@ -27,7 +27,7 @@ func TestWeCantCreateAPostWithAnInvalidURL(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	_, err := author.CreatePost("Post Title", "post title", "lorem ipsum", "image", 0, 0)
 	if err == nil {
 		t.Errorf("Posts should not be able to be made with spaces in the url")
@@ -38,7 +38,7 @@ func TestWeCantCreateAPostWithAnInvalidTitle(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	_, err := author.CreatePost("", "post", "lorem ipsum", "image", 0, 0)
 	if err == nil {
 		t.Errorf("Posts should not be able to be made with no title")
@@ -49,7 +49,7 @@ func TestWeCanIncrementScoreForPost(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
@@ -72,7 +72,7 @@ func TestWeCanFindAPostByItsURL(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
@@ -87,7 +87,7 @@ func TestWeCanFindAPostByItsID(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	post, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Error when creating post: %s", err.Error())
@@ -105,7 +105,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "userName", "password", 0)
+	author, _ := UserFactory("example@example.com", "userName", "password")
 	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("We should be able to create a post. Error: %v", err)
@@ -122,7 +122,7 @@ func TestWeTagAPost(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
@@ -146,7 +146,7 @@ func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
@@ -175,7 +175,7 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	p1, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
@@ -207,7 +207,7 @@ func TestIfAPostIsCreatedWithAnEmptyTypeItGetsSetToTheDefaultTypeImage(t *testin
 	setupTestingDB()
 
 	// create an author for post
-	author, _ := UserFactory("example@example.com", "", "password", 0)
+	author, _ := UserFactory("example@example.com", "", "password")
 	p, err := author.CreatePost("Title", "post-title", "lorem ipsum", "", 0, 0) // note the empty 3rd param
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
@@ -253,8 +253,8 @@ func TestWeCanQueryPost(t *testing.T) {
 	p := Post{}
 
 	// create two authors for posts
-	author1, _ := UserFactory("example@example.com", "user1", "password", 0)
-	author2, _ := UserFactory("example2@example.com", "user2", "password", 0)
+	author1, _ := UserFactory("example@example.com", "user1", "password")
+	author2, _ := UserFactory("example2@example.com", "user2", "password")
 
 	// create some posts
 	author1.CreatePost("Post thats arty", "url1", "lorem ipsum", "image", 0, 0)
