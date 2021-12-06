@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	price2 "github.com/stripe/stripe-go/v72/price"
 	"net/http"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
@@ -24,7 +25,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 	// Decode the JSON payload
 	type requestPayload struct {
 		PaymentMethodID string `json:"paymentMethodId"`
-		PriceID         string `json:"priceId"`
+		Price           int64  `json:"price"`
 	}
 
 	var payload requestPayload
@@ -58,6 +59,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("attaching payment method failed: %v", err))
+		return
 	}
 
 	// Check if the user has any active subscriptions, and cancel the others if they're adding one.
@@ -86,12 +88,33 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(5 * time.Second)
 	}
 
+	// get products with this amount
+	priceListParams := &stripe.PriceListParams{}
+	priceListParams.Active = stripe.Bool(true)
+	priceListParams.Currency = stripe.String(string(stripe.CurrencyUSD))
+	i := price2.List(priceListParams)
+
+	var priceId string
+
+	for i.Next() {
+		p := i.Price()
+		if p.UnitAmount == payload.Price*100 {
+			priceId = p.ID
+			break
+		}
+	}
+	
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("creating price: %v", err))
+		return
+	}
+
 	// Create subscription
 	subscriptionParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(u.StripeCustomerID),
 		Items: []*stripe.SubscriptionItemsParams{
 			{
-				Price: stripe.String(payload.PriceID),
+				Price: stripe.String(priceId),
 			},
 		},
 		PaymentBehavior:      stripe.String("error_if_incomplete"),
@@ -101,6 +124,13 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 	newSub, err := sub.New(subscriptionParams)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("new subscription: %v", err))
+		return
+	}
+
+	// Set account_type to supporter if subscription is successful
+	err = u.UpdateAccountType("supporter")
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("update account type: %v", err))
 		return
 	}
 
