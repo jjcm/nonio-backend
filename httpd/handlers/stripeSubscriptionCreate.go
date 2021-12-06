@@ -103,7 +103,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-	
+
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("creating price: %v", err))
 		return
@@ -131,6 +131,13 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 	err = u.UpdateAccountType("supporter")
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("update account type: %v", err))
+		return
+	}
+
+	// Update subscription amount in user model
+	err = u.UpdateSubscriptionAmount(payload.Price)
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("update subscription amount: %v", err))
 		return
 	}
 

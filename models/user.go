@@ -265,6 +265,11 @@ func (u *User) UpdateAccountType(accountType string) error {
 	return err
 }
 
+func (u *User) UpdateSubscriptionAmount(amount int64) error {
+	_, err := DBConn.Exec("UPDATE users SET subscription_amount = ? where id = ?", amount, u.ID)
+	return err
+}
+
 func (u *User) GetStripeConnectAccountId() (string, error) {
 	var accountId string
 	row := DBConn.QueryRow("SELECT stripe_connect_account_id from users where id=?", u.ID)
