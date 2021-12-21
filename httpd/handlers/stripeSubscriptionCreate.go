@@ -120,17 +120,11 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		PaymentBehavior:      stripe.String("error_if_incomplete"),
 		DefaultPaymentMethod: stripe.String(payload.PaymentMethodID),
 	}
+
 	subscriptionParams.AddExpand("latest_invoice.payment_intent")
 	newSub, err := sub.New(subscriptionParams)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("new subscription: %v", err))
-		return
-	}
-
-	// Set account_type to supporter if subscription is successful
-	err = u.UpdateAccountType("supporter")
-	if err != nil {
-		sendSystemError(w, fmt.Errorf("update account type: %v", err))
 		return
 	}
 

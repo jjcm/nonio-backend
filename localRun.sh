@@ -15,6 +15,7 @@ export EMAIL_REFRESH_TOKEN=""
 export EMAIL_CLIENT_ID=""
 export EMAIL_CLIENT_SECRET=""
 export STRIPE_KEY=""
+export WEBHOOK_ENDPOINT_SECRET="whsec_gtbExyPfaKCRSUQfktqHpVKwqmupfBZ0"
 
 cd ../migrations
 goose mysql "${DB_USER}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_DATABASE}" up
