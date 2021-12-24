@@ -38,19 +38,14 @@ func AllocatePayouts() error {
 
 		tr, _ := transfer.New(params)
 
-		fmt.Println(tr, "===============transfer=======")
-
-		_, err := DBConn.Exec("UPDATE users SET cash = cash + ? WHERE stripe_connect_account_id = ?", payout, stripeAccountId)
-		if err != nil {
-			return err
-		}
+		fmt.Println(tr.ID)
 	}
 
-	//v := PostTagVote{}
-	//err = v.MarkVotesAsTallied(currentTime)
-	//if err != nil {
-	//	return err
-	//}
+	v := PostTagVote{}
+	err = v.MarkVotesAsTallied(currentTime)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
