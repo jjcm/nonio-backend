@@ -53,8 +53,23 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 		}
 
 		expressAccountParams := &stripe.AccountParams{
+			Params:          stripe.Params{},
+			AccountToken:    nil,
+			BusinessProfile: nil,
+			BusinessType:    stripe.String("individual"),
+			Capabilities: &stripe.AccountCapabilitiesParams{
+				CardPayments: &stripe.AccountCapabilitiesCardPaymentsParams{
+					Requested: stripe.Bool(true),
+				},
+				Transfers: &stripe.AccountCapabilitiesTransfersParams{
+					Requested: stripe.Bool(true),
+				},
+			},
 			Email: stripe.String(u.Email),
-			Type:  stripe.String("express"),
+			TOSAcceptance: &stripe.AccountTOSAcceptanceParams{
+				ServiceAgreement: stripe.String("full"),
+			},
+			Type: stripe.String("express"),
 		}
 		result, _ := account.New(expressAccountParams)
 
