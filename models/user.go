@@ -121,6 +121,21 @@ func (u *User) FindByUsername(username string) error {
 	return nil
 }
 
+func (u *User) FindByCustomerId(customerID string) error {
+	dbUser := User{}
+	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE stripe_customer_id = ?", customerID)
+	if err != nil {
+		return err
+	}
+
+	// if a record was found, then let's hydrate the current User struct with
+	// the found one
+	if dbUser.ID != 0 {
+		*u = dbUser
+	}
+	return nil
+}
+
 // GetAll gets all users.
 func (u *User) GetAll() ([]User, error) {
 	users := []User{}
@@ -262,6 +277,11 @@ func (u *User) UpdateStripeConnectAccountId(id string) error {
 
 func (u *User) UpdateAccountType(accountType string) error {
 	_, err := DBConn.Exec("UPDATE users SET account_type = ? where id = ?", accountType, u.ID)
+	return err
+}
+
+func (u *User) UpdateSubscriptionAmount(amount int64) error {
+	_, err := DBConn.Exec("UPDATE users SET subscription_amount = ? where id = ?", amount, u.ID)
 	return err
 }
 

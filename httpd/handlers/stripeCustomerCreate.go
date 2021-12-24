@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/stripe/stripe-go/v72/account"
 	"net/http"
-	"os"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
 
@@ -52,8 +51,6 @@ func StripeCreateCustomer(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, fmt.Errorf("update stripe customer id: %v", err))
 			return
 		}
-
-		stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
 		expressAccountParams := &stripe.AccountParams{
 			Email: stripe.String(u.Email),
