@@ -285,6 +285,21 @@ func (u *User) UpdateSubscriptionAmount(amount int64) error {
 	return err
 }
 
+func (u *User) Ban() error {
+	_, err := DBConn.Exec("UPDATE users SET account_type = ? where id = ?", "banned", u.ID)
+	return err
+}
+
+func (u *User) IsAdmin() (bool, error) {
+	var count int
+	err := DBConn.Get(&count, "SELECT count(*) FROM admin_users WHERE id = ?", u.ID)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func (u *User) GetStripeConnectAccountId() (string, error) {
 	var accountId string
 	row := DBConn.QueryRow("SELECT stripe_connect_account_id from users where id=?", u.ID)
