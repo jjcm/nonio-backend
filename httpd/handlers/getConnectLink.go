@@ -12,7 +12,7 @@ import (
 // GetConnectLink creates a strip login link for a user
 func GetConnectLink(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		SendResponse(w, utils.MakeError("you can only POST to the get connect link route"), 405)
+		SendResponse(w, utils.MakeError("you can only GET to the get connect link route"), 405)
 		return
 	}
 
