@@ -3,8 +3,14 @@ package models
 import (
 	"errors"
 	"fmt"
+	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/account"
+	"github.com/stripe/stripe-go/v72/accountlink"
+	"github.com/stripe/stripe-go/v72/balance"
+	"github.com/stripe/stripe-go/v72/loginlink"
 	"math"
 	"math/rand"
+	"os"
 	"regexp"
 	"soci-backend/httpd/utils"
 	"strconv"
@@ -150,9 +156,13 @@ func (u *User) GetAll() ([]User, error) {
 }
 
 type UserFinancialData struct {
-	SubscriptionAmount float64 `db:"subscription_amount" json:"subscription_amount"`
-	Cash               float64 `db:"cash" json:"cash"`
-	StripeCustomerID   float64 `db:"stripe_customer_id" json:"stripe_customer_id"`
+	SubscriptionAmount     float64 `db:"subscription_amount" json:"subscription_amount"`
+	Cash                   float64 `db:"cash" json:"cash"`
+	StripeCustomerID       string  `db:"stripe_customer_id" json:"stripe_customer_id"`
+	StripeWalletBalance    float64 `db:"stripe_wallet_balance" json:"stripe_wallet_balance"`
+	StripeConnectAccountId string  `db:"stripe_connect_account_id" json:"stripe_connect_account_id"`
+	StripeDashboardLink    string  `json:"stripe_connect_link"`
+	StripeStatus           string  `json:"stripe_status"`
 }
 
 // GetFinancialData will return the user's tag subscriptions
@@ -160,11 +170,57 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 	financialData := UserFinancialData{}
 
 	// run the correct sql query
-	var query = "SELECT cash, subscription_amount, stripe_customer_id FROM users WHERE id = ?"
+	var query = "SELECT cash, subscription_amount, stripe_connect_account_id, stripe_customer_id FROM users WHERE id = ?"
 	err := DBConn.Get(&financialData, query, u.ID)
 	if err != nil {
 		return financialData, err
 	}
+
+	params := &stripe.LoginLinkParams{
+		Account: stripe.String(financialData.StripeConnectAccountId),
+	}
+
+	link, err := loginlink.New(params)
+	var dashboardLink string
+
+	if link.URL == "" {
+		// get account link
+		accountLinkParams := &stripe.AccountLinkParams{
+			Account:    stripe.String(financialData.StripeConnectAccountId),
+			RefreshURL: stripe.String(os.Getenv("WEB_HOST") + "/admin/financials"),
+			ReturnURL:  stripe.String(os.Getenv("WEB_HOST") + "/admin/financials"),
+			Type:       stripe.String("account_onboarding"),
+		}
+		al, _ := accountlink.New(accountLinkParams)
+		dashboardLink = al.URL
+	} else {
+		dashboardLink = link.URL
+	}
+
+	financialData.StripeDashboardLink = dashboardLink
+
+	a, _ := account.GetByID(financialData.StripeConnectAccountId, nil)
+
+	if len(a.Requirements.CurrentlyDue) > 0 || a.Requirements.DisabledReason != "" || a.Capabilities.Transfers != stripe.AccountCapabilityStatusActive {
+		financialData.StripeStatus = "pending"
+	} else {
+		financialData.StripeStatus = "active"
+	}
+
+	balanceParams := &stripe.BalanceParams{}
+	params.SetStripeAccount(financialData.StripeConnectAccountId)
+	bal, _ := balance.Get(balanceParams)
+	var totalBalance int64
+
+	for _, b := range bal.Available {
+		totalBalance += b.Value
+	}
+
+	for _, p := range bal.Pending {
+		totalBalance += p.Value
+	}
+
+	financialData.StripeWalletBalance = float64(totalBalance)
 
 	return financialData, nil
 }
