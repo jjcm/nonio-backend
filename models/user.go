@@ -127,6 +127,21 @@ func (u *User) FindByUsername(username string) error {
 	return nil
 }
 
+func (u *User) FindByUsername(username string) error {
+	dbUser := User{}
+	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE username = ?", username)
+	if err != nil {
+		return err
+	}
+
+	// if a record was found, then let's hydrate the current User struct with
+	// the found one
+	if dbUser.ID != 0 {
+		*u = dbUser
+	}
+	return nil
+}
+
 func (u *User) FindByCustomerId(customerID string) error {
 	dbUser := User{}
 	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE stripe_customer_id = ?", customerID)
@@ -146,6 +161,18 @@ func (u *User) FindByCustomerId(customerID string) error {
 func (u *User) GetAll() ([]User, error) {
 	users := []User{}
 	err := DBConn.Select(&users, "SELECT * FROM users")
+	if err != nil {
+		return nil, err
+	}
+
+	// if an email was found, then let's hydrate the current User struct with
+	// the found one
+	return users, nil
+}
+
+func (u *User) GetAllForPayout() ([]User, error) {
+	users := []User{}
+	err := DBConn.Select(&users, "SELECT * FROM users where cash > ? and account_type != ?", 0, "banned")
 	if err != nil {
 		return nil, err
 	}
