@@ -2,12 +2,14 @@ package models
 
 import (
 	"fmt"
+	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/transfer"
 	"time"
 )
 
 type Payout struct {
-	UserID int
-	Payout float64
+	StripeConnectAccountId string
+	Payout                 float64
 }
 
 func AllocatePayouts() error {
@@ -18,18 +20,25 @@ func AllocatePayouts() error {
 		return err
 	}
 
-	users := make(map[int]float64)
+	// map of stripe connect account id and the corresponding payout to be paid out
+	users := make(map[string]float64)
 
 	for _, payout := range payouts {
-		users[payout.UserID] = users[payout.UserID] + payout.Payout
+		users[payout.StripeConnectAccountId] = users[payout.StripeConnectAccountId] + payout.Payout
 	}
 
-	for user, payout := range users {
-		fmt.Printf("User %v is getting paid %v\n", user, payout)
-		_, err := DBConn.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", payout, user)
-		if err != nil {
-			return err
+	for stripeAccountId, payout := range users {
+		fmt.Printf("User %v is getting paid %v\n", stripeAccountId, payout)
+
+		params := &stripe.TransferParams{
+			Amount:      stripe.Int64(int64(payout)),
+			Currency:    stripe.String(string(stripe.CurrencyUSD)),
+			Destination: stripe.String(stripeAccountId),
 		}
+
+		tr, _ := transfer.New(params)
+
+		fmt.Println(tr.ID)
 	}
 
 	v := PostTagVote{}
@@ -54,28 +63,30 @@ func calculatePayouts(currentTime time.Time) ([]Payout, error) {
 
 	// For each of our users, get their votes and calculate what their individual payout is.
 	for _, user := range users {
-		votes, err := user.GetUntalliedVotes(currentTime)
+		if user.AccountType == "supporter" {
+			votes, err := user.GetUntalliedVotes(currentTime)
 
-		// A user may have multiple tags they voted on for a post. A vote for a post should only be counted once, regardless of the tags upvoted.
-		votes = uniquePostFilter(votes)
+			// A user may have multiple tags they voted on for a post. A vote for a post should only be counted once, regardless of the tags upvoted.
+			votes = uniquePostFilter(votes)
 
-		payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
+			payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
 
-		if err != nil {
-			Log.Errorf("Error getting votes for user %v\n", user.Email)
-			return payouts, err
-		}
-
-		for _, vote := range votes {
-			post := Post{}
-			post.FindByID(vote.PostID)
-
-			payout := Payout{
-				UserID: post.AuthorID,
-				Payout: payoutPerVote,
+			if err != nil {
+				Log.Errorf("Error getting votes for user %v\n", user.Email)
+				return payouts, err
 			}
 
-			payouts = append(payouts, payout)
+			for _, vote := range votes {
+				post := Post{}
+				post.FindByID(vote.PostID)
+				u.FindByID(post.AuthorID)
+				payout := Payout{
+					StripeConnectAccountId: u.StripeConnectAccountID,
+					Payout:                 payoutPerVote,
+				}
+
+				payouts = append(payouts, payout)
+			}
 		}
 	}
 	return payouts, err
