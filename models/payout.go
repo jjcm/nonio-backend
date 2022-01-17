@@ -20,25 +20,36 @@ func AllocatePayouts() error {
 		return err
 	}
 
-	// map of stripe connect account id and the corresponding payout to be paid out
-	users := make(map[string]float64)
-
-	for _, payout := range payouts {
-		users[payout.StripeConnectAccountId] = users[payout.StripeConnectAccountId] + payout.Payout
+	for userId, payout := range payouts {
+		_, err := DBConn.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", payout, userId)
+		if err != nil {
+			return err
+		}
 	}
 
-	for stripeAccountId, payout := range users {
-		fmt.Printf("User %v is getting paid %v\n", stripeAccountId, payout)
+	u := User{}
+	allUsers, err := u.GetAllForPayout()
+	if err != nil {
+		return err
+	}
+
+	for _, user := range allUsers {
+		fmt.Printf("User %v is getting paid %v\n", user.ID, user.Cash)
 
 		params := &stripe.TransferParams{
-			Amount:      stripe.Int64(int64(payout)),
+			Amount:      stripe.Int64(int64(user.Cash)),
 			Currency:    stripe.String(string(stripe.CurrencyUSD)),
-			Destination: stripe.String(stripeAccountId),
+			Destination: stripe.String(user.StripeConnectAccountID),
 		}
 
-		tr, _ := transfer.New(params)
-
-		fmt.Println(tr.ID)
+		_, err := transfer.New(params)
+		if err != nil {
+			return err
+		}
+		_, err = DBConn.Exec("UPDATE users SET cash = 0 WHERE id = ?", user.ID)
+		if err != nil {
+			return err
+		}
 	}
 
 	v := PostTagVote{}
@@ -50,15 +61,15 @@ func AllocatePayouts() error {
 	return nil
 }
 
-func calculatePayouts(currentTime time.Time) ([]Payout, error) {
+func calculatePayouts(currentTime time.Time) (map[int]float64, error) {
 	fmt.Printf("Routine ran at %v\n", currentTime.String())
 
 	u := User{}
 	users, err := u.GetAll()
-	var payouts []Payout
+	var payouts map[int]float64
 	if err != nil {
 		Log.Errorf("Error getting list of users: %v\n", err)
-		return payouts, err
+		return nil, err
 	}
 
 	// For each of our users, get their votes and calculate what their individual payout is.
@@ -73,19 +84,15 @@ func calculatePayouts(currentTime time.Time) ([]Payout, error) {
 
 			if err != nil {
 				Log.Errorf("Error getting votes for user %v\n", user.Email)
-				return payouts, err
+				return nil, err
 			}
 
 			for _, vote := range votes {
 				post := Post{}
 				post.FindByID(vote.PostID)
 				u.FindByID(post.AuthorID)
-				payout := Payout{
-					StripeConnectAccountId: u.StripeConnectAccountID,
-					Payout:                 payoutPerVote,
-				}
 
-				payouts = append(payouts, payout)
+				payouts[u.ID] += payoutPerVote
 			}
 		}
 	}
