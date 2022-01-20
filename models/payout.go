@@ -66,7 +66,7 @@ func calculatePayouts(currentTime time.Time) (map[int]float64, error) {
 
 	u := User{}
 	users, err := u.GetAll()
-	var payouts map[int]float64
+	payouts := map[int]float64{}
 	if err != nil {
 		Log.Errorf("Error getting list of users: %v\n", err)
 		return nil, err

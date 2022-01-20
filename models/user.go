@@ -127,21 +127,6 @@ func (u *User) FindByUsername(username string) error {
 	return nil
 }
 
-func (u *User) FindByUsername(username string) error {
-	dbUser := User{}
-	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE username = ?", username)
-	if err != nil {
-		return err
-	}
-
-	// if a record was found, then let's hydrate the current User struct with
-	// the found one
-	if dbUser.ID != 0 {
-		*u = dbUser
-	}
-	return nil
-}
-
 func (u *User) FindByCustomerId(customerID string) error {
 	dbUser := User{}
 	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE stripe_customer_id = ?", customerID)
@@ -190,6 +175,16 @@ type UserFinancialData struct {
 	StripeConnectAccountId string  `db:"stripe_connect_account_id" json:"stripe_connect_account_id"`
 	StripeDashboardLink    string  `json:"stripe_connect_link"`
 	StripeStatus           string  `json:"stripe_status"`
+}
+
+func (u *User) GetCash() (float64, error) {
+	// run the correct sql query
+	var cash float64
+	err := DBConn.Get(&cash, "SELECT cash FROM users WHERE id = ?", u.ID)
+	if err != nil {
+		return 0, err
+	}
+	return cash, nil
 }
 
 // GetFinancialData will return the user's tag subscriptions

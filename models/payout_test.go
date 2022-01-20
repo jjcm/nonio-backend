@@ -16,6 +16,10 @@ func TestWeCanCalculatePayouts(t *testing.T) {
 	user2, _ := UserFactory("example2@example.com", "joey", "password")
 	user3, _ := UserFactory("example3@example.com", "bobby", "password")
 
+	user1.UpdateAccountType("supporter")
+	user2.UpdateAccountType("supporter")
+	user3.UpdateAccountType("supporter")
+
 	post1, _ := user1.CreatePost("Post Title", "test-post-1", "lorem ipsum", "image", 0, 0)
 	post2, _ := user2.CreatePost("Post Title", "test-post-2", "lorem ipsum", "image", 0, 0)
 	post3, _ := user3.CreatePost("Post Title", "test-post-3", "lorem ipsum", "image", 0, 0)
@@ -38,8 +42,8 @@ func TestWeCanCalculatePayouts(t *testing.T) {
 	if err != nil {
 		t.Errorf("Payout calculation failed: %v\n", err)
 	}
-	if len(payouts) != 5 {
-		t.Errorf("Returned %v payouts instead of the 5 expected.", len(payouts))
+	if len(payouts) != 3 {
+		t.Errorf("Returned %v payouts instead of the 3 expected.", len(payouts))
 	}
 }
 
@@ -51,6 +55,14 @@ func TestWeCanAllocatePayouts(t *testing.T) {
 	user1, _ := UserFactory("example1@example.com", "ralph", "password")
 	user2, _ := UserFactory("example2@example.com", "joey", "password")
 	user3, _ := UserFactory("example3@example.com", "bobby", "password")
+
+	user1.UpdateAccountType("supporter")
+	user2.UpdateAccountType("supporter")
+	user3.UpdateAccountType("supporter")
+
+	user1.UpdateSubscriptionAmount(10)
+	user2.UpdateSubscriptionAmount(10)
+	user3.UpdateSubscriptionAmount(10)
 
 	post1, _ := user1.CreatePost("Post Title", "test-post-1", "lorem ipsum", "image", 0, 0)
 	post2, _ := user2.CreatePost("Post Title", "test-post-2", "lorem ipsum", "image", 0, 0)
@@ -71,31 +83,31 @@ func TestWeCanAllocatePayouts(t *testing.T) {
 
 	AllocatePayouts()
 
-	financialData1, err := user1.GetFinancialData()
+	cash1, err := user1.GetCash()
 	if err != nil {
 		t.Errorf("Couldn't get financial data: %v", err)
 	}
-	if financialData1.Cash != 2 {
-		t.Errorf("User 1's cash was incorrect. Got %v expected 2.", financialData1.Cash)
+	if cash1 != 4.5 {
+		t.Errorf("User 1's cash was incorrect. Got %v expected 4.5.", cash1)
 	}
 
-	financialData2, _ := user2.GetFinancialData()
-	if financialData2.Cash != 7 {
-		t.Errorf("User 2's cash was incorrect. Got %v expected 7.", financialData2.Cash)
+	cash2, _ := user2.GetCash()
+	if cash2 != 9 {
+		t.Errorf("User 2's cash was incorrect. Got %v expected 9.", cash2)
 	}
 
-	financialData3, _ := user3.GetFinancialData()
-	if financialData3.Cash != 25 {
-		t.Errorf("User 3's cash was incorrect. Got %v expected 25.", financialData3.Cash)
+	cash3, _ := user3.GetCash()
+	if cash3 != 13.5 {
+		t.Errorf("User 3's cash was incorrect. Got %v expected 13.5.", cash3)
 	}
 
 	// try allocating again to ensure double counts arent happening
 	AllocatePayouts()
-	financialData1, _ = user1.GetFinancialData()
+	cash1, _ = user1.GetCash()
 	if err != nil {
 		t.Errorf("Couldn't get financial data: %v", err)
 	}
-	if financialData1.Cash != 2 {
-		t.Errorf("User 1's cash was incorrect. Got %v expected 2.", financialData1.Cash)
+	if cash1 != 4.5 {
+		t.Errorf("User 1's cash was incorrect. Got %v expected 4.5.", cash1)
 	}
 }
