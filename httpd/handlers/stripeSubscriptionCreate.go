@@ -135,6 +135,13 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set current_period_end of subscription for user
+	err = u.UpdateCurrentPeriodEnd(time.Unix(newSub.CurrentPeriodEnd, 0))
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("update subscription amount: %v", err))
+		return
+	}
+
 	// If everything looks good, then send some info back to the user
 	output := map[string]interface{}{
 		"subscriptionId": newSub.ID,

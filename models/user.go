@@ -34,6 +34,9 @@ type User struct {
 	AccountType            string    `db:"account_type" json:"account_type"`
 	SubscriptionAmount     float64   `db:"subscription_amount" json:"subscriptionAmount"`
 	Cash                   float64   `db:"cash" json:"cash"`
+	CurrentPeriodEnd       time.Time `db:"current_period_end" json:"current_period_end"`
+	NextPayout             time.Time `db:"next_payout" json:"next_payout"`
+	LastPayout             time.Time `db:"last_payout" json:"last_payout"`
 	LastLogin              time.Time `db:"last_login" json:"-"`
 	CreatedAt              time.Time `db:"created_at" json:"createdAt"`
 	UpdatedAt              time.Time `db:"updated_at" json:"updatedAt"`
@@ -360,6 +363,11 @@ func (u *User) UpdateAccountType(accountType string) error {
 
 func (u *User) UpdateSubscriptionAmount(amount int64) error {
 	_, err := DBConn.Exec("UPDATE users SET subscription_amount = ? where id = ?", amount, u.ID)
+	return err
+}
+
+func (u *User) UpdateCurrentPeriodEnd(ts time.Time) error {
+	_, err := DBConn.Exec("UPDATE users SET current_period_end = ? where id = ?", ts, u.ID)
 	return err
 }
 
