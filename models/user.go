@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/account"
 	"github.com/stripe/stripe-go/v72/accountlink"
@@ -160,7 +161,29 @@ func (u *User) GetAll() ([]User, error) {
 
 func (u *User) GetAllForPayout() ([]User, error) {
 	users := []User{}
-	err := DBConn.Select(&users, "SELECT * FROM users where cash > ? and account_type != ?", 0, "banned")
+	// get yesterday's date
+	past := time.Now().AddDate(0, 0, -1)
+	lastMonth := time.Now().AddDate(0, -1, 0)
+
+	err := DBConn.Select(&users, "SELECT * FROM users where cash > ? and account_type != ? and next_payout < ? and last_payout < ?", 0, "banned", past, lastMonth)
+	if err != nil {
+		return nil, err
+	}
+
+	// if an email was found, then let's hydrate the current User struct with
+	// the found one
+	return users, nil
+}
+
+func (u *User) GetAllUsersByIds(ids []int) ([]User, error) {
+	users := []User{}
+	query, args, err := sqlx.In("SELECT * FROM users where id IN (?)", ids)
+	if err != nil {
+		return nil, err
+	}
+
+	query = DBConn.Rebind(query)
+	err = DBConn.Select(&users, query, args...)
 	if err != nil {
 		return nil, err
 	}

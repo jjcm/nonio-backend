@@ -79,7 +79,7 @@ func calculatePayouts(currentTime time.Time) (map[int]float64, error) {
 	fmt.Printf("Routine ran at %v\n", currentTime.String())
 
 	u := User{}
-	users, err := u.GetAll()
+	users, err := u.GetAllForPayout()
 	payouts := map[int]float64{}
 	if err != nil {
 		Log.Errorf("Error getting list of users: %v\n", err)
