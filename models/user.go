@@ -371,6 +371,16 @@ func (u *User) UpdateCurrentPeriodEnd(ts time.Time) error {
 	return err
 }
 
+func (u *User) UpdateNextPayout(ts time.Time) error {
+	_, err := DBConn.Exec("UPDATE users SET next_payout = ? where id = ?", ts, u.ID)
+	return err
+}
+
+func (u *User) UpdateLastPayout(ts time.Time) error {
+	_, err := DBConn.Exec("UPDATE users SET last_payout = ? where id = ?", ts, u.ID)
+	return err
+}
+
 func (u *User) Ban() error {
 	_, err := DBConn.Exec("UPDATE users SET account_type = ? where id = ?", "banned", u.ID)
 	return err

@@ -50,6 +50,20 @@ func AllocatePayouts() error {
 		if err != nil {
 			return err
 		}
+
+		err = user.UpdateLastPayout(time.Now())
+		if err != nil {
+			return err
+		}
+
+		now := time.Now()
+		tomorrow := now.Add(time.Hour * 24)
+		if user.CurrentPeriodEnd.After(now) && user.CurrentPeriodEnd.Before(tomorrow) {
+			err = user.UpdateNextPayout(user.CurrentPeriodEnd)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	v := PostTagVote{}

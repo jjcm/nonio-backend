@@ -138,7 +138,14 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 	// Set current_period_end of subscription for user
 	err = u.UpdateCurrentPeriodEnd(time.Unix(newSub.CurrentPeriodEnd, 0))
 	if err != nil {
-		sendSystemError(w, fmt.Errorf("update subscription amount: %v", err))
+		sendSystemError(w, fmt.Errorf("update current_period_end: %v", err))
+		return
+	}
+
+	// Set next_payout equal to current_period_end
+	err = u.UpdateNextPayout(time.Unix(newSub.CurrentPeriodEnd, 0))
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("update next_payout: %v", err))
 		return
 	}
 
