@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/account"
 	"github.com/stripe/stripe-go/v72/accountlink"
@@ -34,6 +35,9 @@ type User struct {
 	AccountType            string    `db:"account_type" json:"account_type"`
 	SubscriptionAmount     float64   `db:"subscription_amount" json:"subscriptionAmount"`
 	Cash                   float64   `db:"cash" json:"cash"`
+	CurrentPeriodEnd       time.Time `db:"current_period_end" json:"current_period_end"`
+	NextPayout             time.Time `db:"next_payout" json:"next_payout"`
+	LastPayout             time.Time `db:"last_payout" json:"last_payout"`
 	LastLogin              time.Time `db:"last_login" json:"-"`
 	CreatedAt              time.Time `db:"created_at" json:"createdAt"`
 	UpdatedAt              time.Time `db:"updated_at" json:"updatedAt"`
@@ -127,21 +131,6 @@ func (u *User) FindByUsername(username string) error {
 	return nil
 }
 
-func (u *User) FindByUsername(username string) error {
-	dbUser := User{}
-	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE username = ?", username)
-	if err != nil {
-		return err
-	}
-
-	// if a record was found, then let's hydrate the current User struct with
-	// the found one
-	if dbUser.ID != 0 {
-		*u = dbUser
-	}
-	return nil
-}
-
 func (u *User) FindByCustomerId(customerID string) error {
 	dbUser := User{}
 	err := DBConn.Get(&dbUser, "SELECT * FROM users WHERE stripe_customer_id = ?", customerID)
@@ -172,7 +161,29 @@ func (u *User) GetAll() ([]User, error) {
 
 func (u *User) GetAllForPayout() ([]User, error) {
 	users := []User{}
-	err := DBConn.Select(&users, "SELECT * FROM users where cash > ? and account_type != ?", 0, "banned")
+	// get yesterday's date
+	past := time.Now().AddDate(0, 0, -1)
+	lastMonth := time.Now().AddDate(0, -1, 0)
+
+	err := DBConn.Select(&users, "SELECT * FROM users where cash > ? and account_type != ? and next_payout < ? and last_payout < ?", 0, "banned", past, lastMonth)
+	if err != nil {
+		return nil, err
+	}
+
+	// if an email was found, then let's hydrate the current User struct with
+	// the found one
+	return users, nil
+}
+
+func (u *User) GetAllUsersByIds(ids []int) ([]User, error) {
+	users := []User{}
+	query, args, err := sqlx.In("SELECT * FROM users where id IN (?)", ids)
+	if err != nil {
+		return nil, err
+	}
+
+	query = DBConn.Rebind(query)
+	err = DBConn.Select(&users, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +201,16 @@ type UserFinancialData struct {
 	StripeConnectAccountId string  `db:"stripe_connect_account_id" json:"stripe_connect_account_id"`
 	StripeDashboardLink    string  `json:"stripe_connect_link"`
 	StripeStatus           string  `json:"stripe_status"`
+}
+
+func (u *User) GetCash() (float64, error) {
+	// run the correct sql query
+	var cash float64
+	err := DBConn.Get(&cash, "SELECT cash FROM users WHERE id = ?", u.ID)
+	if err != nil {
+		return 0, err
+	}
+	return cash, nil
 }
 
 // GetFinancialData will return the user's tag subscriptions
@@ -365,6 +386,21 @@ func (u *User) UpdateAccountType(accountType string) error {
 
 func (u *User) UpdateSubscriptionAmount(amount int64) error {
 	_, err := DBConn.Exec("UPDATE users SET subscription_amount = ? where id = ?", amount, u.ID)
+	return err
+}
+
+func (u *User) UpdateCurrentPeriodEnd(ts time.Time) error {
+	_, err := DBConn.Exec("UPDATE users SET current_period_end = ? where id = ?", ts, u.ID)
+	return err
+}
+
+func (u *User) UpdateNextPayout(ts time.Time) error {
+	_, err := DBConn.Exec("UPDATE users SET next_payout = ? where id = ?", ts, u.ID)
+	return err
+}
+
+func (u *User) UpdateLastPayout(ts time.Time) error {
+	_, err := DBConn.Exec("UPDATE users SET last_payout = ? where id = ?", ts, u.ID)
 	return err
 }
 

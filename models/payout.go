@@ -50,6 +50,20 @@ func AllocatePayouts() error {
 		if err != nil {
 			return err
 		}
+
+		err = user.UpdateLastPayout(time.Now())
+		if err != nil {
+			return err
+		}
+
+		now := time.Now()
+		tomorrow := now.Add(time.Hour * 24)
+		if user.CurrentPeriodEnd.After(now) && user.CurrentPeriodEnd.Before(tomorrow) {
+			err = user.UpdateNextPayout(user.CurrentPeriodEnd)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	v := PostTagVote{}
@@ -65,8 +79,8 @@ func calculatePayouts(currentTime time.Time) (map[int]float64, error) {
 	fmt.Printf("Routine ran at %v\n", currentTime.String())
 
 	u := User{}
-	users, err := u.GetAll()
-	var payouts map[int]float64
+	users, err := u.GetAllForPayout()
+	payouts := map[int]float64{}
 	if err != nil {
 		Log.Errorf("Error getting list of users: %v\n", err)
 		return nil, err

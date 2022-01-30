@@ -11,6 +11,7 @@ import (
 	"os"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
+	"time"
 )
 
 // StripeWebhook create a new customer for user
@@ -34,7 +35,8 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if event.Type == "payment_intent.succeeded" {
+	switch event.Type {
+	case "payment_intent.succeeded":
 		var paymentIntent stripe.PaymentIntent
 		err := json.Unmarshal(event.Data.Raw, &paymentIntent)
 		if err != nil {
@@ -54,7 +56,7 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, fmt.Errorf("find user by id: %v", err))
 			return
 		}
-	} else if event.Type == "payment_intent.payment_failed" {
+	case "payment_intent.payment_failed":
 		var paymentIntent stripe.PaymentIntent
 		err := json.Unmarshal(event.Data.Raw, &paymentIntent)
 		if err != nil {
@@ -75,6 +77,32 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, fmt.Errorf("find user by id: %v", err))
 			return
 		}
+	case "invoice.paid":
+		var invoice stripe.Invoice
+		err := json.Unmarshal(event.Data.Raw, &invoice)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing webhook JSON: %v\n", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		u := models.User{}
+		if err := u.FindByCustomerId(invoice.Customer.ID); err != nil {
+			sendSystemError(w, fmt.Errorf("find user by id: %v", err))
+			return
+		}
+		if u.StripeCustomerID == "" {
+			sendSystemError(w, errors.New("no customer for the user"))
+			return
+		}
+		err = u.UpdateCurrentPeriodEnd(time.Unix(invoice.PeriodEnd, 0))
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("update subscription amount: %v", err))
+			return
+		}
+		if u.LastPayout.Sub(u.NextPayout) >= -time.Hour*24*2 || u.LastPayout.Sub(u.NextPayout) <= time.Hour*24*2 {
+
+		}
 	}
+
 	SendResponse(w, true, 200)
 }
