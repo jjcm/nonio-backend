@@ -44,7 +44,7 @@ func StripeGetSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 
 	output := map[string]interface{}{
-		"subscription": iter.Subscription(),
+		"subscription": subscriptions[0].ID,
 	}
 	SendResponse(w, output, 200)
 }
