@@ -32,6 +32,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
+	if u.AccountType != "supporter" {
+		SendResponse(w, utils.MakeError("only supporters can submit posts"), 403)
+		return
+	}
+
 	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Content, payload.Type, payload.Width, payload.Height)
 	if err != nil {
 		sendSystemError(w, err)
