@@ -261,6 +261,7 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 	bal, _ := balance.Get(balanceParams)
 	var totalBalance int64
 
+	Log.Info(fmt.Sprintf("%+v\n", bal))
 	for _, b := range bal.Available {
 		Log.Info(fmt.Sprintf("%+v\n", b))
 		Log.Info(fmt.Sprintf("Balance: %v", b.Value))
