@@ -3,12 +3,6 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"github.com/stripe/stripe-go/v72"
-	"github.com/stripe/stripe-go/v72/account"
-	"github.com/stripe/stripe-go/v72/accountlink"
-	"github.com/stripe/stripe-go/v72/balance"
-	"github.com/stripe/stripe-go/v72/loginlink"
 	"math"
 	"math/rand"
 	"os"
@@ -16,6 +10,13 @@ import (
 	"soci-backend/httpd/utils"
 	"strconv"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/account"
+	"github.com/stripe/stripe-go/v72/accountlink"
+	"github.com/stripe/stripe-go/v72/balance"
+	"github.com/stripe/stripe-go/v72/loginlink"
 
 	b64 "encoding/base64"
 
@@ -261,10 +262,12 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 	var totalBalance int64
 
 	for _, b := range bal.Available {
+		Log.Info(fmt.Sprintf("Balance: %v", b.Value))
 		totalBalance += b.Value
 	}
 
 	for _, p := range bal.Pending {
+		Log.Info(fmt.Sprintf("Balance: %v", p.Value))
 		totalBalance += p.Value
 	}
 
