@@ -269,7 +269,7 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 	}
 
 	for _, p := range bal.Pending {
-		Log.Info(fmt.Sprintf("%+v\n", p))
+		Log.Info(fmt.Sprintf("Pending: %+v\n", p))
 		Log.Info(fmt.Sprintf("Balance: %v", p.Value))
 		totalBalance += p.Value
 	}
