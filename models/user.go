@@ -3,12 +3,6 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"github.com/stripe/stripe-go/v72"
-	"github.com/stripe/stripe-go/v72/account"
-	"github.com/stripe/stripe-go/v72/accountlink"
-	"github.com/stripe/stripe-go/v72/balance"
-	"github.com/stripe/stripe-go/v72/loginlink"
 	"math"
 	"math/rand"
 	"os"
@@ -16,6 +10,13 @@ import (
 	"soci-backend/httpd/utils"
 	"strconv"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/account"
+	"github.com/stripe/stripe-go/v72/accountlink"
+	"github.com/stripe/stripe-go/v72/balance"
+	"github.com/stripe/stripe-go/v72/loginlink"
 
 	b64 "encoding/base64"
 
@@ -260,10 +261,23 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 	bal, _ := balance.Get(balanceParams)
 	var totalBalance int64
 
+	Log.Info(fmt.Sprintf("%+v\n", bal))
 	for _, b := range bal.Available {
+		Log.Info(fmt.Sprintf("%+v\n", b))
+		Log.Info(fmt.Sprintf("Balance: %v", b.Value))
 		totalBalance += b.Value
 	}
 
+<<<<<<< HEAD
+=======
+	Log.Info(fmt.Sprintf("%+v\n", bal.Pending))
+	for _, p := range bal.Pending {
+		Log.Info(fmt.Sprintf("Pending: %#v\n", p))
+		Log.Info(fmt.Sprintf("Balance: %v", p.Value))
+		totalBalance += p.Value
+	}
+
+>>>>>>> 355b64555738539632e1316802a8e9cdde8efb94
 	financialData.StripeWalletBalance = float64(totalBalance)
 
 	return financialData, nil
