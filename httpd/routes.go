@@ -66,7 +66,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/user/update-description": handlers.UpdateDescription,
 		"/user/get-financials":     handlers.GetFinancials,
 		// TODO - set up the GetSettings route or something similar to return whether the user is a subscriber or not
-		"/user/get-settings":        handlers.GetSettings,
+		// "/user/get-settings":        handlers.GetSettings,
 		"/user/choose-free-account": handlers.ChooseFreeAccount,
 
 		// VOTES ROUTES

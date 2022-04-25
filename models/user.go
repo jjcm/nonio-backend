@@ -264,10 +264,6 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 		totalBalance += b.Value
 	}
 
-	for _, p := range bal.Pending {
-		totalBalance += p.Value
-	}
-
 	financialData.StripeWalletBalance = float64(totalBalance)
 
 	return financialData, nil
