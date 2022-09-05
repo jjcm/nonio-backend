@@ -19,9 +19,15 @@ There is one environment variable that you'll need to set that doesn't have a de
 
 `APP_KEY=asdf DB_USER=root DB_PASSWORD=secret dist/socid`
 
-Next, you'll probably need to make sure that database exists and that your db user has the correct permissions to work with that database.
+# Database
 
-If so, you can get the app database up to date by running the migrations inside the `migrations/` folder. You'll need to have goose (https://github.com/pressly/goose) added to your path.
+Next, you'll probably need to make sure that database exists and that your db user has the correct permissions to work with that database. 
+
+`CREATE DATABASE socidb;`
+`CREATE USER 'dbuser'@localhost IDENTIFIED BY 'password';`
+`GRANT ALL PRIVILEGES ON 'socidb'.* TO 'dbuser'@localhost;`
+
+You can get the database schema up to date by running the migrations inside the `migrations/` folder. You'll need to have goose (https://github.com/pressly/goose) added to your path.
 
 If that's all good to go, go ahead and run this command from inside the migrations folder:
 
