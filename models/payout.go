@@ -14,7 +14,7 @@ type Payout struct {
 
 func AllocatePayouts() error {
 	currentTime := time.Now()
-	payouts, err := calculatePayouts(currentTime)
+	payouts, ledgerEntries, err := calculatePayouts(currentTime)
 	if err != nil {
 		Log.Errorf("Error calculating payouts: %v", err)
 		return err
@@ -56,6 +56,19 @@ func AllocatePayouts() error {
 			return err
 		}
 
+		for _, l := range ledgerEntries {
+			if l.authorId == user.ID {
+				// deposit ledgers
+				return createLedgerEntry(user.ID, l.contributorId, user.Cash, l.ledgerType, l.description)
+			}
+		}
+
+		//withdrawal ledger entry
+		err = createLedgerEntry(user.ID, -1, user.Cash, "withdrawal", "withdrawal from non.io to Stripe")
+		if err != nil {
+			return err
+		}
+
 		now := time.Now()
 		tomorrow := now.Add(time.Hour * 24)
 		if user.CurrentPeriodEnd.After(now) && user.CurrentPeriodEnd.Before(tomorrow) {
@@ -75,7 +88,7 @@ func AllocatePayouts() error {
 	return nil
 }
 
-func calculatePayouts(currentTime time.Time) (map[int]float64, error) {
+func calculatePayouts(currentTime time.Time) (map[int]float64, []LedgerEntries, error) {
 	fmt.Printf("Routine ran at %v\n", currentTime.String())
 
 	u := User{}
@@ -83,10 +96,11 @@ func calculatePayouts(currentTime time.Time) (map[int]float64, error) {
 	payouts := map[int]float64{}
 	if err != nil {
 		Log.Errorf("Error getting list of users: %v\n", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	// For each of our users, get their votes and calculate what their individual payout is.
+	var ledgerEntries []LedgerEntries
 	for _, user := range users {
 		if user.AccountType == "supporter" {
 			votes, err := user.GetUntalliedVotes(currentTime)
@@ -98,7 +112,7 @@ func calculatePayouts(currentTime time.Time) (map[int]float64, error) {
 
 			if err != nil {
 				Log.Errorf("Error getting votes for user %v\n", user.Email)
-				return nil, err
+				return nil, nil, err
 			}
 
 			for _, vote := range votes {
@@ -108,9 +122,17 @@ func calculatePayouts(currentTime time.Time) (map[int]float64, error) {
 
 				payouts[u.ID] += payoutPerVote
 			}
+
+			ledgerEntries = append(ledgerEntries, LedgerEntries{
+				authorId:      u.ID,
+				contributorId: user.ID,
+				amount:        payouts[u.ID],
+				ledgerType:    "deposit",
+				description:   "deposit from " + user.Name,
+			})
 		}
 	}
-	return payouts, err
+	return payouts, ledgerEntries, err
 }
 
 func uniquePostFilter(votes []PostTagVote) []PostTagVote {
@@ -125,4 +147,23 @@ func uniquePostFilter(votes []PostTagVote) []PostTagVote {
 	}
 
 	return uniqueVotes
+}
+
+type LedgerEntries struct {
+	authorId      int
+	contributorId int
+	amount        float64
+	ledgerType    string
+	description   string
+}
+
+func createLedgerEntry(authorId, contributorId int, amount float64, ledgerType, description string) error {
+	_, err := DBConn.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
+		authorId, contributorId, amount, ledgerType, description,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
