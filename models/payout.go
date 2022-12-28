@@ -121,15 +121,15 @@ func calculatePayouts(currentTime time.Time) (map[int]float64, []LedgerEntries, 
 				u.FindByID(post.AuthorID)
 
 				payouts[u.ID] += payoutPerVote
-			}
 
-			ledgerEntries = append(ledgerEntries, LedgerEntries{
-				authorId:      u.ID,
-				contributorId: user.ID,
-				amount:        payouts[u.ID],
-				ledgerType:    "deposit",
-				description:   "deposit from " + user.Name,
-			})
+				ledgerEntries = append(ledgerEntries, LedgerEntries{
+					authorId:      u.ID,
+					contributorId: user.ID,
+					amount:        payouts[u.ID],
+					ledgerType:    "deposit",
+					description:   "deposit from " + user.Name,
+				})
+			}
 		}
 	}
 	return payouts, ledgerEntries, err
@@ -166,4 +166,13 @@ func createLedgerEntry(authorId, contributorId int, amount float64, ledgerType, 
 	}
 
 	return nil
+}
+
+func createLedgerEntries(ledgerEntries []LedgerEntries, u User) {
+	for _, l := range ledgerEntries {
+		if l.authorId == u.ID {
+			// deposit ledgers
+			createLedgerEntry(u.ID, l.contributorId, u.Cash, l.ledgerType, l.description)
+		}
+	}
 }
