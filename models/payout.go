@@ -14,6 +14,8 @@ type Payout struct {
 
 func AllocatePayouts() error {
 	currentTime := time.Now()
+
+
 	payouts, ledgerEntries, err := calculatePayouts(currentTime)
 	if err != nil {
 		Log.Errorf("Error calculating payouts: %v", err)
@@ -166,4 +168,83 @@ func createLedgerEntry(authorId, contributorId int, amount float64, ledgerType, 
 	}
 
 	return nil
+}
+
+/* This is proposed pseudocode for this. Lemme know if you think this would work/make sense */
+AllocatePayouts () {
+	// we only grab the ledger entries for the current period. See the modified calculatePayouts function below.
+	ledgerEntries, err := calculatePayouts(currentTime)
+
+	// using pseudocode here just to communicate the idea
+	for each ledger in ledgerEntries {
+
+		//create a transaction that creates a ledger, and increments the user's cash
+		transaction {
+			db(insert into ledgertable deposit ${ledger})
+			db(update users set cash = cash + ${ledger.amount} where id = ${ledger.authorId})
+		}
+
+	}
+	
+	// after this we can run the loop that pays out users to stripe if they have that set up
+
+	allUsers, err := u.GetAllForPayout()
+	for each user in allUsers {
+		
+		// store some temporary cash value
+		tempCash = user.cash
+
+		// run a transaction that creates a ledger, and sets the user's cash to 0
+		transaction {
+			db(insert into ledgertable withdrawal of ${user.cash})
+			db(update users set cash = 0 where id = ${user.id})
+		}
+
+		// if no errors, then transfer our tempCash to the user's stripe account
+		if(!err){
+			stripe.transfer(tempCash, user.stripeConnectId)
+		}
+
+
+	}
+
+}
+
+func calculatePayouts(currentTime time.Time) ([]LedgerEntries, error) {
+	users, err := u.GetAllForPayout()
+	var ledgerEntries []LedgerEntries
+
+	// For each of our users, get their votes and calculate what their individual payout is.
+	for _, user := range users {
+		if user.AccountType == "supporter" {
+
+			// get all of our untallied votes for the user
+			votes, err := user.GetUntalliedVotes(currentTime)
+
+			// A user may have multiple tags they voted on for a post. A vote for a post should only be counted once, regardless of the tags upvoted.
+			votes = uniquePostFilter(votes)
+
+			// This is key - we still calculate the payout per vote. 
+			payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
+
+			// then for each unique vote, we create a ledger entry
+			for _, vote := range votes {
+				// find the author of the post
+				post := Post{}
+				post.FindByID(vote.PostID)
+				u.FindByID(post.AuthorID)
+
+				// now create a ledger entry with all of our info. The amount will be the "payoutPerVote" amount we calculated above.
+				ledgerEntries = append(ledgerEntries, LedgerEntries{
+					authorId:      u.ID,
+					contributorId: user.ID,
+					amount:        payoutPerVote,
+					ledgerType:    "deposit",
+					description:   "deposit from " + user.Name,
+				})
+			}
+
+		}
+	}
+	return ledgerEntries, err
 }
