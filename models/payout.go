@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/transfer"
 	"time"
@@ -14,30 +13,46 @@ type Payout struct {
 
 func AllocatePayouts() error {
 	currentTime := time.Now()
-	payouts, ledgerEntries, err := calculatePayouts(currentTime)
+
+	ledgerEntries, err := calculatePayouts(currentTime)
 	if err != nil {
-		Log.Errorf("Error calculating payouts: %v", err)
 		return err
 	}
 
-	for userId, payout := range payouts {
-		_, err := DBConn.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", payout, userId)
-		if err != nil {
-			return err
+	for _, ledger := range ledgerEntries {
+		tx, txErr := DBConn.Begin()
+		if txErr != nil {
+			return txErr
+		}
+		_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
+			ledger.authorId, ledger.contributorId, ledger.amount, ledger.ledgerType, ledger.description,
+		)
+		_, txErr = tx.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", ledger.amount, ledger.authorId)
+		txErr = tx.Commit()
+		if txErr != nil {
+			return txErr
 		}
 	}
 
 	u := User{}
 	allUsers, err := u.GetAllForPayout()
-	if err != nil {
-		return err
-	}
-
 	for _, user := range allUsers {
-		fmt.Printf("User %v is getting paid %v\n", user.ID, user.Cash)
+		tempCash := user.Cash
+		tx, txErr := DBConn.Begin()
+		if txErr != nil {
+			return txErr
+		}
+		_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
+			user.ID, -1, user.Cash, "withdrawal", "withdrawal from non.io to Stripe",
+		)
+		_, txErr = tx.Exec("UPDATE users SET cash = 0 WHERE id = ?", user.ID)
+		txErr = tx.Commit()
+		if txErr != nil {
+			return txErr
+		}
 
 		params := &stripe.TransferParams{
-			Amount:      stripe.Int64(int64(user.Cash)),
+			Amount:      stripe.Int64(int64(tempCash)),
 			Currency:    stripe.String(string(stripe.CurrencyUSD)),
 			Destination: stripe.String(user.StripeConnectAccountID),
 		}
@@ -46,25 +61,8 @@ func AllocatePayouts() error {
 		if err != nil {
 			return err
 		}
-		_, err = DBConn.Exec("UPDATE users SET cash = 0 WHERE id = ?", user.ID)
-		if err != nil {
-			return err
-		}
 
 		err = user.UpdateLastPayout(time.Now())
-		if err != nil {
-			return err
-		}
-
-		for _, l := range ledgerEntries {
-			if l.authorId == user.ID {
-				// deposit ledgers
-				return createLedgerEntry(user.ID, l.contributorId, user.Cash, l.ledgerType, l.description)
-			}
-		}
-
-		//withdrawal ledger entry
-		err = createLedgerEntry(user.ID, -1, user.Cash, "withdrawal", "withdrawal from non.io to Stripe")
 		if err != nil {
 			return err
 		}
@@ -88,51 +86,41 @@ func AllocatePayouts() error {
 	return nil
 }
 
-func calculatePayouts(currentTime time.Time) (map[int]float64, []LedgerEntries, error) {
-	fmt.Printf("Routine ran at %v\n", currentTime.String())
-
+func calculatePayouts(currentTime time.Time) ([]LedgerEntries, error) {
 	u := User{}
 	users, err := u.GetAllForPayout()
-	payouts := map[int]float64{}
 	if err != nil {
-		Log.Errorf("Error getting list of users: %v\n", err)
-		return nil, nil, err
+		return nil, err
 	}
 
-	// For each of our users, get their votes and calculate what their individual payout is.
 	var ledgerEntries []LedgerEntries
+
 	for _, user := range users {
 		if user.AccountType == "supporter" {
 			votes, err := user.GetUntalliedVotes(currentTime)
-
-			// A user may have multiple tags they voted on for a post. A vote for a post should only be counted once, regardless of the tags upvoted.
-			votes = uniquePostFilter(votes)
-
-			payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
-
 			if err != nil {
-				Log.Errorf("Error getting votes for user %v\n", user.Email)
-				return nil, nil, err
+				return nil, err
 			}
+			votes = uniquePostFilter(votes)
+			payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
 
 			for _, vote := range votes {
 				post := Post{}
 				post.FindByID(vote.PostID)
 				u.FindByID(post.AuthorID)
 
-				payouts[u.ID] += payoutPerVote
-
 				ledgerEntries = append(ledgerEntries, LedgerEntries{
 					authorId:      u.ID,
 					contributorId: user.ID,
-					amount:        payouts[u.ID],
+					amount:        payoutPerVote,
 					ledgerType:    "deposit",
 					description:   "deposit from " + user.Name,
 				})
 			}
 		}
 	}
-	return payouts, ledgerEntries, err
+
+	return ledgerEntries, nil
 }
 
 func uniquePostFilter(votes []PostTagVote) []PostTagVote {
@@ -155,24 +143,4 @@ type LedgerEntries struct {
 	amount        float64
 	ledgerType    string
 	description   string
-}
-
-func createLedgerEntry(authorId, contributorId int, amount float64, ledgerType, description string) error {
-	_, err := DBConn.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
-		authorId, contributorId, amount, ledgerType, description,
-	)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func createLedgerEntries(ledgerEntries []LedgerEntries, u User) {
-	for _, l := range ledgerEntries {
-		if l.authorId == u.ID {
-			// deposit ledgers
-			createLedgerEntry(u.ID, l.contributorId, u.Cash, l.ledgerType, l.description)
-		}
-	}
 }
