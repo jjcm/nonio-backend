@@ -16,6 +16,7 @@ func AllocatePayouts() error {
 
 	ledgerEntries, err := calculatePayouts(currentTime)
 	if err != nil {
+		Log.Errorf("Error calculating payouts: %v", err)
 		return err
 	}
 
