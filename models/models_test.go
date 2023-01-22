@@ -46,7 +46,7 @@ func setupTestingDB() error {
 
 	goPath := os.Getenv("GOPATH")
 	command := goPath + "/bin/goose"
-	cmd := exec.Command(command, "mysql", os.Getenv("DB_USER")+":"+os.Getenv("DB_PASSWORD")+"@/"+testingDBName, "up")
+	cmd := exec.Command(command, "mysql", os.Getenv("DB_USER")+":"+os.Getenv("DB_PASSWORD")+"@tcp("+os.Getenv("DB_HOST")+":"+os.Getenv("DB_PORT")+")/"+testingDBName, "up")
 
 	_, b, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(b)

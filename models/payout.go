@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/transfer"
 	"time"
@@ -39,19 +40,6 @@ func AllocatePayouts() error {
 	allUsers, err := u.GetAllForPayout()
 	for _, user := range allUsers {
 		tempCash := user.Cash
-		tx, txErr := DBConn.Begin()
-		if txErr != nil {
-			return txErr
-		}
-		_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
-			user.ID, -1, user.Cash, "withdrawal", "withdrawal from non.io to Stripe",
-		)
-		_, txErr = tx.Exec("UPDATE users SET cash = 0 WHERE id = ?", user.ID)
-		txErr = tx.Commit()
-		if txErr != nil {
-			return txErr
-		}
-
 		params := &stripe.TransferParams{
 			Amount:      stripe.Int64(int64(tempCash)),
 			Currency:    stripe.String(string(stripe.CurrencyUSD)),
@@ -61,6 +49,19 @@ func AllocatePayouts() error {
 		_, err := transfer.New(params)
 		if err != nil {
 			return err
+		}
+
+		tx, txErr := DBConn.Begin()
+		if txErr != nil {
+			return txErr
+		}
+		_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
+			user.ID, -1, tempCash, "withdrawal", "withdrawal from non.io to Stripe",
+		)
+		_, txErr = tx.Exec("UPDATE users SET cash = 0 WHERE id = ?", user.ID)
+		txErr = tx.Commit()
+		if txErr != nil {
+			return txErr
 		}
 
 		err = user.UpdateLastPayout(time.Now())
@@ -115,7 +116,7 @@ func calculatePayouts(currentTime time.Time) ([]LedgerEntries, error) {
 					contributorId: user.ID,
 					amount:        payoutPerVote,
 					ledgerType:    "deposit",
-					description:   "deposit from " + user.Name,
+					description:   "deposit from user ID " + fmt.Sprintf("%d", user.ID),
 				})
 			}
 		}

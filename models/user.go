@@ -214,6 +214,14 @@ func (u *User) GetCash() (float64, error) {
 	return cash, nil
 }
 
+func (u *User) SetCash(cash float64) (float64, error) {
+	_, err := DBConn.Exec("update users set cash = ? WHERE id = ?", cash, u.ID)
+	if err != nil {
+		return 0, err
+	}
+	return cash, nil
+}
+
 // GetFinancialData will return the user's tag subscriptions
 func (u *User) GetFinancialData() (UserFinancialData, error) {
 	financialData := UserFinancialData{}
