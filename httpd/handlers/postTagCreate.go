@@ -69,6 +69,17 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.ContainsAny(payload.TagName, "<>='\"./|\\") {
+		sendSystemError(w, fmt.Errorf("PostTag cannot contain html elements"))
+		return
+	}
+
+	//checks the length of the TagName, if it's more than 30 characters, returns an error
+	if len(payload.TagName) > 20 {
+		sendSystemError(w, fmt.Errorf("PostTag cannot be more than 20 characters"))
+		return
+	}
+
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)
 

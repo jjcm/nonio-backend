@@ -15,6 +15,8 @@ export EMAIL_REFRESH_TOKEN=""
 export EMAIL_CLIENT_ID=""
 export EMAIL_CLIENT_SECRET=""
 export STRIPE_KEY=""
+export STRIPE_SECRET_KEY="asdf"
+export STRIPE_PUBLISHABLE_KEY="asdf"
 export WEBHOOK_ENDPOINT_SECRET=""
 
 cd ../migrations

@@ -11,6 +11,7 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 	routes := map[string]func(http.ResponseWriter, *http.Request){
 		"/": handlers.Home,
 
+		"/posts":       handlers.GetPosts,
 		"/posts/":                 handlers.GetPostByURL,
 		"/post/url-is-available/": handlers.CheckIfURLIsAvailable,
 
@@ -35,7 +36,6 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/protected": handlers.GetTokenDetails,
 
 		// POST ROUTES
-		"/posts":       handlers.GetPosts,
 		"/post/create": handlers.CreatePost,
 		// TODO "/post/delete/": handlers.DeletePost,
 
