@@ -117,9 +117,11 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	// ?sort=popular|top|new
 	// Returns posts sorted by a particular algorithm.
 	formSort := strings.TrimSpace(r.FormValue("sort"))
-	params.Sort = "top"
+	Log.Info("formSort: %s", formSort)
+	params.Sort = "popular"
 	switch formSort {
 	case "popular":
+		// This is unused for now, but will eventually be to show "popular things since the users last login"
 		// get the user id from context
 		userID := r.Context().Value("user_id").(int)
 		// query the user by user id
@@ -141,6 +143,10 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	case "new":
 		// sort by the create time
 		params.Sort = "new"
+	case "top":
+		params.Sort = "top"
+	default:
+		params.Sort = "popular"
 	}
 
 	// ?user=USER
