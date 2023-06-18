@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
+	"soci-backend/models"
 	"fmt"
 	"net/http"
 	"soci-backend/httpd/utils"
@@ -16,16 +16,10 @@ func StripeCancelSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type requestPayload struct {
-		SubscriptionID string `json:"subscriptionId"`
-	}
-	var payload requestPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		sendSystemError(w, fmt.Errorf("decode request payload: %v", err))
-		return
-	}
+	u := models.User{}
+	u.FindByID(r.Context().Value("user_id").(int))
 
-	subscription, err := sub.Cancel(payload.SubscriptionID, nil)
+	subscription, err := sub.Cancel(u.StripeSubscriptionID, nil)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("cancel subscription: %v", err))
 		return

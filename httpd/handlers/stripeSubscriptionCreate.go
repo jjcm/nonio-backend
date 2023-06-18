@@ -149,6 +149,8 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	u.UpdateStripeSubscriptionID(newSub.ID)
+
 	// If everything looks good, then send some info back to the user
 	output := map[string]interface{}{
 		"subscriptionId": newSub.ID,

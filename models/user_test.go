@@ -125,18 +125,18 @@ func TestFindingAUserByTheirUsername(t *testing.T) {
 	u := User{}
 	err := u.FindByUsername("")
 	if err == nil {
-		t.Errorf("Searching for a user by an empty username should have thrown an error")
+		t.Errorf("Searching for a user by an empty username should have thrown an errorr")
 	}
 
 	// now let's create a user and search with an invalid username, we are expecting an error
 	createUser("user@example.com", "radUser123", "anything")
 	err = u.FindByUsername("radUser")
 	if err == nil {
-		t.Errorf("The username 'radUser' should not exist in the database so an error should have been thrown")
+		t.Errorf("The username 'radUser' should not exist in the database so an error should have been thrown: %v", err)
 	}
 	err = u.FindByUsername("radUser123")
 	if err != nil {
-		t.Errorf("The username 'radUser123' should exist in the database so an error should not have been thrown")
+		t.Errorf("The username 'radUser123' should exist in the database so an error should not have been thrown: %v", err)
 	}
 	if u.ID == 0 {
 		t.Error("We should have hyradted the user struct, but it's not hydrated")
