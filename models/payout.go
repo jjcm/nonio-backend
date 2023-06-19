@@ -2,9 +2,10 @@ package models
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/transfer"
-	"time"
 )
 
 type Payout struct {
@@ -92,6 +93,7 @@ func calculatePayouts(currentTime time.Time) ([]LedgerEntries, error) {
 	u := User{}
 	users, err := u.GetAllForPayout()
 	if err != nil {
+		Log.Error("Error getting users for payout")
 		return nil, err
 	}
 
@@ -101,6 +103,7 @@ func calculatePayouts(currentTime time.Time) ([]LedgerEntries, error) {
 		if user.AccountType == "supporter" {
 			votes, err := user.GetUntalliedVotes(currentTime)
 			if err != nil {
+				Log.Error("Error getting users votes")
 				return nil, err
 			}
 			votes = uniquePostFilter(votes)

@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	price2 "github.com/stripe/stripe-go/v72/price"
 	"net/http"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
 	"time"
+
+	price2 "github.com/stripe/stripe-go/v72/price"
 
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/paymentmethod"
@@ -149,7 +150,7 @@ func StripeCreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u.UpdateStripeSubscriptionID(newSub.ID)
+	u.UpdateStripeSubscriptionId(newSub.ID)
 
 	// If everything looks good, then send some info back to the user
 	output := map[string]interface{}{

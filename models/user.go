@@ -196,6 +196,7 @@ func (u *User) GetAllUsersByIds(ids []int) ([]User, error) {
 }
 
 type UserFinancialData struct {
+	AccountType            string  `db:"account_type" json:"account_type"`
 	SubscriptionAmount     float64 `db:"subscription_amount" json:"subscription_amount"`
 	Cash                   float64 `db:"cash" json:"cash"`
 	StripeCustomerID       string  `db:"stripe_customer_id" json:"stripe_customer_id"`
@@ -203,6 +204,7 @@ type UserFinancialData struct {
 	StripeConnectAccountId string  `db:"stripe_connect_account_id" json:"stripe_connect_account_id"`
 	StripeDashboardLink    string  `json:"stripe_connect_link"`
 	StripeStatus           string  `json:"stripe_status"`
+	StripeSubscriptionId   string  `db:"stripe_subscription_id" json:"stripe_subscription_id"`
 }
 
 func (u *User) GetCash() (float64, error) {
@@ -228,7 +230,7 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 	financialData := UserFinancialData{}
 
 	// run the correct sql query
-	var query = "SELECT cash, subscription_amount, stripe_connect_account_id, stripe_customer_id FROM users WHERE id = ?"
+	var query = "SELECT account_type, cash, subscription_amount, stripe_connect_account_id, stripe_customer_id, stripe_subscription_id FROM users WHERE id = ?"
 	err := DBConn.Get(&financialData, query, u.ID)
 	if err != nil {
 		return financialData, err
