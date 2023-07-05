@@ -163,10 +163,12 @@ func (u *User) CreatePost(title string, postUrl string, link string, content str
 	}
 
 	if err != nil {
+		Log.Error("Error creating post - error 166")
 		return p, err
 	}
 	insertID, err := result.LastInsertId()
 	if err != nil {
+		Log.Error("Error creating post - error 171")
 		return p, err
 	}
 	p.FindByID(int(insertID))

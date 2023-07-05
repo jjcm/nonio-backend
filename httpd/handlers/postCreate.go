@@ -40,8 +40,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 	*/
 
+	Log.Info("attempting to create post")
+
 	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Link, payload.Content, payload.Type, payload.Width, payload.Height)
 	if err != nil {
+		Log.Error("Post creation failed: 47")
 		sendSystemError(w, err)
 		return
 	}
