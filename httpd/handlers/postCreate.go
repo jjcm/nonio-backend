@@ -19,6 +19,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	type requestPayload struct {
 		Title   string `json:"title"`
 		URL     string `json:"url"`
+		Link    string `json:"link"`
 		Content string `json:"content"`
 		Type    string `json:"type"`
 		Width   int    `json:"width"`
@@ -33,13 +34,13 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	u.FindByID(r.Context().Value("user_id").(int))
 
 	/*
-	if u.AccountType != "supporter" {
-		SendResponse(w, utils.MakeError("only supporters can submit posts"), 403)
-		return
-	}
+		if u.AccountType != "supporter" {
+			SendResponse(w, utils.MakeError("only supporters can submit posts"), 403)
+			return
+		}
 	*/
 
-	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Content, payload.Type, payload.Width, payload.Height)
+	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Link, payload.Content, payload.Type, payload.Width, payload.Height)
 	if err != nil {
 		sendSystemError(w, err)
 		return

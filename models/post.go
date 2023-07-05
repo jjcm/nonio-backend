@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,6 +15,8 @@ type Post struct {
 	ID           int       `db:"id" json:"ID"`
 	Title        string    `db:"title" json:"title"`
 	URL          string    `db:"url" json:"url"`
+	Link         string    `db:"link" json:"link"`
+	Domain       string    `db:"domain" json:"-"`
 	Author       User      `db:"-" json:"user"`
 	AuthorID     int       `db:"user_id" json:"-"`
 	Thumbnail    string    `db:"thumbnail" json:"thumbnail"`
@@ -56,6 +59,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		UserName     string    `json:"user"`
 		TimeStamp    int64     `json:"time"`
 		URL          string    `json:"url"`
+		Link         string    `json:"link"`
 		Content      string    `json:"content"`
 		Type         string    `json:"type"`
 		Score        int       `json:"score"`
@@ -69,6 +73,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		UserName:     p.Author.GetDisplayName(),
 		TimeStamp:    p.CreatedAt.UnixNano() / int64(time.Millisecond),
 		URL:          p.URL,
+		Link:         p.Link,
 		Content:      p.Content,
 		Type:         p.Type,
 		Score:        p.Score,
@@ -93,7 +98,7 @@ func (p *Post) ToJSON() string {
 /************************************************/
 
 // CreatePost - create a new post in the database
-func (u *User) CreatePost(title, url, content, postType string, width int, height int) (Post, error) {
+func (u *User) CreatePost(title string, postUrl string, link string, content string, postType string, width int, height int) (Post, error) {
 	p := Post{}
 	now := time.Now().Format("2006-01-02 15:04:05")
 
@@ -101,24 +106,30 @@ func (u *User) CreatePost(title, url, content, postType string, width int, heigh
 		return p, fmt.Errorf("post must contain a title")
 	}
 
-	if len(url) == 0 {
+	if len(postUrl) == 0 {
 		return p, fmt.Errorf("post must contain a url")
 	}
 
-	postURL := url
-	// TODO: this needs some backend verification that it's only /^[0-9A-Za-z-_]+$/
-
 	// perpare and truncate the title if necessary
-	postTitle := title
 	if len(title) > 256 {
-		postTitle = title[0:255]
+		title = title[0:255]
 	}
 
 	// If the URL has invalid characters, throw an error
 	validURL := regexp.MustCompile(`^[a-zA-Z0-9\-\._]*$`)
-	if !validURL.MatchString(url) {
+	if !validURL.MatchString(postUrl) {
 		return p, fmt.Errorf("url contains invalid characters")
+	}
 
+	// Check if the link is a valid URL, and if so set our domain to the URL's domain
+	postLink := url.URL{}
+	if link != "" {
+		// set the postLink to the parsed value of the url
+		parsedUrl, err := url.Parse(link)
+		if err != nil {
+			return p, fmt.Errorf("link is not a valid URL")
+		}
+		postLink = *parsedUrl
 	}
 
 	// set the type if it's blank
@@ -127,25 +138,25 @@ func (u *User) CreatePost(title, url, content, postType string, width int, heigh
 	}
 
 	// try and create the post in the DB
-	result, err := DBConn.Exec("INSERT INTO posts (title, url, user_id, thumbnail, score, content, type, width, height, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", postTitle, postURL, u.ID, "", 0, content, postType, width, height, now, now)
+	result, err := DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, width, height, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, postUrl, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, width, height, now, now)
 	// check for specific error of an existing post URL
 	// if we hit this error, run a second DB call to see how many of the posts have a similar URL alias and then tack on a suffix to make this one unique
 	if err != nil && err.Error()[0:10] == "Error 1062" {
 		var countSimilarAliases int
 		// the uniquie URL that we are testing for might not be long enough for the following LIKE query to work, so let's check that here
-		urlToCheckFor := postURL
+		urlToCheckFor := postUrl
 		if len(urlToCheckFor) > 240 {
 			urlToCheckFor = urlToCheckFor[0:240] // 240 is safe enough, since this is such an edge case that it's probably never going to happen
 		}
 		DBConn.Get(&countSimilarAliases, "SELECT COUNT(*) FROM posts WHERE url LIKE ?", urlToCheckFor+"%")
 		suffix := "-" + strconv.Itoa(countSimilarAliases+1)
-		newURL := postURL + suffix
+		newURL := postUrl + suffix
 		if len(newURL) > 255 {
-			newURL = postURL[0:len(postURL)-len(suffix)] + suffix
+			newURL = postUrl[0:len(postUrl)-len(suffix)] + suffix
 		}
 
 		// now let's try it again with the updated post URL
-		result, err = DBConn.Exec("INSERT INTO posts (title, url, user_id, thumbnail, score, content, type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", postTitle, newURL, u.ID, "", 0, content, postType, now, now)
+		result, err = DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, newURL, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, now, now)
 		if err != nil {
 			return p, err
 		}
@@ -185,6 +196,7 @@ func (p *Post) FindByURL(url string) error {
 	dbPost := Post{}
 	err := DBConn.Get(&dbPost, "SELECT * FROM posts WHERE url = ?", url)
 	if err != nil {
+		Log.Error(err.Error())
 		return err
 	}
 

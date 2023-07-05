@@ -43,7 +43,7 @@ func EditComment(w http.ResponseWriter, r *http.Request) {
 	comment := models.Comment{}
 	comment.FindByID(*(payload.ID))
 	if comment.ID == 0 {
-		sendSystemError(w, errors.New("comment doesn't exist or can't be found."))
+		sendSystemError(w, errors.New("comment doesn't exist or can't be found"))
 		return
 	}
 	comment.Content = payload.Content

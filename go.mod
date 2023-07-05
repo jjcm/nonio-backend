@@ -13,6 +13,8 @@ require (
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
+	github.com/otiai10/opengraph v1.1.3 // indirect
+	github.com/otiai10/opengraph/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stripe/stripe-go/v72 v72.66.0
 	github.com/urfave/cli v1.22.3
