@@ -119,4 +119,43 @@ func TestWeCanProcessPayouts(t *testing.T) {
 	if cash, _ := user3.GetCash(); cash != 25 {
 		t.Errorf("Cash of user 3 expected to be $25, instead got: %v", cash)
 	}
+
+	// Check the ledger entries for each user
+
+	ledger1, err := user1.GetLedgerEntries()
+	if err != nil {
+		t.Errorf("Error getting ledger entries for user 1: %v", err)
+	}
+
+	if len(ledger1) != 1 {
+		for _, ledger := range ledger1 {
+			t.Errorf("Ledger entry: %v", ledger.Description)
+		}
+		t.Errorf("User 1 should have 1 ledger entry, instead has %v", len(ledger1))
+	}
+
+	ledger2, err := user2.GetLedgerEntries()
+	if err != nil {
+		t.Errorf("Error getting ledger entries for user 2: %v", err)
+	}
+
+	if len(ledger2) != 2 {
+		for _, ledger := range ledger2 {
+			t.Errorf("Ledger entry: %v", ledger.Description)
+		}
+		t.Errorf("User 2 should have 1 ledger entry, instead has %v", len(ledger2))
+	}
+
+	ledger3, err := user3.GetLedgerEntries()
+	if err != nil {
+		t.Errorf("Error getting ledger entries for user 3: %v", err)
+	}
+
+	if len(ledger3) != 2 {
+		for _, ledger := range ledger3 {
+			t.Errorf("Ledger entry: %v", ledger.Description)
+		}
+
+		t.Errorf("User 3 should have 1 ledger entry, instead has %v", len(ledger3))
+	}
 }

@@ -35,6 +35,21 @@ func GetFinancials(w http.ResponseWriter, r *http.Request) {
 	SendResponse(w, &financialData, 200)
 }
 
+// GetFinancialLedger returns all of the ledger entries for a user
+func GetFinancialLedger(w http.ResponseWriter, r *http.Request) {
+	// get the user from context
+	user := models.User{}
+	user.FindByID(r.Context().Value("user_id").(int))
+
+	financialLedger, err := user.GetLedgerEntries()
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
+	SendResponse(w, &financialLedger, 200)
+}
+
 // GetUser gets details for a specific user
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	username := strings.ToLower(utils.ParseRouteParameter(r.URL.Path, "/users/"))

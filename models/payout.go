@@ -86,14 +86,6 @@ func uniquePostFilter(votes []PostTagVote) []PostTagVote {
 	return uniqueVotes
 }
 
-type LedgerEntries struct {
-	authorId      int
-	contributorId int
-	amount        float64
-	ledgerType    string
-	description   string
-}
-
 func (u *User) CreateFuturePayout(amount float64, payoutDate time.Time) error {
 	Log.Infof("creating future payout for user %v with amount %v, on %v", u.ID, amount, payoutDate)
 	_, err := DBConn.Exec("INSERT INTO payouts (user_id, payout_date, amount) VALUES (?, ?, ?)", u.ID, payoutDate, amount)
@@ -138,6 +130,7 @@ func ProcessPayouts() error {
 			post.FindByID(vote.PostID)
 			author.FindByID(post.AuthorID)
 
+			Log.Infof("Creating a ledger entry for user %v", author.Username)
 			_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
 				author.ID, user.ID, payoutPerVote, "deposit", "deposit from "+user.Username,
 			)

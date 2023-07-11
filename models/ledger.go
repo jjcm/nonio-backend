@@ -17,8 +17,8 @@ type Ledger struct {
 }
 
 // ToJSON - get a string representation of this Tag in JSON
-func (t *Tag) ToJSON() string {
-	jsonData, err := json.Marshal(t)
+func (l *Ledger) ToJSON() string {
+	jsonData, err := json.Marshal(l)
 	if err != nil {
 		return err.Error()
 	}
@@ -52,9 +52,9 @@ func (l *Ledger) CreateLedgerWithTx(tx Transaction) error {
 /************************************************/
 
 // GetLedgerEntries - get ledger entries for a specific user
-func (u *User) GetLedgerEntries(name string) ([]Ledger, error) {
+func (u *User) GetLedgerEntries() ([]Ledger, error) {
 	ledgerEntries := []Ledger{}
-	err := DBConn.Get(&ledgerEntries, "SELECT * FROM ledger WHERE author_id = ?", u.ID)
+	err := DBConn.Select(&ledgerEntries, "SELECT * FROM ledger WHERE author_id = ?", u.ID)
 	if err != nil {
 		return nil, err
 	}
