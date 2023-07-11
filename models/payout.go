@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/stripe/stripe-go/v72"
@@ -9,33 +8,17 @@ import (
 )
 
 type Payout struct {
-	StripeConnectAccountId string
-	Payout                 float64
+	ID         int       `db:"id" json:"-"`
+	User       *User     `db:"-" json:"-"`
+	UserID     int       `db:"user_id" json:"userID"`
+	Amount     float64   `db:"amount" json:"amount"`
+	PayoutDate time.Time `db:"payout_date" json:"payoutDate"`
+	CreatedAt  time.Time `db:"created_at" json:"createdAt"`
+	Tallied    bool      `db:"tallied" json:"tallied"`
 }
 
 func AllocatePayouts() error {
 	currentTime := time.Now()
-
-	ledgerEntries, err := calculatePayouts(currentTime)
-	if err != nil {
-		Log.Errorf("Error calculating payouts: %v", err)
-		return err
-	}
-
-	for _, ledger := range ledgerEntries {
-		tx, txErr := DBConn.Begin()
-		if txErr != nil {
-			return txErr
-		}
-		_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
-			ledger.authorId, ledger.contributorId, ledger.amount, ledger.ledgerType, ledger.description,
-		)
-		_, txErr = tx.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", ledger.amount, ledger.authorId)
-		txErr = tx.Commit()
-		if txErr != nil {
-			return txErr
-		}
-	}
 
 	u := User{}
 	allUsers, err := u.GetAllForPayout()
@@ -89,45 +72,6 @@ func AllocatePayouts() error {
 	return nil
 }
 
-func calculatePayouts(currentTime time.Time) ([]LedgerEntries, error) {
-	u := User{}
-	users, err := u.GetAllForPayout()
-	if err != nil {
-		Log.Error("Error getting users for payout")
-		return nil, err
-	}
-
-	var ledgerEntries []LedgerEntries
-
-	for _, user := range users {
-		if user.AccountType == "supporter" {
-			votes, err := user.GetUntalliedVotes(currentTime)
-			if err != nil {
-				Log.Error("Error getting users votes")
-				return nil, err
-			}
-			votes = uniquePostFilter(votes)
-			payoutPerVote := (user.SubscriptionAmount - ServerFee) / float64(len(votes))
-
-			for _, vote := range votes {
-				post := Post{}
-				post.FindByID(vote.PostID)
-				u.FindByID(post.AuthorID)
-
-				ledgerEntries = append(ledgerEntries, LedgerEntries{
-					authorId:      u.ID,
-					contributorId: user.ID,
-					amount:        payoutPerVote,
-					ledgerType:    "deposit",
-					description:   "deposit from user ID " + fmt.Sprintf("%d", user.ID),
-				})
-			}
-		}
-	}
-
-	return ledgerEntries, nil
-}
-
 func uniquePostFilter(votes []PostTagVote) []PostTagVote {
 	keys := make(map[int]bool)
 	uniqueVotes := []PostTagVote{}
@@ -148,4 +92,77 @@ type LedgerEntries struct {
 	amount        float64
 	ledgerType    string
 	description   string
+}
+
+func (u *User) CreateFuturePayout(amount float64, payoutDate time.Time) error {
+	Log.Infof("creating future payout for user %v with amount %v, on %v", u.ID, amount, payoutDate)
+	_, err := DBConn.Exec("INSERT INTO payouts (user_id, payout_date, amount) VALUES (?, ?, ?)", u.ID, payoutDate, amount)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ProcessPayouts() error {
+	payouts := []Payout{}
+
+	err := DBConn.Select(&payouts, "select * from payouts where tallied = 0 AND payout_date < ?", time.Now())
+	if err != nil {
+		return err
+	}
+
+	for _, payout := range payouts {
+		user := User{}
+		user.FindByID(payout.UserID)
+
+		Log.Infof("Processing payouts for user %v", user.Username)
+
+		votes, err := user.GetUntalliedVotes(payout.PayoutDate)
+		if err != nil {
+			return err
+		}
+
+		votes = uniquePostFilter(votes)
+
+		payoutPerVote := (payout.Amount / float64(len(votes)))
+
+		Log.Infof("Payout is $%v, spread across %v votes. Each vote will get %v", payout.Amount, len(votes), payoutPerVote)
+
+		tx, txErr := DBConn.Begin()
+		if txErr != nil {
+			return txErr
+		}
+		for _, vote := range votes {
+			post := Post{}
+			author := User{}
+			post.FindByID(vote.PostID)
+			author.FindByID(post.AuthorID)
+
+			_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
+				author.ID, user.ID, payoutPerVote, "deposit", "deposit from "+user.Username,
+			)
+			if txErr != nil {
+				Log.Error("Error inserting ledger entry")
+				return txErr
+			}
+			_, txErr = tx.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", payoutPerVote, author.ID)
+			if txErr != nil {
+				Log.Error("Error updating user cash")
+				return txErr
+			}
+		}
+
+		_, txErr = tx.Exec("UPDATE payouts SET tallied = 1 WHERE id = ?", payout.ID)
+		if txErr != nil {
+			Log.Error("Error setting payout to tallied")
+			return txErr
+		}
+
+		txErr = tx.Commit()
+		if txErr != nil {
+			return txErr
+		}
+	}
+
+	return nil
 }

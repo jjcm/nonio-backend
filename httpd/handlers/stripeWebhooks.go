@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/stripe/stripe-go/v72"
-	"github.com/stripe/stripe-go/v72/webhook"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
 	"time"
+
+	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/webhook"
 )
 
 // StripeWebhook create a new customer for user
@@ -25,6 +26,11 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
 	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		Log.Errorf("Error reading stripe webhook body: %v", err)
+		sendSystemError(w, err)
+		return
+	}
 
 	endPointSecret := os.Getenv("WEBHOOK_ENDPOINT_SECRET")
 
@@ -78,6 +84,7 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case "invoice.paid":
+		Log.Info("Stripe invoice paid event detected")
 		var invoice stripe.Invoice
 		err := json.Unmarshal(event.Data.Raw, &invoice)
 		if err != nil {
@@ -99,8 +106,10 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, fmt.Errorf("update subscription amount: %v", err))
 			return
 		}
-		if u.LastPayout.Sub(u.NextPayout) >= -time.Hour*24*2 || u.LastPayout.Sub(u.NextPayout) <= time.Hour*24*2 {
-
+		err = u.CreateFuturePayout(float64(invoice.AmountPaid)/100, time.Unix(invoice.PeriodEnd, 0))
+		if err != nil {
+			sendSystemError(w, errors.New("error creating future payout"))
+			return
 		}
 	}
 

@@ -9,7 +9,7 @@ func TestWeCanCreateComments(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	// create comment
 	comment, err := author.CreateComment(post, nil, "This is a dumb post")
@@ -27,7 +27,7 @@ func TestWeCanDeleteComments(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	// create comment
 	comment, _ := author.CreateComment(post, nil, "This is a dumb post")
@@ -43,7 +43,7 @@ func TestWeCanEditComments(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	// create comment
 	comment, _ := author.CreateComment(post, nil, "This is a dumb post")
@@ -97,7 +97,7 @@ func TestWeCanAbandonComments(t *testing.T) {
 
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	post, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	// create comment
 	comment, _ := author.CreateComment(post, nil, "This is a dumb post")
@@ -124,8 +124,8 @@ func TestWeCanGetCommentsByParams(t *testing.T) {
 	bill, _ := UserFactory("bill@example.com", "bill", "password")
 	joe, _ := UserFactory("joe@example.com", "joe", "password")
 
-	post1, _ := bill.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
-	post2, _ := bill.CreatePost("Post Title", "post-title-2", "lorem ipsum", "image", 0, 0)
+	post1, _ := bill.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
+	post2, _ := bill.CreatePost("Post Title", "post-title-2", "", "lorem ipsum", "image", 0, 0)
 
 	// create comments on the first post
 	comment1, _ := joe.CreateComment(post1, nil, "This is a dumb post")

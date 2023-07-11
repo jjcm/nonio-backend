@@ -10,7 +10,7 @@ func TestWeCanVoteOnComments(t *testing.T) {
 	user1, _ := UserFactory("example1@example.com", "bob", "password")
 	user2, _ := UserFactory("example2@example.com", "ralph", "password")
 
-	post, _ := user1.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := user1.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	comment1, _ := user2.CreateComment(post, nil, "Test comment from user 2 on user 1's post")
 
@@ -25,7 +25,7 @@ func TestWeCanAdjustLineageScore(t *testing.T) {
 	user1, _ := UserFactory("example1@example.com", "bob", "password")
 	user2, _ := UserFactory("example2@example.com", "ralph", "password")
 
-	post, _ := user1.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := user1.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	comment1, _ := user2.CreateComment(post, nil, "Test comment from user 2 on user 1's post")
 	comment2, _ := user2.CreateComment(post, &comment1, "Test comment replying to comment 1")
@@ -109,7 +109,7 @@ func TestWeCanGetUpvotes(t *testing.T) {
 	joe, _ := UserFactory("example3@example.com", "joe", "password")
 	wanda, _ := UserFactory("example4@example.com", "wanda", "password")
 
-	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := bob.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	comment1, _ := ralph.CreateComment(post, nil, "Test comment from ralph on bob's post")
 
@@ -138,7 +138,7 @@ func TestWeCanGetDownvotes(t *testing.T) {
 	joe, _ := UserFactory("example3@example.com", "joe", "password")
 	wanda, _ := UserFactory("example4@example.com", "wanda", "password")
 
-	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := bob.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	comment1, _ := ralph.CreateComment(post, nil, "Test comment from ralph on bob's post")
 
@@ -167,7 +167,7 @@ func TestWeCanChangeVotes(t *testing.T) {
 	joe, _ := UserFactory("example3@example.com", "joe", "password")
 	wanda, _ := UserFactory("example4@example.com", "wanda", "password")
 
-	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := bob.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	comment1, _ := ralph.CreateComment(post, nil, "Test comment from ralph on bob's post")
 
@@ -204,7 +204,7 @@ func TestWeCanDeleteVotes(t *testing.T) {
 	bob, _ := UserFactory("example1@example.com", "bob", "password")
 	ralph, _ := UserFactory("example2@example.com", "ralph", "password")
 
-	post, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, _ := bob.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	comment1, _ := ralph.CreateComment(post, nil, "Test comment from ralph on bob's post")
 
@@ -238,8 +238,8 @@ func TestWeCanGetCommentVotesByParams(t *testing.T) {
 	ralph, _ := UserFactory("ralph@example.com", "ralph", "password")
 	joe, _ := UserFactory("joe@example.com", "joe", "password")
 
-	bobsPost, _ := bob.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
-	ralphsPost, _ := ralph.CreatePost("Post Title", "post-title-2", "lorem ipsum", "image", 0, 0)
+	bobsPost, _ := bob.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
+	ralphsPost, _ := ralph.CreatePost("Post Title", "post-title-2", "", "lorem ipsum", "image", 0, 0)
 
 	comment1, _ := ralph.CreateComment(bobsPost, nil, "Test comment from user 2 on user 1's post")
 	comment2, _ := ralph.CreateComment(bobsPost, &comment1, "Test comment replying to comment 1")

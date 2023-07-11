@@ -230,7 +230,7 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	switch params.Sort {
 	case "popular":
 		query = query + " order by score / POWER(((current_timestamp() - created_at) / 3600000), 1.8) desc"
-		Log.Info("popular query: %s", query)
+		Log.Infof("popular query: %s", query)
 	case "top":
 		query = query + " order by score desc"
 		Log.Info("top")

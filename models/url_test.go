@@ -12,7 +12,7 @@ func TestWeCanCheckIfAUrlIsAvailable(t *testing.T) {
 
 	// cool, now let's create a post and the URL should not be available anymore
 	author, _ := UserFactory("example@example.com", "", "password")
-	p, _ := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	p, _ := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	// now the URL for the existing post should be taken
 	isAvaiable, _ = URLIsAvailable(p.URL)

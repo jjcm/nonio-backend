@@ -11,7 +11,7 @@ func TestWeCanCreateAPost(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	p, err := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
@@ -28,7 +28,7 @@ func TestWeCantCreateAPostWithAnInvalidURL(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	_, err := author.CreatePost("Post Title", "post title", "lorem ipsum", "image", 0, 0)
+	_, err := author.CreatePost("Post Title", "post title", "", "lorem ipsum", "image", 0, 0)
 	if err == nil {
 		t.Errorf("Posts should not be able to be made with spaces in the url")
 	}
@@ -39,7 +39,7 @@ func TestWeCantCreateAPostWithAnInvalidTitle(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	_, err := author.CreatePost("", "post", "lorem ipsum", "image", 0, 0)
+	_, err := author.CreatePost("", "post", "", "lorem ipsum", "image", 0, 0)
 	if err == nil {
 		t.Errorf("Posts should not be able to be made with no title")
 	}
@@ -50,7 +50,7 @@ func TestWeCanIncrementScoreForPost(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
 	if err := p.FindByURL("post-title"); err != nil {
@@ -73,7 +73,7 @@ func TestWeCanFindAPostByItsURL(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
 	p.FindByURL("post-title")
@@ -88,7 +88,7 @@ func TestWeCanFindAPostByItsID(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	post, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	post, err := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Error when creating post: %s", err.Error())
 	}
@@ -106,7 +106,7 @@ func TestWhenWeMarshalAPostToJSONItHasTheShapeThatWeExpect(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "userName", "password")
-	p, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	p, err := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("We should be able to create a post. Error: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestWeTagAPost(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
 	p.FindByURL("post-title")
@@ -147,7 +147,7 @@ func TestWeCantTagAPostWithTheSameTagMoreThanOneTime(t *testing.T) {
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 
 	p := Post{}
 	p.FindByURL("post-title")
@@ -176,7 +176,7 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	p1, err := author.CreatePost("Post Title", "post-title", "lorem ipsum", "image", 0, 0)
+	p1, err := author.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
@@ -185,7 +185,7 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 	}
 
 	// now let's create a second post with the same title
-	p2, err := author.CreatePost("Post Title", "post-title", "Dolor sit amit", "image", 0, 0)
+	p2, err := author.CreatePost("Post Title", "post-title", "", "Dolor sit amit", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
@@ -194,7 +194,7 @@ func TestIfWeCreateAPostWithTheSameURLTheSystemWillGenerateAUniqueOne(t *testing
 	}
 
 	// now let's create a third post with the same title
-	p3, err := author.CreatePost("Post Title", "post-title", "Dolor sit amit", "image", 0, 0)
+	p3, err := author.CreatePost("Post Title", "post-title", "", "Dolor sit amit", "image", 0, 0)
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
@@ -208,7 +208,7 @@ func TestIfAPostIsCreatedWithAnEmptyTypeItGetsSetToTheDefaultTypeImage(t *testin
 
 	// create an author for post
 	author, _ := UserFactory("example@example.com", "", "password")
-	p, err := author.CreatePost("Title", "post-title", "lorem ipsum", "", 0, 0) // note the empty 3rd param
+	p, err := author.CreatePost("Title", "post-title", "", "lorem ipsum", "", 0, 0) // note the empty 3rd param
 	if err != nil {
 		t.Errorf("Post creation should have worked. Error recieved: %v", err)
 	}
@@ -257,16 +257,16 @@ func TestWeCanQueryPost(t *testing.T) {
 	author2, _ := UserFactory("example2@example.com", "user2", "password")
 
 	// create some posts
-	author1.CreatePost("Post thats arty", "url1", "lorem ipsum", "image", 0, 0)
+	author1.CreatePost("Post thats arty", "url1", "", "lorem ipsum", "image", 0, 0)
 
 	// add a light delay. We'll use this in the "since" test later.
 	time.Sleep(1 * time.Second)
 	inBetweenTime := time.Now().Format("2006-01-02 15:04:05")
 	time.Sleep(1 * time.Second)
 
-	author2.CreatePost("Post thats both", "url2", "lorem ipsum", "image", 0, 0)
+	author2.CreatePost("Post thats both", "url2", "", "lorem ipsum", "image", 0, 0)
 	time.Sleep(1 * time.Second)
-	author1.CreatePost("Post thats funny", "url3", "lorem ipsum", "image", 0, 0)
+	author1.CreatePost("Post thats funny", "url3", "", "lorem ipsum", "image", 0, 0)
 
 	// create a set of tags
 	artTag, _ := TagFactory("art", author1)

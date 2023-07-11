@@ -241,7 +241,7 @@ func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 	}
 
 	// create a post
-	author.CreatePost("It's my post! Yay!", "post-title", "lorem ipsum", "image", 0, 0)
+	author.CreatePost("It's my post! Yay!", "post-title", "", "lorem ipsum", "image", 0, 0)
 	posts, err = author.GetPosts(-1, 0)
 	if err != nil {
 		t.Error(err)
@@ -254,7 +254,7 @@ func TestWeCanGetAllThePostsFromAUser(t *testing.T) {
 	// now let's create a ton of posts to test the offset and limit behavior
 	for index := 1; index < 200; index++ {
 		indexAsString := strconv.Itoa(index)
-		author.CreatePost("Post Title "+indexAsString, "post-title-"+indexAsString, "lorem ipsum", "image", 0, 0)
+		author.CreatePost("Post Title "+indexAsString, "post-title-"+indexAsString, "", "lorem ipsum", "image", 0, 0)
 	}
 
 	posts, err = author.GetPosts(-1, 0)
