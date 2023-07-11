@@ -96,6 +96,7 @@ func (u *User) CreateFuturePayout(amount float64, payoutDate time.Time) error {
 }
 
 func ProcessPayouts() error {
+	Log.Info("Processing payouts")
 	payouts := []Payout{}
 
 	err := DBConn.Select(&payouts, "select * from payouts where tallied = 0 AND payout_date < ?", time.Now())

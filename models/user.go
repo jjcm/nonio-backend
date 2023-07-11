@@ -236,50 +236,52 @@ func (u *User) GetFinancialData() (UserFinancialData, error) {
 		return financialData, err
 	}
 
-	params := &stripe.LoginLinkParams{
-		Account: stripe.String(financialData.StripeConnectAccountId),
-	}
-
-	link, err := loginlink.New(params)
-	var dashboardLink string
-
-	if link.URL == "" {
-		// get account link
-		accountLinkParams := &stripe.AccountLinkParams{
-			Account:    stripe.String(financialData.StripeConnectAccountId),
-			RefreshURL: stripe.String(os.Getenv("WEB_HOST") + "/admin/financials"),
-			ReturnURL:  stripe.String(os.Getenv("WEB_HOST") + "/admin/financials"),
-			Type:       stripe.String("account_onboarding"),
+	if financialData.StripeConnectAccountId != "" {
+		params := &stripe.LoginLinkParams{
+			Account: stripe.String(financialData.StripeConnectAccountId),
 		}
-		al, _ := accountlink.New(accountLinkParams)
-		dashboardLink = al.URL
-	} else {
-		dashboardLink = link.URL
+
+		link, _ := loginlink.New(params)
+		var dashboardLink string
+
+		if link.URL == "" {
+			// get account link
+			accountLinkParams := &stripe.AccountLinkParams{
+				Account:    stripe.String(financialData.StripeConnectAccountId),
+				RefreshURL: stripe.String(os.Getenv("WEB_HOST") + "/admin/financials"),
+				ReturnURL:  stripe.String(os.Getenv("WEB_HOST") + "/admin/financials"),
+				Type:       stripe.String("account_onboarding"),
+			}
+			al, _ := accountlink.New(accountLinkParams)
+			dashboardLink = al.URL
+		} else {
+			dashboardLink = link.URL
+		}
+
+		financialData.StripeDashboardLink = dashboardLink
+
+		a, _ := account.GetByID(financialData.StripeConnectAccountId, nil)
+
+		if len(a.Requirements.CurrentlyDue) > 0 || a.Requirements.DisabledReason != "" || a.Capabilities.Transfers != stripe.AccountCapabilityStatusActive {
+			financialData.StripeStatus = "pending"
+		} else {
+			financialData.StripeStatus = "active"
+		}
+
+		balanceParams := &stripe.BalanceParams{}
+		params.SetStripeAccount(financialData.StripeConnectAccountId)
+		bal, _ := balance.Get(balanceParams)
+		var totalBalance int64
+
+		Log.Info(fmt.Sprintf("%+v\n", bal))
+		for _, b := range bal.Available {
+			Log.Info(fmt.Sprintf("%+v\n", b))
+			Log.Info(fmt.Sprintf("Balance: %v", b.Value))
+			totalBalance += b.Value
+		}
+
+		financialData.StripeWalletBalance = float64(totalBalance)
 	}
-
-	financialData.StripeDashboardLink = dashboardLink
-
-	a, _ := account.GetByID(financialData.StripeConnectAccountId, nil)
-
-	if len(a.Requirements.CurrentlyDue) > 0 || a.Requirements.DisabledReason != "" || a.Capabilities.Transfers != stripe.AccountCapabilityStatusActive {
-		financialData.StripeStatus = "pending"
-	} else {
-		financialData.StripeStatus = "active"
-	}
-
-	balanceParams := &stripe.BalanceParams{}
-	params.SetStripeAccount(financialData.StripeConnectAccountId)
-	bal, _ := balance.Get(balanceParams)
-	var totalBalance int64
-
-	Log.Info(fmt.Sprintf("%+v\n", bal))
-	for _, b := range bal.Available {
-		Log.Info(fmt.Sprintf("%+v\n", b))
-		Log.Info(fmt.Sprintf("Balance: %v", b.Value))
-		totalBalance += b.Value
-	}
-
-	financialData.StripeWalletBalance = float64(totalBalance)
 
 	return financialData, nil
 }
@@ -310,7 +312,7 @@ func (u *User) GetInfo() (UserInfo, error) {
 	}
 
 	// get the karma for the user
-	err = DBConn.Get(&userInfo.Karma, "SELECT SUM(score) FROM posts WHERE user_id = ?", u.ID)
+	err = DBConn.Get(&userInfo.Karma, "SELECT IFNULL(SUM(score), 0) FROM posts WHERE user_id = ?", u.ID)
 	if err != nil {
 		return userInfo, err
 	}
