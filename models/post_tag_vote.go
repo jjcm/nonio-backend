@@ -107,7 +107,7 @@ func (u *User) GetUntalliedVotes(before time.Time) ([]PostTagVote, error) {
 
 	timestring := before.UTC().Format("2006-01-02 15:04:05")
 	Log.Infof("getting posts before: %s for user %d", timestring, u.ID)
-	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND tallied = ?", u.ID, 0)
+	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND created_at <= ? AND tallied = ? AND creator_id != ?", u.ID, timestring, 0, u.ID)
 	Log.Infof("votes found: %v", len(votes))
 	return votes, err
 }
