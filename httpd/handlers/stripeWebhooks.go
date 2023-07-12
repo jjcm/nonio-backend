@@ -17,6 +17,7 @@ import (
 
 // StripeWebhook create a new customer for user
 func StripeWebhook(w http.ResponseWriter, r *http.Request) {
+	Log.Info("Stripe: received webhook")
 	if r.Method != "POST" {
 		SendResponse(w, utils.MakeError("you can only POST to the stripe webhook route"), http.StatusMethodNotAllowed)
 		return
@@ -37,6 +38,7 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 	event, err := webhook.ConstructEvent(body, r.Header.Get("Stripe-Signature"), endPointSecret)
 
 	if err != nil {
+		Log.Error("Error verifying webhook signature")
 		sendSystemError(w, err)
 		return
 	}
