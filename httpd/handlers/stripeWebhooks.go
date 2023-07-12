@@ -107,6 +107,13 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, errors.New("no customer for the user"))
 			return
 		}
+		if len(invoice.Lines.Data) == 0 {
+			Log.Error("Stripe: No invoice lines")
+			//sendSystemError(w, errors.New("no invoice lines"))
+			//return
+		} else {
+			Log.Infof("Period ends on %v", time.Unix(invoice.Lines.Data[0].Period.End, 0))
+		}
 		err = u.UpdateCurrentPeriodEnd(time.Unix(invoice.PeriodEnd, 0))
 		if err != nil {
 			sendSystemError(w, fmt.Errorf("update subscription amount: %v", err))
