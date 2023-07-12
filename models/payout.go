@@ -152,6 +152,12 @@ func ProcessPayouts() error {
 			return txErr
 		}
 
+		_, txErr = tx.Exec("UPDATE posts_tags_votes SET tallied = 1 WHERE voter_id = ? AND created_at < ?", payout.UserID, payout.PayoutDate)
+		if txErr != nil {
+			Log.Error("Error setting votes to tallied")
+			return txErr
+		}
+
 		txErr = tx.Commit()
 		if txErr != nil {
 			return txErr
