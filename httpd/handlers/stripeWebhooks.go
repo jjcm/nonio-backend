@@ -41,6 +41,8 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	Log.Infof("Stripe: received event %s", event.Type)
+
 	switch event.Type {
 	case "payment_intent.succeeded":
 		var paymentIntent stripe.PaymentIntent
@@ -62,6 +64,7 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, fmt.Errorf("find user by id: %v", err))
 			return
 		}
+		Log.Infof("Stripe: payment_intent.succeeded for user %s", u.Username)
 	case "payment_intent.payment_failed":
 		var paymentIntent stripe.PaymentIntent
 		err := json.Unmarshal(event.Data.Raw, &paymentIntent)
@@ -83,6 +86,7 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, fmt.Errorf("find user by id: %v", err))
 			return
 		}
+		Log.Infof("Stripe: payment_intent.payment_failed for user %s", u.Username)
 	case "invoice.paid":
 		Log.Info("Stripe invoice paid event detected")
 		var invoice stripe.Invoice
@@ -111,6 +115,7 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			sendSystemError(w, errors.New("error creating future payout"))
 			return
 		}
+		Log.Infof("Stripe: invoice.paid for user %s", u.Username)
 	}
 
 	SendResponse(w, true, 200)
