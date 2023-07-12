@@ -41,14 +41,14 @@ func (v *PostTagVote) CreatePostTagVote() error {
 	post := &Post{}
 	post.FindByID(v.PostID)
 	// create a new PostTag association
-	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id) VALUES (?, ?, ?)", v.PostID, v.TagID, v.VoterID)
+	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id, creator_id) VALUES (?, ?, ?, ?)", v.PostID, v.TagID, v.VoterID, post.AuthorID)
 	return err
 }
 
 // CreatePostTagVoteWithTx - create the PostTagVote with post and tag information
 func (v *PostTagVote) CreatePostTagVoteWithTx(tx Transaction) error {
 	// create a new PostTag association
-	_, err := tx.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id) VALUES (?, ?, ?)", v.PostID, v.TagID, v.VoterID)
+	_, err := tx.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id, creator_id) VALUES (?, ?, ?, ?)", v.PostID, v.TagID, v.VoterID, v.CreatorID)
 	if err != nil {
 		return err
 	}

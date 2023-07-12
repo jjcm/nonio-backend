@@ -85,6 +85,7 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	postTagVote.Voter = user
 	postTagVote.VoterID = user.ID
 	postTagVote.VoterName = user.Name
+	postTagVote.CreatorID = post.AuthorID
 
 	if err = models.WithTransaction(func(tx models.Transaction) error {
 		// insert the PostTagVote to database
