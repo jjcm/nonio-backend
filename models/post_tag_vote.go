@@ -31,6 +31,7 @@ type PostTagVote struct {
 func (u *User) CreatePostTagVote(postID int, tagID int) error {
 	post := &Post{}
 	post.FindByID(postID)
+	Log.Infof("creating post tag vote for post author %d", post.AuthorID)
 	_, err := DBConn.Exec("INSERT INTO posts_tags_votes (post_id, tag_id, voter_id, creator_id) VALUES (?, ?, ?, ?)", postID, tagID, u.ID, post.AuthorID)
 	return err
 }
@@ -105,7 +106,9 @@ func (u *User) GetUntalliedVotes(before time.Time) ([]PostTagVote, error) {
 	votes := []PostTagVote{}
 
 	timestring := before.UTC().Format("2006-01-02 15:04:05")
+	Log.Infof("getting posts before: %s", timestring)
 	err := DBConn.Select(&votes, "select * from posts_tags_votes where voter_id = ? AND created_at <= ? AND tallied = ? AND creator_id != ?", u.ID, timestring, 0, u.ID)
+	Log.Infof("votes found: %v", len(votes))
 	return votes, err
 }
 
