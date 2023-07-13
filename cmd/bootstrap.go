@@ -34,6 +34,7 @@ func bootstrap() {
 	utils.HmacSampleSecret = sociConfig.HMACKey
 	utils.AdminEmail = sociConfig.AdminEmail
 	utils.AdminEmailPassword = sociConfig.AdminEmailPassword
+	utils.Log = sociConfig.Logger
 	fmt.Println(sociConfig.AdminEmail)
 
 	// let's now hydrate a few things in the middleware package

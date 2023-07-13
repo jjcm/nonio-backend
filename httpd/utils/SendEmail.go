@@ -10,12 +10,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 )
 
+var Log *logrus.Logger
 var AdminEmail string
 var AdminEmailPassword string
 
@@ -89,6 +91,7 @@ func SendEmailOAUTH2(to string, subject string, body string) (bool, error) {
 	// Send the message
 	_, err := GmailService.Users.Messages.Send("me", &message).Do()
 	if err != nil {
+		Log.Errorf("Error sending email: %v", err)
 		return false, err
 	}
 	return true, nil
