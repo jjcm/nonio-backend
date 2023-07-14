@@ -52,16 +52,17 @@ func OAuthGmailService() {
 		ClientID:     os.Getenv("EMAIL_CLIENT_ID"),
 		ClientSecret: os.Getenv("EMAIL_CLIENT_SECRET"),
 		Endpoint:     google.Endpoint,
-		RedirectURL:  "http://localhost",
+		RedirectURL:  "https://non.io",
 	}
 
 	token := oauth2.Token{
 		AccessToken:  os.Getenv("EMAIL_ACCESS_TOKEN"),
 		RefreshToken: os.Getenv("EMAIL_REFRESH_TOKEN"),
 		TokenType:    "Bearer",
-		Expiry:       time.Now(),
+		Expiry:       time.Now().AddDate(0, 0, 1),
 	}
 
+	Log.Infof("Creating token with access token: %v, and refresh token %v", token.AccessToken, token.RefreshToken)
 	var tokenSource = config.TokenSource(context.Background(), &token)
 
 	srv, err := gmail.NewService(context.Background(), option.WithTokenSource(tokenSource))
