@@ -26,12 +26,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	err := u.FindByEmail(requestUser.Email)
 	if err != nil {
+		Log.Errorf("error finding user by email: %v", requestUser.Email)
 		sendNotFound(w, err)
 		return
 	}
 
 	err = u.Login(requestUser.Password)
 	if err != nil {
+		// Info - there's an error logging in on the mobile browser, but I'm not sure why. I'm logging passwords IN PLAINTEXT only for myself here. I'm lazy so I'm testing on prod, but I also want anyone reading this to know I'm only doing it for myself.
+		if requestUser.Email == "j@jjcm.org" {
+			Log.Errorf("error logging in with password: %v", requestUser.Password)
+		}
 		sendNotFound(w, err)
 		return
 	}
