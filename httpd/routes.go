@@ -71,6 +71,9 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		// "/user/get-settings":        handlers.GetSettings,
 		"/user/choose-free-account": handlers.ChooseFreeAccount,
 
+		// NOTIFICATIONS ROUTES
+		"/notifications": handlers.GetNotifications,
+
 		// VOTES ROUTES
 		"/votes": handlers.GetVotes,
 
