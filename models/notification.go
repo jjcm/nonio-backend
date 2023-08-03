@@ -8,7 +8,7 @@ import (
 // Notification - code representation of responses to a user's comments or posts
 type Notification struct {
 	ID        int       `db:"id" json:"-"`
-	User      int       `db:"user_id" json:"-"`
+	UserID    int       `db:"user_id" json:"-"`
 	Comment   Comment   `db:"-" json:"-"`
 	CommentID int       `db:"comment_id" json:"commentID"`
 	Read      bool      `db:"read" json:"read"`
@@ -80,16 +80,37 @@ func (u *User) CreateNotification(comment Comment) error {
 // GetNotifications - get all notifications for a user
 func (u *User) GetNotifications() ([]Notification, error) {
 	notifications := []Notification{}
-	return notifications, nil
 
-	/* TODO
 	// run the correct sql query
 	var query = "SELECT * FROM subscriptions WHERE user_id = ?"
-	err := DBConn.Select(&subscriptions, query, u.ID)
+	err := DBConn.Select(&notifications, query, u.ID)
 	if err != nil {
-		return subscriptions, err
+		return notifications, err
 	}
 
-	return subscriptions, nil
-	*/
+	return notifications, nil
+}
+
+// FindByID - find a notification by its id
+func (n *Notification) FindByID(id int) error {
+	err := DBConn.Get(n, "SELECT * FROM notifications WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/************************************************/
+/******************** UPDATE ********************/
+/************************************************/
+
+// MarkRead - mark a notification as read
+func (n *Notification) MarkRead() error {
+	_, err := DBConn.Exec("UPDATE notifications SET read = 1 WHERE id = ?", n.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
