@@ -82,7 +82,7 @@ func (u *User) GetNotifications() ([]Notification, error) {
 	notifications := []Notification{}
 
 	// run the correct sql query
-	var query = "SELECT * FROM subscriptions WHERE user_id = ?"
+	var query = "SELECT * FROM notifications WHERE user_id = ?"
 	err := DBConn.Select(&notifications, query, u.ID)
 	if err != nil {
 		return notifications, err
@@ -107,7 +107,7 @@ func (n *Notification) FindByID(id int) error {
 
 // MarkRead - mark a notification as read
 func (n *Notification) MarkRead() error {
-	_, err := DBConn.Exec("UPDATE notifications SET read = 1 WHERE id = ?", n.ID)
+	_, err := DBConn.Exec("UPDATE notifications SET `read` = true WHERE id = ?", n.ID)
 	if err != nil {
 		return err
 	}
