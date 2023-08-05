@@ -91,6 +91,20 @@ func (u *User) GetNotifications() ([]Notification, error) {
 	return notifications, nil
 }
 
+// GetUnreadNotificationCount - get count of all unread notifications for the user
+func (u *User) GetUnreadNotificationCount() (int, error) {
+	var count int
+
+	// run the correct sql query
+	var query = "SELECT count(*) FROM notifications WHERE user_id = ? AND `read` = false"
+	err := DBConn.Get(&count, query, u.ID)
+	if err != nil {
+		return count, err
+	}
+
+	return count, nil
+}
+
 // FindByID - find a notification by its id
 func (n *Notification) FindByID(id int) error {
 	err := DBConn.Get(n, "SELECT * FROM notifications WHERE id = ?", id)

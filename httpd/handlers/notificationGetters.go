@@ -7,7 +7,7 @@ import (
 	"soci-backend/models"
 )
 
-// GetSubscriptions - gets a user's posttagvotes.
+// GetNotifications - gets a user's notifications as a list of comments
 func GetNotifications(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
@@ -22,4 +22,18 @@ func GetNotifications(w http.ResponseWriter, r *http.Request) {
 		"notifications": notifications,
 	}
 	SendResponse(w, output, 200)
+}
+
+// GetUnreadNotificationCount - gets a user's count of unread notifications
+func GetUnreadNotificationCount(w http.ResponseWriter, r *http.Request) {
+	u := models.User{}
+	u.FindByID(r.Context().Value("user_id").(int))
+
+	notificationCount, err := u.GetUnreadNotificationCount()
+	if err != nil {
+		SendResponse(w, utils.MakeError(err.Error()), 500)
+		return
+	}
+
+	SendResponse(w, notificationCount, 200)
 }

@@ -95,10 +95,13 @@ func (u *User) CreateComment(post Post, parent *Comment, content string) (Commen
 		return c, errors.New("can't create a comment for an invalid user or post")
 	}
 
-	var notificationRecepientID int
 	var commentParentID int
 	if parent != nil {
 		commentParentID = parent.ID
+	}
+
+	var notificationRecepientID int
+	if commentParentID != 0 {
 		notificationRecepientID = int(parent.AuthorID.Int32)
 	} else {
 		notificationRecepientID = post.AuthorID
