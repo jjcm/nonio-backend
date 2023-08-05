@@ -95,9 +95,13 @@ func (u *User) CreateComment(post Post, parent *Comment, content string) (Commen
 		return c, errors.New("can't create a comment for an invalid user or post")
 	}
 
+	var notificationRecepientID int
 	var commentParentID int
 	if parent != nil {
 		commentParentID = parent.ID
+		notificationRecepientID = int(parent.AuthorID.Int32)
+	} else {
+		notificationRecepientID = post.AuthorID
 	}
 
 	var insertID int64
@@ -115,6 +119,13 @@ func (u *User) CreateComment(post Post, parent *Comment, content string) (Commen
 		_, err = tx.Exec("UPDATE posts set comment_count = comment_count + 1 WHERE id = ?", post.ID)
 		if err != nil {
 			return err
+		}
+
+		if u.ID != notificationRecepientID {
+			_, err = tx.Exec("INSERT INTO notifications (user_id, comment_id, created_at) VALUES (?, ?, ?)", notificationRecepientID, insertID, now)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
