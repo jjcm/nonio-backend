@@ -64,4 +64,7 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 
 	// status 201 for "created"
 	SendResponse(w, &comment, 201)
+
+	// Nuke the cache
+	PostCache = make(map[string]PostQueryResponse)
 }
