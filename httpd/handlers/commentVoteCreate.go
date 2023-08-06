@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
@@ -20,14 +19,10 @@ func AddCommentVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Log.Info(r.Body)
 	// decode the request parameters
 	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
-	Log.Info("comment vote time")
-	Log.Info(fmt.Sprintf("comment id: %v", payload.ID))
-	Log.Info(fmt.Sprintf("comment upvoted: %v", payload.Upvote))
 
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))

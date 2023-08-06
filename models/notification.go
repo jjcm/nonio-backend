@@ -10,7 +10,7 @@ type Notification struct {
 	ID        int       `db:"id" json:"-"`
 	UserID    int       `db:"user_id" json:"-"`
 	Comment   Comment   `db:"-" json:"-"`
-	CommentID int       `db:"comment_id" json:"commentID"`
+	CommentID int       `db:"comment_id" json:"comment_id"`
 	Read      bool      `db:"read" json:"read"`
 	CreatedAt time.Time `db:"created_at" json:"-"`
 }
@@ -22,6 +22,11 @@ func (n *Notification) MarshalJSON() ([]byte, error) {
 		n.Comment.FindByID(n.CommentID)
 	}
 
+	// hydrate the user
+	if n.Comment.Author.ID == 0 {
+		n.Comment.Author.FindByID(int(n.Comment.AuthorID.Int32))
+	}
+
 	// hydrate the comment's post
 	if n.Comment.Post.ID == 0 {
 		n.Comment.Post.FindByID(n.Comment.PostID)
@@ -30,10 +35,10 @@ func (n *Notification) MarshalJSON() ([]byte, error) {
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
 		ID          int    `json:"id"`
-		CommentID   int    `json:"commentID"`
-		CommentDate int64  `json:"commentDate"`
+		CommentID   int    `json:"comment_id"`
+		CommentDate int64  `json:"date"`
 		Post        string `json:"post"`
-		PostTitle   string `json:"postTitle"`
+		PostTitle   string `json:"post_title"`
 		Content     string `json:"content"`
 		User        string `json:"user"`
 		Upvotes     int    `json:"upvotes"`
@@ -77,12 +82,22 @@ func (u *User) CreateNotification(comment Comment) error {
 /********************* READ *********************/
 /************************************************/
 
+type NotificationQueryParams struct {
+	Unread bool
+}
+
 // GetNotifications - get all notifications for a user
-func (u *User) GetNotifications() ([]Notification, error) {
+func (u *User) GetNotifications(params *NotificationQueryParams) ([]Notification, error) {
 	notifications := []Notification{}
 
 	// run the correct sql query
 	var query = "SELECT * FROM notifications WHERE user_id = ?"
+	if params != nil {
+		if params.Unread {
+			query += " AND `read` = false"
+		}
+	}
+
 	err := DBConn.Select(&notifications, query, u.ID)
 	if err != nil {
 		return notifications, err

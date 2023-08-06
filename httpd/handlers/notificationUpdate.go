@@ -17,12 +17,14 @@ func MarkNotificationRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		ID int `json:"ID"`
+		ID int `json:"id"`
 	}
 
 	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
+
+	Log.Infof("Marking notification %d as read", payload.ID)
 
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)

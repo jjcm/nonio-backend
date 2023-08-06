@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
@@ -12,7 +13,17 @@ func GetNotifications(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	notifications, err := u.GetNotifications()
+	params := &models.NotificationQueryParams{}
+
+	// parse the url parameters
+	r.ParseForm()
+
+	// ?unread=true|false
+	// Filters by unread
+	unread := strings.TrimSpace(r.FormValue("unread"))
+	params.Unread = unread == "true"
+
+	notifications, err := u.GetNotifications(params)
 	if err != nil {
 		SendResponse(w, utils.MakeError(err.Error()), 500)
 		return
