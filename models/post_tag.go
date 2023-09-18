@@ -97,7 +97,6 @@ func (p *PostTag) CreatePostTagWithTx(tx Transaction) error {
 		return err
 	}
 
-	fmt.Printf("updating the count for tag %v\n", p.TagID)
 	_, err = tx.Exec("UPDATE tags SET count = count + 1 WHERE id = ?", p.TagID)
 	if err != nil {
 		return err

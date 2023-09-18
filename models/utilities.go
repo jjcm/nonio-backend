@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -10,7 +9,6 @@ import (
 // this will take in a slice of comments and return a unique list of parent IDs
 // as a comma separated string. it's used to make SQL queries faster
 func getUniqueCommentParentIDs(comments []Comment) string {
-	fmt.Println("comments:", comments)
 	var parentIDs []string
 
 	if len(comments) == 0 {

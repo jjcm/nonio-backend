@@ -26,9 +26,6 @@ func TestCanGetTags(t *testing.T) {
 		if err == nil {
 			index++
 		}
-		if err != nil {
-			Log.Info("Error creating tag: ", err.Error())
-		}
 
 		if err := WithTransaction(func(tx Transaction) error {
 			postTag := PostTag{}
