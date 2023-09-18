@@ -21,11 +21,25 @@ func TestCanGetTags(t *testing.T) {
 	limit := 500
 	index := 0
 	for index < limit {
-		_, err := TagFactory(fake.Words(), author)
+		tag, err := TagFactory(fake.Words(), author)
 		// i expect the faker library to return a bunch of duplicates, but I want 500 unique words so we will only increment the index counter if they are all unique
 		if err == nil {
 			index++
 		}
+		if err != nil {
+			Log.Info("Error creating tag: ", err.Error())
+		}
+
+		if err := WithTransaction(func(tx Transaction) error {
+			postTag := PostTag{}
+			postTag.PostID = 0
+			postTag.TagID = tag.ID
+			postTag.CreatePostTagWithTx(tx)
+			return nil
+		}); err != nil {
+			t.Errorf("Error creating post tag: %v", err.Error())
+		}
+
 	}
 
 	batch1, err := GetTags(0, 100)

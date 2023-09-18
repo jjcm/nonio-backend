@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"fmt"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql" // db connections are made via mysql/mariaDB
@@ -42,8 +41,6 @@ func InitConfig() (Config, error) {
 			panic("The env variable " + v + " is required")
 		}
 	}
-
-	fmt.Printf("DB ENV: %v\n", os.Getenv("ADMIN_EMAIL"))
 
 	c := Config{
 		DBHost:               os.Getenv("DB_HOST"),

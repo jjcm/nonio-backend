@@ -13,12 +13,13 @@ import (
 // CheckIfURLIsAvailable - return a boolean value to see if a given URL is
 // already taken
 func CheckIfURLIsAvailable(w http.ResponseWriter, r *http.Request) {
-	requestedURL := utils.ParseRouteParameter(r.URL.Path, "/posts/url-is-available/")
+	requestedURL := utils.ParseRouteParameter(r.URL.Path, "/post/url-is-available/")
 	if strings.TrimSpace(requestedURL) == "" {
 		sendSystemError(w, errors.New("please pass a valid URL for us to get you your requested content"))
 		return
 	}
 
+	Log.Info("Checking if URL is available: " + requestedURL)
 	isAvailable, err := models.URLIsAvailable(requestedURL)
 	if err != nil {
 		sendSystemError(w, err)

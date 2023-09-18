@@ -11,11 +11,9 @@ func TestWeCanGetNotifications(t *testing.T) {
 	user2, _ := UserFactory("example2@example.com", "joey", "password")
 
 	post, _ := user1.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
-	comment, _ := user2.CreateComment(post, nil, "This is a lovely post")
+	user2.CreateComment(post, nil, "This is a lovely post")
 
-	user1.CreateNotification(comment)
-
-	notifications, err := user1.GetNotifications()
+	notifications, err := user1.GetNotifications(nil)
 	if err != nil {
 		t.Errorf("Error getting notifications for the user.")
 	}
@@ -32,11 +30,9 @@ func TestWeCanMarkNotificationAsRead(t *testing.T) {
 	user2, _ := UserFactory("example2@example.com", "joey", "password")
 
 	post, _ := user1.CreatePost("Post Title", "post-title", "", "lorem ipsum", "image", 0, 0)
-	comment, _ := user2.CreateComment(post, nil, "This is a lovely post")
+	user2.CreateComment(post, nil, "This is a lovely post")
 
-	user1.CreateNotification(comment)
-
-	notifications, err := user1.GetNotifications()
+	notifications, err := user1.GetNotifications(nil)
 	if err != nil {
 		t.Errorf("Error getting notifications for the user.")
 	}
