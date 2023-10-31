@@ -15,6 +15,9 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posts/":                 handlers.GetPostByURL,
 		"/post/url-is-available/": handlers.CheckIfURLIsAvailable,
 
+		// TAG ROUTES
+		"/tags": handlers.GetTags,
+
 		"/user/register":                  handlers.Register,
 		"/user/login":                     handlers.Login,
 		"/user/username-is-available/":    handlers.CheckIfUsernameIsAvailable,
@@ -41,7 +44,6 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/post/parse-external-url": handlers.CheckExternalURLTitle,
 
 		// TAG ROUTES
-		"/tags":  handlers.GetTags,
 		"/tags/": handlers.GetTagsByPrefix,
 
 		// COMMENT ROUTES
