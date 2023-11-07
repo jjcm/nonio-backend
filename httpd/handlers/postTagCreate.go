@@ -59,6 +59,11 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
 
+	if payload.TagName == "" {
+		sendSystemError(w, fmt.Errorf("PostTag cannot be empty"))
+		return
+	}
+
 	if strings.ContainsAny(payload.TagName, " ") {
 		sendSystemError(w, fmt.Errorf("PostTag cannot contain spaces"))
 		return
