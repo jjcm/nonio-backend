@@ -25,6 +25,7 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/comments": handlers.GetComments,
 
 		// TAG ROUTES
+		"/tags2": handlers.GetTags,
 		"/tags":  handlers.GetTags,
 		"/tags/": handlers.GetTagsByPrefix,
 
