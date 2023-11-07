@@ -24,6 +24,10 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		"/comments": handlers.GetComments,
 
+		// TAG ROUTES
+		"/tags":  handlers.GetTags,
+		"/tags/": handlers.GetTagsByPrefix,
+
 		"/stripe/webhooks": handlers.StripeWebhook,
 	}
 
@@ -39,10 +43,6 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/post/create": handlers.CreatePost,
 		// TODO "/post/delete/": handlers.DeletePost,
 		"/post/parse-external-url": handlers.CheckExternalURLTitle,
-
-		// TAG ROUTES
-		"/tags":  handlers.GetTags,
-		"/tags/": handlers.GetTagsByPrefix,
 
 		// COMMENT ROUTES
 		"/comment/create":      handlers.CommentOnPost,
