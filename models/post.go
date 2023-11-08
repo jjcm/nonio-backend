@@ -221,20 +221,18 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 		args = append(args, params.UserID)
 	}
 
-	/*
-		// tags
-		if params.TagID > 0 {
-			Log.Infof("tag id: %d", params.TagID)
-			query = query + " and id in (SELECT post_id from posts_tags where tag_id = ?)"
-			args = append(args, params.TagID)
-		}
-	*/
+	// tags
+	if params.TagID > 0 {
+		Log.Infof("tag id: %d", params.TagID)
+		query = query + " and id in (SELECT post_id from posts_tags where tag_id = ?)"
+		args = append(args, params.TagID)
+	}
 
 	// orders
 	switch params.Sort {
 	case "popular":
-		//query = query + " order by score / POWER(((current_timestamp() - created_at) / 3600000), 1.8) desc"
-		query = query + " order by score desc"
+		query = query + " order by score / POWER(((current_timestamp() - created_at) / 3600000), 1.8) desc"
+		//query = query + " order by score desc"
 	case "top":
 		query = query + " order by score desc"
 		Log.Info("top")
