@@ -117,27 +117,29 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	// ?sort=popular|top|new
 	// Returns posts sorted by a particular algorithm.
 	formSort := strings.TrimSpace(r.FormValue("sort"))
-	Log.Info("formSort: %s", formSort)
+	Log.Infof("formSort: %s", formSort)
 	params.Sort = "popular"
 	switch formSort {
 	case "popular":
-		// This is unused for now, but will eventually be to show "popular things since the users last login"
-		// get the user id from context
-		userID := r.Context().Value("user_id").(int)
-		// query the user by user id
-		user := &models.User{}
-		if err := user.FindByID(userID); err != nil {
-			sendSystemError(w, fmt.Errorf("query user: %v", err))
-			return
-		}
+		/*
+			// This is unused for now, but will eventually be to show "popular things since the users last login"
+			// get the user id from context
+			userID := r.Context().Value("user_id").(int)
+			// query the user by user id
+			user := &models.User{}
+			if err := user.FindByID(userID); err != nil {
+				sendSystemError(w, fmt.Errorf("query user: %v", err))
+				return
+			}
 
-		// check duration of 24 hours vs last login
-		cutoff = user.LastLogin
-		oneDayAgo := time.Now().AddDate(0, 0, -1)
-		if user.LastLogin.After(oneDayAgo) {
-			cutoff = oneDayAgo
-		}
-		params.Since = cutoff.Format("2006-01-02 15:04:05")
+			// check duration of 24 hours vs last login
+			cutoff = user.LastLogin
+			oneDayAgo := time.Now().AddDate(0, 0, -1)
+			if user.LastLogin.After(oneDayAgo) {
+				cutoff = oneDayAgo
+			}
+			params.Since = cutoff.Format("2006-01-02 15:04:05")
+		*/
 		params.Sort = "popular"
 
 	case "new":
