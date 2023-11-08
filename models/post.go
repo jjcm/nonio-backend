@@ -247,6 +247,7 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	// offset
 	query = query + " limit 100 offset ?"
 	args = append(args, params.Offset)
+	Log.Infof("Offset: %d", params.Offset)
 
 	Log.Infof("final query: %s", query)
 	posts := []*Post{}
@@ -255,6 +256,7 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 		return nil, err
 	}
 
+	Log.Infof("number of posts: %d", len(posts))
 	return posts, nil
 }
 
