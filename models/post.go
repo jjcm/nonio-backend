@@ -222,6 +222,7 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 
 	// tags
 	if params.TagID > 0 {
+		Log.Infof("tag id: %d", params.TagID)
 		query = query + " and id in (SELECT post_id from posts_tags where tag_id = ?)"
 		args = append(args, params.TagID)
 	}
