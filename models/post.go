@@ -213,6 +213,7 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	query := "select * from posts where created_at > ?"
 	// time range
 	args = append(args, params.Since)
+	Log.Infof("time range: %s", params.Since)
 
 	// special user
 	if params.UserID > 0 {
@@ -232,8 +233,8 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	// orders
 	switch params.Sort {
 	case "popular":
-		query = query + " order by score / POWER(((current_timestamp() - created_at) / 3600000), 1.8) desc"
-		Log.Infof("popular query: %s", query)
+		//query = query + " order by score / POWER(((current_timestamp() - created_at) / 3600000), 1.8) desc"
+		query = query + " order by score desc"
 	case "top":
 		query = query + " order by score desc"
 		Log.Info("top")
@@ -247,6 +248,7 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	query = query + " limit 100 offset ?"
 	args = append(args, params.Offset)
 
+	Log.Infof("final query: %s", query)
 	posts := []*Post{}
 	// exec the query string
 	if err := DBConn.Select(&posts, query, args...); err != nil {
