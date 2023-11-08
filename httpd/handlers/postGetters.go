@@ -175,13 +175,11 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		// fill the tags for the posts
-		if err := fillPostTags(posts); err != nil {
-			sendSystemError(w, fmt.Errorf("query tags by posts: %v", err))
-			return
-		}
-	*/
+	// fill the tags for the posts
+	if err := fillPostTags(posts); err != nil {
+		sendSystemError(w, fmt.Errorf("query tags by posts: %v", err))
+		return
+	}
 
 	output := map[string]interface{}{
 		"posts": posts,

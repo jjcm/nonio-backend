@@ -170,6 +170,7 @@ func GetPostTags(id int) ([]PostTag, error) {
 
 	err := DBConn.Select(&tags, "SELECT * FROM posts_tags where post_id = ?", id)
 	if err != nil {
+		Log.Errorf("Error getting post tags: %v", err)
 		return nil, err
 	}
 
@@ -177,6 +178,7 @@ func GetPostTags(id int) ([]PostTag, error) {
 	for i, item := range tags {
 		tag := Tag{}
 		if err = tag.FindByID(item.TagID); err != nil {
+			Log.Errorf("Error finding tag ID: %v, %d", err, item.TagID)
 			return nil, err
 		}
 		tags[i].TagName = tag.Name
