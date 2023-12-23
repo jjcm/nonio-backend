@@ -705,3 +705,13 @@ func (u *User) ForgotPasswordRequest(email string) error {
 
 	return nil
 }
+
+// GetRoles - return a list of strings of the user's roles
+func (u *User) GetRoles() ([]Role, error) {
+	roles := []Role{}
+	err := DBConn.Select(&roles, "SELECT role FROM roles WHERE user_id = ?", u.ID)
+	if err != nil {
+		return nil, err
+	}
+	return roles, nil
+}
