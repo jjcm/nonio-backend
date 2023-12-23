@@ -15,11 +15,12 @@ func NukeUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		ID *int `json:"id"`
+		Username *string `json:"username"`
 	}
 
 	// ensure the user is an admin
 	u := models.User{}
+	u.FindByID(r.Context().Value("user_id").(int))
 	adminCheck, err := u.IsAdmin()
 	if err != nil {
 		SendResponse(w, utils.MakeError(err.Error()), 500)
@@ -37,7 +38,7 @@ func NukeUser(w http.ResponseWriter, r *http.Request) {
 
 	// ensure the user exists
 	user := models.User{}
-	user.FindByID(*(payload.ID))
+	user.FindByUsername(*(payload.Username))
 	if user.ID == 0 {
 		SendResponse(w, utils.MakeError("user not found"), 404)
 		return

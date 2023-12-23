@@ -429,7 +429,7 @@ func (u *User) Ban() error {
 
 func (u *User) IsAdmin() (bool, error) {
 	var count int
-	err := DBConn.Get(&count, "SELECT count(*) FROM roles WHERE user_id = ? and role = `admin`", u.ID)
+	err := DBConn.Get(&count, "SELECT count(*) FROM roles WHERE user_id = ? and role = ?", u.ID, "admin")
 	if err != nil {
 		return false, err
 	}
@@ -549,6 +549,20 @@ func (u *User) Nuke() error {
 			Log.Error("Error deleting post tag votes during nuke", txErr)
 			return txErr
 		}
+
+		// delete all posts as part of the transaction
+		_, txErr = tx.Exec("delete from posts where id = ?", post.ID)
+		if txErr != nil {
+			Log.Error("Error deleting post during nuke", txErr)
+			return txErr
+		}
+	}
+
+	//finally, delete the user
+	_, txErr = tx.Exec("delete from users where id = ?", u.ID)
+	if txErr != nil {
+		Log.Error("Error deleting user during nuke", txErr)
+		return txErr
 	}
 
 	txErr = tx.Commit()
