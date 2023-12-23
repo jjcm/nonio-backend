@@ -429,7 +429,7 @@ func (u *User) Ban() error {
 
 func (u *User) IsAdmin() (bool, error) {
 	var count int
-	err := DBConn.Get(&count, "SELECT count(*) FROM admin_users WHERE id = ?", u.ID)
+	err := DBConn.Get(&count, "SELECT count(*) FROM roles WHERE user_id = ? and role = `admin`", u.ID)
 	if err != nil {
 		return false, err
 	}
@@ -504,7 +504,61 @@ func (u *User) ChangeForgottenPassword(token string, newPassword string, confirm
 /******************** DELETE ********************/
 /************************************************/
 
-// TODO
+func (u *User) Nuke() error {
+
+	tx, txErr := DBConn.Begin()
+	if txErr != nil {
+		return txErr
+	}
+
+	// delete all comments as part of the transaction
+	_, txErr = tx.Exec("delete from comments where author_id = ?", u.ID)
+	if txErr != nil {
+		Log.Error("Error deleting comments during nuke", txErr)
+		return txErr
+	}
+
+	// delete all post tag votes as part of the transaction
+	_, txErr = tx.Exec("delete from posts_tags_votes where voter_id = ?", u.ID)
+	if txErr != nil {
+		Log.Error("Error deleting post tag votes during nuke", txErr)
+		return txErr
+	}
+
+	// get all the posts from the user
+	posts := []Post{}
+
+	err := DBConn.Select(&posts, "select id from posts where user_id = ?", u.ID)
+	if err != nil {
+		Log.Errorf("Error getting posts for user while trying to nuke them: %v\n", err)
+		return err
+	}
+
+	//iterate through each post
+	for _, post := range posts {
+		// delete all post tags as part of the transaction
+		_, txErr = tx.Exec("delete from posts_tags where post_id = ?", post.ID)
+		if txErr != nil {
+			Log.Error("Error deleting post tags during nuke", txErr)
+			return txErr
+		}
+
+		// delete all post tag votes as part of the transaction
+		_, txErr = tx.Exec("delete from posts_tags_votes where post_id = ?", post.ID)
+		if txErr != nil {
+			Log.Error("Error deleting post tag votes during nuke", txErr)
+			return txErr
+		}
+	}
+
+	txErr = tx.Commit()
+
+	if txErr != nil {
+		Log.Error("Error committing the nuke transaction", txErr)
+		return txErr
+	}
+	return nil
+}
 
 /************************************************/
 /******************** HELPER ********************/
