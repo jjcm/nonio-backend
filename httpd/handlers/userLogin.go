@@ -42,9 +42,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]string{
+	roles, err := u.GetRoles()
+	if err != nil {
+		SendResponse(w, utils.MakeError("there was an error getting your roles: "+err.Error()), 500)
+		return
+	}
+
+	response := map[string]interface{}{
 		"token":    token,
 		"username": u.Username,
+		"roles":    roles,
 	}
+
 	SendResponse(w, response, 200)
 }
