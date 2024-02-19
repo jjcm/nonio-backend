@@ -54,16 +54,24 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// send a token
-	token, err := utils.TokenCreator(payload.Email)
+	// generate an access token
+	accessToken, err := utils.TokenCreator(payload.Email, 24*7, "access")
+	if err != nil {
+		SendResponse(w, utils.MakeError("there was an error signing your JWT token: "+err.Error()), 500)
+		return
+	}
+
+	// generate a refresh token
+	refreshToken, err := utils.TokenCreator(payload.Email, 24*7*60, "refresh")
 	if err != nil {
 		SendResponse(w, utils.MakeError("there was an error signing your JWT token: "+err.Error()), 500)
 		return
 	}
 
 	response := map[string]string{
-		"token":    token,
-		"username": payload.Username,
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
+		"username":     payload.Username,
 	}
 	SendResponse(w, response, 200)
 }

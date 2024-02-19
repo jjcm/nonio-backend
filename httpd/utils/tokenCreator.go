@@ -11,10 +11,12 @@ import (
 var HmacSampleSecret []byte
 
 // TokenCreator creates a jwt token for us to use
-func TokenCreator(email string) (string, error) {
+func TokenCreator(email string, expiresAfterHours time.Duration, tokenType string) (string, error) {
+	expirationTime := time.Now().Add(time.Hour * expiresAfterHours)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email":     email,
-		"expiresAt": time.Now().Add(time.Hour * 100).Unix(), // tokens are valid for 10 minutes?
+		"expiresAt": expirationTime.Unix(),
+		"type":      tokenType,
 	})
 	tokenString, err := token.SignedString(HmacSampleSecret)
 	if err != nil {
