@@ -17,7 +17,7 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		"/user/register":                  handlers.Register,
 		"/user/login":                     handlers.Login,
-		"/user/refreshAccessToken":        handlers.RefreshAccessToken,
+		"/user/refresh-access-token":      handlers.RefreshAccessToken,
 		"/user/username-is-available/":    handlers.CheckIfUsernameIsAvailable,
 		"/user/forgot-password-request":   handlers.ForgotPasswordRequest,
 		"/user/change-forgotten-password": handlers.ChangeForgottenPassword,
