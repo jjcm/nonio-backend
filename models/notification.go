@@ -11,6 +11,7 @@ type Notification struct {
 	UserID    int       `db:"user_id" json:"-"`
 	Comment   Comment   `db:"-" json:"-"`
 	CommentID int       `db:"comment_id" json:"comment_id"`
+	Parent    Comment   `db:"-" json:"-"`
 	Read      bool      `db:"read" json:"read"`
 	CreatedAt time.Time `db:"created_at" json:"-"`
 }
@@ -32,33 +33,42 @@ func (n *Notification) MarshalJSON() ([]byte, error) {
 		n.Comment.Post.FindByID(n.Comment.PostID)
 	}
 
+	// hydrate the parent comment
+	if n.Parent.ID == 0 {
+		n.Parent.FindByID(n.Comment.ParentID)
+	}
+
 	// return the custom JSON for this post
 	return json.Marshal(&struct {
-		ID          int    `json:"id"`
-		CommentID   int    `json:"comment_id"`
-		CommentDate int64  `json:"date"`
-		Post        string `json:"post"`
-		PostTitle   string `json:"post_title"`
-		Content     string `json:"content"`
-		User        string `json:"user"`
-		Upvotes     int    `json:"upvotes"`
-		Downvotes   int    `json:"downvotes"`
-		Parent      int    `json:"parent"`
-		Edited      bool   `json:"edited"`
-		Read        bool   `json:"read"`
+		ID            int    `json:"id"`
+		CommentID     int    `json:"comment_id"`
+		CommentDate   int64  `json:"date"`
+		Post          string `json:"post"`
+		PostTitle     string `json:"post_title"`
+		PostType      string `json:"post_type"`
+		Content       string `json:"content"`
+		User          string `json:"user"`
+		Upvotes       int    `json:"upvotes"`
+		Downvotes     int    `json:"downvotes"`
+		Parent        int    `json:"parent"`
+		ParentContent string `json:"parent_content"`
+		Edited        bool   `json:"edited"`
+		Read          bool   `json:"read"`
 	}{
-		ID:          n.ID,
-		CommentID:   n.CommentID,
-		CommentDate: n.CreatedAt.UnixNano() / int64(time.Millisecond),
-		Post:        n.Comment.Post.URL,
-		PostTitle:   n.Comment.Post.Title,
-		Content:     n.Comment.Content,
-		User:        n.Comment.Author.GetDisplayName(),
-		Upvotes:     n.Comment.Upvotes,
-		Downvotes:   n.Comment.Downvotes,
-		Parent:      n.Comment.ParentID,
-		Edited:      n.Comment.Edited,
-		Read:        n.Read,
+		ID:            n.ID,
+		CommentID:     n.CommentID,
+		CommentDate:   n.CreatedAt.UnixNano() / int64(time.Millisecond),
+		Post:          n.Comment.Post.URL,
+		PostTitle:     n.Comment.Post.Title,
+		PostType:      n.Comment.Post.Type,
+		Content:       n.Comment.Content,
+		User:          n.Comment.Author.GetDisplayName(),
+		Upvotes:       n.Comment.Upvotes,
+		Downvotes:     n.Comment.Downvotes,
+		Parent:        n.Comment.ParentID,
+		ParentContent: n.Parent.Content,
+		Edited:        n.Comment.Edited,
+		Read:          n.Read,
 	})
 }
 
