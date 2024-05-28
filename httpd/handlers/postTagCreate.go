@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
@@ -29,7 +28,7 @@ func findUserPostTag(userID int, postURL string, tagName string) (*models.User, 
 	if err := tag.FindByTagName(tagName); err != nil {
 		return nil, nil, nil, fmt.Errorf("query tag: %v", err)
 	}
-	// if there is no rows about the tag name, insert a new one
+	// if the tag doesn't exist, create it
 	if tag.ID == 0 {
 		tempTag, err := models.TagFactory(tagName, user)
 		if err != nil {
@@ -58,32 +57,6 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	var payload requestPayload
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&payload)
-
-	if payload.TagName == "" {
-		sendSystemError(w, fmt.Errorf("PostTag cannot be empty"))
-		return
-	}
-
-	if strings.ContainsAny(payload.TagName, " ") {
-		sendSystemError(w, fmt.Errorf("PostTag cannot contain spaces"))
-		return
-	}
-
-	if strings.ContainsAny(payload.TagName, "#") {
-		sendSystemError(w, fmt.Errorf("PostTag cannot contain hashes"))
-		return
-	}
-
-	if strings.ContainsAny(payload.TagName, "<>='\"./|\\") {
-		sendSystemError(w, fmt.Errorf("PostTag cannot contain html elements"))
-		return
-	}
-
-	//checks the length of the TagName, if it's more than 30 characters, returns an error
-	if len(payload.TagName) > 20 {
-		sendSystemError(w, fmt.Errorf("PostTag cannot be more than 20 characters"))
-		return
-	}
 
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)

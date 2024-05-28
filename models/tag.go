@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -43,6 +44,27 @@ func (t *Tag) ToJSON() string {
 
 // createTag - create a tag in the database by a given word
 func createTag(tag string, author User) error {
+	if tag == "" {
+		return fmt.Errorf("Tag cannot be an empty string")
+	}
+
+	if strings.ContainsAny(tag, " ") {
+		return fmt.Errorf("Tag cannot contain spaces")
+	}
+
+	if strings.ContainsAny(tag, "#") {
+		return fmt.Errorf("Tag cannot contain hashes")
+	}
+
+	if strings.ContainsAny(tag, "<>='\"./|\\") {
+		return fmt.Errorf("Tag cannot contain html elements")
+	}
+
+	//checks the length of the TagName, if it's more than 30 characters, returns an error
+	if len(tag) > 20 {
+		return fmt.Errorf("Tag cannot be more than 20 characters")
+	}
+
 	now := time.Now().Format("2006-01-02 15:04:05")
 
 	_, err := DBConn.Exec("INSERT INTO tags (name, user_id, created_at) VALUES (?, ?, ?)", tag, author.ID, now)
