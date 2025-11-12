@@ -29,6 +29,7 @@ type Post struct {
 	Tags         []PostTag `db:"-"`
 	Width        int       `db:"width" json:"width"`
 	Height       int       `db:"height" json:"height"`
+	IsEncoding   bool      `db:"is_encoding" json:"isEncoding"`
 }
 
 // PostQueryParams - structure represents the parameters for querying posts
@@ -67,6 +68,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		Tags         []PostTag `json:"tags"`
 		Width        int       `json:"width"`
 		Height       int       `json:"height"`
+		IsEncoding   bool      `json:"isEncoding"`
 	}{
 		ID:           p.ID,
 		Title:        p.Title,
@@ -81,6 +83,7 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		Tags:         p.Tags,
 		Width:        p.Width,
 		Height:       p.Height,
+		IsEncoding:   p.IsEncoding,
 	})
 }
 
@@ -137,8 +140,11 @@ func (u *User) CreatePost(title string, postUrl string, link string, content str
 		postType = "image"
 	}
 
+	// set is_encoding to true for video posts (they need encoding)
+	isEncoding := postType == "video"
+
 	// try and create the post in the DB
-	result, err := DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, width, height, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, postUrl, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, width, height, now, now)
+	result, err := DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, width, height, is_encoding, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, postUrl, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, width, height, isEncoding, now, now)
 	// check for specific error of an existing post URL
 	// if we hit this error, run a second DB call to see how many of the posts have a similar URL alias and then tack on a suffix to make this one unique
 	if err != nil && err.Error()[0:10] == "Error 1062" {
@@ -156,7 +162,7 @@ func (u *User) CreatePost(title string, postUrl string, link string, content str
 		}
 
 		// now let's try it again with the updated post URL
-		result, err = DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, newURL, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, now, now)
+		result, err = DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, width, height, is_encoding, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, newURL, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, width, height, isEncoding, now, now)
 		if err != nil {
 			return p, err
 		}
@@ -210,7 +216,7 @@ func (p *Post) FindByURL(url string) error {
 func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	args := []interface{}{}
 
-	query := "select * from posts where created_at > ?"
+	query := "select * from posts where created_at > ? and is_encoding = false"
 	// time range
 	args = append(args, params.Since)
 	Log.Infof("time range: %s", params.Since)
@@ -302,6 +308,12 @@ func (p *Post) IncrementScoreWithTx(tx Transaction, id int) error {
 // DecrementScoreWithTx - decrement the score by post id
 func (p *Post) DecrementScoreWithTx(tx Transaction, id int) error {
 	_, err := tx.Exec("update posts set score=score-1 where id = ?", id)
+	return err
+}
+
+// MarkEncodingComplete - mark a post as no longer encoding
+func (p *Post) MarkEncodingComplete(url string) error {
+	_, err := DBConn.Exec("update posts set is_encoding = false where url = ?", url)
 	return err
 }
 

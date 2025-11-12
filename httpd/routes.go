@@ -14,6 +14,7 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posts":                  handlers.GetPosts,
 		"/posts/":                 handlers.GetPostByURL,
 		"/post/url-is-available/": handlers.CheckIfURLIsAvailable,
+		"/post/encoding-complete": handlers.PostEncodingComplete,
 
 		"/user/register":                  handlers.Register,
 		"/user/login":                     handlers.Login,

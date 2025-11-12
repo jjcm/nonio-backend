@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"soci-backend/httpd/utils"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -17,6 +18,7 @@ import (
 	"github.com/stripe/stripe-go/v72/accountlink"
 	"github.com/stripe/stripe-go/v72/balance"
 	"github.com/stripe/stripe-go/v72/loginlink"
+	"github.com/stripe/stripe-go/v72/sub"
 
 	b64 "encoding/base64"
 
@@ -445,6 +447,46 @@ func (u *User) GetStripeConnectAccountId() (string, error) {
 		return "", err
 	}
 	return accountId, nil
+}
+
+// CanPost checks if a user can submit posts
+// Returns true if the user has an active subscription OR their account was created before Nov 1, 2025
+// In local development, always returns true (no restrictions)
+func (u *User) CanPost() (bool, error) {
+	// Skip restriction when running locally (check if WebHost contains localhost)
+	if WebHost != "" {
+		webHostLower := strings.ToLower(WebHost)
+		if strings.Contains(webHostLower, "localhost") || strings.Contains(webHostLower, "127.0.0.1") {
+			return true, nil
+		}
+	}
+
+	// Check if account was created before Nov 1, 2025
+	cutoffDate := time.Date(2025, 11, 1, 0, 0, 0, 0, time.UTC)
+	if u.CreatedAt.Before(cutoffDate) {
+		return true, nil
+	}
+
+	// Check if user has an active subscription
+	if u.StripeCustomerID == "" {
+		return false, nil
+	}
+
+	// Check Stripe for active subscriptions
+	listParams := &stripe.SubscriptionListParams{
+		Customer: u.StripeCustomerID,
+		Status:   "active",
+	}
+
+	iter := sub.List(listParams)
+	subscriptions := iter.SubscriptionList().Data
+	
+	// If user has at least one active subscription, they can post
+	if len(subscriptions) > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // ChangeForgottenPassword changes the password of the user, using an emailed token as verification

@@ -35,12 +35,17 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	/*
-		if u.AccountType != "supporter" {
-			SendResponse(w, utils.MakeError("only supporters can submit posts"), 403)
-			return
-		}
-	*/
+	// Check if user can post (has active subscription or account created before Nov 1, 2025)
+	canPost, err := u.CanPost()
+	if err != nil {
+		Log.Error("Error checking if user can post")
+		sendSystemError(w, err)
+		return
+	}
+	if !canPost {
+		SendResponse(w, utils.MakeError("only users with an active subscription or accounts created before Nov 1, 2025 can submit posts"), 403)
+		return
+	}
 
 	Log.Info("attempting to create post")
 
