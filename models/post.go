@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -320,7 +321,51 @@ func (p *Post) MarkEncodingComplete(url string) error {
 /************************************************/
 /******************** DELETE ********************/
 /************************************************/
-// TODO
+
+// DeletePost removes a post and all associated data from the database
+func (p *Post) DeletePost() error {
+	if p.ID == 0 {
+		return errors.New("can't delete a post with an invalid ID")
+	}
+
+	if err := WithTransaction(func(tx Transaction) error {
+		// Delete all post tags
+		_, err := tx.Exec("DELETE FROM posts_tags WHERE post_id = ?", p.ID)
+		if err != nil {
+			return fmt.Errorf("delete post tags: %v", err)
+		}
+
+		// Delete all post tag votes
+		_, err = tx.Exec("DELETE FROM posts_tags_votes WHERE post_id = ?", p.ID)
+		if err != nil {
+			return fmt.Errorf("delete post tag votes: %v", err)
+		}
+
+		// Delete all comment votes for comments on this post
+		_, err = tx.Exec("DELETE FROM comment_votes WHERE comment_id IN (SELECT id FROM comments WHERE post_id = ?)", p.ID)
+		if err != nil {
+			return fmt.Errorf("delete comment votes: %v", err)
+		}
+
+		// Delete all comments on this post
+		_, err = tx.Exec("DELETE FROM comments WHERE post_id = ?", p.ID)
+		if err != nil {
+			return fmt.Errorf("delete comments: %v", err)
+		}
+
+		// Delete the post itself
+		_, err = tx.Exec("DELETE FROM posts WHERE id = ?", p.ID)
+		if err != nil {
+			return fmt.Errorf("delete post: %v", err)
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 /************************************************/
 /******************** HELPER ********************/

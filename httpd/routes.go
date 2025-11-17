@@ -43,7 +43,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 
 		// POST ROUTES
 		"/post/create": handlers.CreatePost,
-		// TODO "/post/delete/": handlers.DeletePost,
+		"/post/delete": handlers.DeletePost,
 		"/post/parse-external-url": handlers.CheckExternalURLTitle,
 
 		// COMMENT ROUTES
