@@ -9,7 +9,16 @@ import (
 
 // GetTags - get tags out of the database, 100 at a time, optional offset
 func GetTags(w http.ResponseWriter, r *http.Request) {
-	tags, err := models.GetTags(0, 100)
+	communityURL := strings.TrimSpace(r.FormValue("community"))
+	communityID := 0
+	if communityURL != "" {
+		c := models.Community{}
+		if err := c.FindByURL(communityURL); err == nil {
+			communityID = c.ID
+		}
+	}
+
+	tags, err := models.GetTags(0, 100, communityID)
 	if err != nil {
 		SendResponse(w, utils.MakeError(err.Error()), 500)
 		return
@@ -29,7 +38,16 @@ func GetTagsByPrefix(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tags, err := models.GetTagsByPrefix(prefix)
+	communityURL := strings.TrimSpace(r.FormValue("community"))
+	communityID := 0
+	if communityURL != "" {
+		c := models.Community{}
+		if err := c.FindByURL(communityURL); err == nil {
+			communityID = c.ID
+		}
+	}
+
+	tags, err := models.GetTagsByPrefix(prefix, communityID)
 	if err != nil {
 		SendResponse(w, utils.MakeError(err.Error()), 500)
 		return

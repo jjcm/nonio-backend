@@ -39,8 +39,8 @@ func AllocatePayouts() error {
 		if txErr != nil {
 			return txErr
 		}
-		_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
-			user.ID, -1, tempCash, "withdrawal", "withdrawal from non.io to Stripe",
+		_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, community_id, amount, type, description) values (?, ?, ?, ?, ?, ?)",
+			user.ID, -1, nil, tempCash, "withdrawal", "withdrawal from non.io to Stripe",
 		)
 		_, txErr = tx.Exec("UPDATE users SET cash = 0 WHERE id = ?", user.ID)
 		txErr = tx.Commit()
@@ -131,15 +131,53 @@ func ProcessPayouts() error {
 			post.FindByID(vote.PostID)
 			author.FindByID(post.AuthorID)
 
+			amountForAuthor := payoutPerVote
+
+			if post.CommunityID != nil && *post.CommunityID > 0 {
+				// Calculate moderator share
+				modShare := payoutPerVote * 0.10
+				amountForAuthor = payoutPerVote - modShare
+
+				// Find moderators
+				community := Community{}
+				community.FindByID(*post.CommunityID)
+				moderators, err := community.GetModerators()
+				if err != nil {
+					Log.Error("Error getting moderators for community")
+					// Fallback to giving it to author
+					amountForAuthor = payoutPerVote
+				} else if len(moderators) > 0 {
+					sharePerMod := modShare / float64(len(moderators))
+					for _, mod := range moderators {
+						Log.Infof("Creating a ledger entry for moderator %v", mod.Username)
+						_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, community_id, amount, type, description) values (?, ?, ?, ?, ?, ?)",
+							mod.ID, user.ID, *post.CommunityID, sharePerMod, "deposit", "moderator share from "+user.Username,
+						)
+						if txErr != nil {
+							Log.Error("Error inserting ledger entry for moderator")
+							return txErr
+						}
+						_, txErr = tx.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", sharePerMod, mod.ID)
+						if txErr != nil {
+							Log.Error("Error updating moderator cash")
+							return txErr
+						}
+					}
+				} else {
+					// If no moderators, give it to author
+					amountForAuthor = payoutPerVote
+				}
+			}
+
 			Log.Infof("Creating a ledger entry for user %v", author.Username)
-			_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, amount, type, description) values (?, ?, ?, ?, ?)",
-				author.ID, user.ID, payoutPerVote, "deposit", "deposit from "+user.Username,
+			_, txErr = tx.Exec("insert into ledger (author_id, contributor_id, community_id, amount, type, description) values (?, ?, ?, ?, ?, ?)",
+				author.ID, user.ID, post.CommunityID, amountForAuthor, "deposit", "deposit from "+user.Username,
 			)
 			if txErr != nil {
 				Log.Error("Error inserting ledger entry")
 				return txErr
 			}
-			_, txErr = tx.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", payoutPerVote, author.ID)
+			_, txErr = tx.Exec("UPDATE users SET cash = cash + ? WHERE id = ?", amountForAuthor, author.ID)
 			if txErr != nil {
 				Log.Error("Error updating user cash")
 				return txErr

@@ -17,7 +17,8 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		URL *string `json:"url"`
+		URL       *string `json:"url"`
+		Community string  `json:"community"`
 	}
 
 	var payload requestPayload
@@ -41,17 +42,36 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	communityID, err := resolveCommunityID(payload.Community)
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("community lookup: %v", err))
+		return
+	}
+
 	// Find the post
 	post := models.Post{}
-	err = post.FindByURL(*payload.URL)
+	err = post.FindByURL(*payload.URL, communityID)
 	if err != nil {
 		sendNotFound(w, errors.New("post not found"))
 		return
 	}
 
 	// Verify the user is the owner or an admin
-	if post.AuthorID != u.ID && !isAdmin {
-		SendResponse(w, utils.MakeError("you can only delete posts you own"), 401)
+	isMod := false
+	if post.CommunityID != nil && *post.CommunityID > 0 {
+		c := models.Community{}
+		c.FindByID(*post.CommunityID)
+		mods, _ := c.GetModerators()
+		for _, mod := range mods {
+			if mod.ID == u.ID {
+				isMod = true
+				break
+			}
+		}
+	}
+
+	if post.AuthorID != u.ID && !isAdmin && !isMod {
+		SendResponse(w, utils.MakeError("you can only delete posts you own or moderate"), 401)
 		return
 	}
 
@@ -67,4 +87,3 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	SendResponse(w, true, 200)
 }
-

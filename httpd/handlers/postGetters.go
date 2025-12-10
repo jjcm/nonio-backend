@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"soci-backend/httpd/utils"
 	"soci-backend/models"
 )
 
@@ -23,14 +22,24 @@ var PostCache map[string]PostQueryResponse = make(map[string]PostQueryResponse)
 // GetPostByURL find a specific post in the database and send back a JSON
 // representation of it
 func GetPostByURL(w http.ResponseWriter, r *http.Request) {
-	url := utils.ParseRouteParameter(r.URL.Path, "/posts/")
+	communitySlug, url := parseCommunityAndSlug(r.URL.Path, "/posts/")
+	if communitySlug == "" {
+		communitySlug = strings.TrimSpace(r.URL.Query().Get("community"))
+	}
+
+	communityID, err := resolveCommunityID(communitySlug)
+	if err != nil {
+		sendNotFound(w, errors.New("we couldn't find a community matching `"+communitySlug+"`"))
+		return
+	}
+
 	if strings.TrimSpace(url) == "" {
 		sendSystemError(w, errors.New("please pass a valid URL for us to get you your requested content"))
 		return
 	}
 
 	p := models.Post{}
-	err := p.FindByURL(url)
+	err = p.FindByURL(url, communityID)
 	if err != nil {
 		sendNotFound(w, errors.New("we couldn't find a post with the url `"+url+"`"))
 		return
@@ -101,14 +110,35 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	}
 	params.Since = cutoff.Format("2006-01-02 15:04:05")
 
+	// ?community=COMMUNITY_URL
+	communityURL := strings.TrimSpace(r.FormValue("community"))
+	communityID := 0
+	if communityURL != "" {
+		if strings.HasPrefix(communityURL, "@") {
+			communityURL = strings.TrimPrefix(communityURL, "@")
+		}
+		c := models.Community{}
+		if err := c.FindByURL(communityURL); err != nil {
+			sendSystemError(w, fmt.Errorf("query community by url %s: %v", communityURL, err))
+			return
+		}
+		communityID = c.ID
+		params.CommunityID = communityID
+	}
+
 	// ?tag=TAG
 	// Only returns results that match a specific tag. Multiple tags can be listed by separating tags with a +
 	tag := strings.TrimSpace(r.FormValue("tag"))
 	if tag != "" {
 		t := &models.Tag{}
-		err := t.FindByTagName(tag)
+		err := t.FindByTagName(tag, communityID)
 		if err != nil {
 			sendSystemError(w, fmt.Errorf("query posts by tag %s: %v", tag, err))
+			return
+		}
+		// If tag does not exist, return empty list
+		if t.ID == 0 {
+			SendResponse(w, map[string]interface{}{"posts": []interface{}{}}, 200)
 			return
 		}
 		params.TagID = t.ID

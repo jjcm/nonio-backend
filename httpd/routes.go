@@ -30,9 +30,20 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/tags":  handlers.GetTags,
 		"/tags/": handlers.GetTagsByPrefix,
 
+		// COMMUNITY ROUTES
+		"/communities":  handlers.GetCommunities,
+
 		"/stripe/webhooks": handlers.StripeWebhook,
 	}
 
+	return routes
+}
+
+// OptionalAuthRoutes - routes that optionally use auth
+func OptionalAuthRoutes() map[string]func(http.ResponseWriter, *http.Request) {
+	routes := map[string]func(http.ResponseWriter, *http.Request){
+		"/communities/": handlers.GetCommunity,
+	}
 	return routes
 }
 
@@ -58,6 +69,20 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posttag/create":      handlers.CreatePostTag,
 		"/posttag/add-vote":    handlers.AddPostTagVote,
 		"/posttag/remove-vote": handlers.RemovePostTagVote,
+
+		// COMMUNITY ROUTES
+		"/community/create":      handlers.CreateCommunity,
+		"/community/subscribe":   handlers.SubscribeToCommunity,
+		"/community/unsubscribe": handlers.UnsubscribeFromCommunity,
+		"/communities/subscribed": handlers.GetSubscribedCommunities,
+		"/community/add-moderator": handlers.AddModerator,
+		"/community/remove-moderator": handlers.RemoveModerator,
+		"/community/moderators": handlers.GetModerators,
+		"/community/update": handlers.UpdateCommunity,
+		"/community/ban": handlers.BanUser,
+		"/community/unban": handlers.UnbanUser,
+		"/community/users": handlers.GetCommunityUsers,
+		"/community/financials": handlers.GetCommunityFinancials,
 
 		// SUBSCRIPTION ROUTES
 		"/subscriptions":       handlers.GetSubscriptions,

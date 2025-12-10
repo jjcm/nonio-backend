@@ -10,6 +10,7 @@ type Ledger struct {
 	ID            int       `db:"id" json:"-"`
 	AuthorID      int       `db:"author_id" json:"-"`
 	ContributorID int       `db:"contributor_id" json:"-"`
+	CommunityID   *int      `db:"community_id" json:"communityID"`
 	Type          string    `db:"type" json:"type"`
 	Amount        float64   `db:"amount" json:"amount"`
 	Description   string    `db:"description" json:"description"`
@@ -30,8 +31,8 @@ func (l *Ledger) ToJSON() string {
 /************************************************/
 
 // CreateLedger - create a new ledger entry in the database
-func CreateLedger(author User, contributor User, ledgerType string, amount float64, description string) error {
-	_, err := DBConn.Exec("INSERT INTO ledger (author_id, contributor_id, type, amount, description) VALUES (?, ?, ?, ?, ?)", author.ID, contributor.ID, ledgerType, amount, description)
+func CreateLedger(author User, contributor User, communityID *int, ledgerType string, amount float64, description string) error {
+	_, err := DBConn.Exec("INSERT INTO ledger (author_id, contributor_id, community_id, type, amount, description) VALUES (?, ?, ?, ?, ?, ?)", author.ID, contributor.ID, communityID, ledgerType, amount, description)
 	if err != nil {
 		return err
 	}
@@ -39,7 +40,7 @@ func CreateLedger(author User, contributor User, ledgerType string, amount float
 }
 
 func (l *Ledger) CreateLedgerWithTx(tx Transaction) error {
-	_, err := tx.Exec("INSERT INTO ledger (author_id, contributor_id, type, amount, description) VALUES (?, ?, ?, ?, ?)", l.AuthorID, l.ContributorID, l.Type, l.Amount, l.Description)
+	_, err := tx.Exec("INSERT INTO ledger (author_id, contributor_id, community_id, type, amount, description) VALUES (?, ?, ?, ?, ?, ?)", l.AuthorID, l.ContributorID, l.CommunityID, l.Type, l.Amount, l.Description)
 	if err != nil {
 		return err
 	}

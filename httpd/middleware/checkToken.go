@@ -70,3 +70,58 @@ func CheckToken(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r.WithContext(ctx))
 	}
 }
+
+// CheckTokenOptional - checks token if present, but doesn't fail if missing
+func CheckTokenOptional(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		if strings.TrimSpace(token) == "" || strings.TrimSpace(token) == "Bearer" {
+			next(w, r)
+			return
+		}
+
+		// if the header starts with "Bearer " then let's trim that junk
+		if len(token) > 7 && token[:7] == "Bearer " {
+			token = token[7:]
+		}
+
+		goodies, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return utils.HmacSampleSecret, nil
+		})
+
+		if err != nil || !goodies.Valid {
+			// If token is invalid, just proceed as unauthenticated
+			next(w, r)
+			return
+		}
+
+		claims, ok := goodies.Claims.(jwt.MapClaims)
+		if !ok {
+			next(w, r)
+			return
+		}
+
+		i := int64(claims["expiresAt"].(float64))
+		ts := time.Unix(i, 0)
+		now := time.Now()
+		if now.After(ts) {
+			next(w, r)
+			return
+		}
+
+		user := models.User{}
+		user.FindByEmail(claims["email"].(string))
+		if user.ID == 0 {
+			next(w, r)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "user_email", user.Email)
+		ctx = context.WithValue(ctx, "user_id", user.ID)
+		ctx = context.WithValue(ctx, "user_username", user.Username)
+		next(w, r.WithContext(ctx))
+	}
+}

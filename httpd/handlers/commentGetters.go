@@ -51,8 +51,14 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
 	// Only returns results that match a specific post url.
 	post := strings.TrimSpace(r.FormValue("post"))
 	if post != "" {
+		communitySlug := strings.TrimSpace(r.FormValue("community"))
+		communityID, err := resolveCommunityID(communitySlug)
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("query comments by post %s: %v", post, err))
+			return
+		}
 		p := &models.Post{}
-		err := p.FindByURL(post)
+		err = p.FindByURL(post, communityID)
 		if err != nil {
 			sendSystemError(w, fmt.Errorf("query comments by post %s: %v", post, err))
 			return

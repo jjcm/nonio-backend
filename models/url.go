@@ -6,10 +6,10 @@ import (
 	"github.com/otiai10/opengraph/v2"
 )
 
-// URLIsAvailable - check the database to see if a given URL is available
-func URLIsAvailable(url string) (bool, error) {
+// URLIsAvailable - check the database to see if a given URL is available for a specific community
+func URLIsAvailable(url string, communityID int) (bool, error) {
 	var total int
-	err := DBConn.Get(&total, "SELECT COUNT(*) FROM posts where url = ?", url)
+	err := DBConn.Get(&total, "SELECT COUNT(*) FROM posts WHERE url = ? AND COALESCE(community_id, 0) = ?", url, communityID)
 	if err != nil {
 		return false, err
 	}

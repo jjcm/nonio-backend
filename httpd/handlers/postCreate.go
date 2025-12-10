@@ -18,14 +18,15 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		Title   string   `json:"title"`
-		URL     string   `json:"url"`
-		Link    string   `json:"link"`
-		Content string   `json:"content"`
-		Type    string   `json:"type"`
-		Width   int      `json:"width"`
-		Height  int      `json:"height"`
-		Tags    []string `json:"tags"`
+		Title     string   `json:"title"`
+		URL       string   `json:"url"`
+		Link      string   `json:"link"`
+		Content   string   `json:"content"`
+		Type      string   `json:"type"`
+		Width     int      `json:"width"`
+		Height    int      `json:"height"`
+		Tags      []string `json:"tags"`
+		Community string   `json:"community"`
 	}
 
 	var payload requestPayload
@@ -48,8 +49,29 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Log.Info("attempting to create post")
+	Log.Infof("Community value received: '%s' (length: %d)", payload.Community, len(payload.Community))
 
-	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Link, payload.Content, payload.Type, payload.Width, payload.Height)
+	communityID := 0
+	communitySlug := ""
+	if payload.Community != "" {
+		// Remove @ prefix if present
+		communityURL := payload.Community
+		if len(communityURL) > 0 && communityURL[0] == '@' {
+			communityURL = communityURL[1:]
+		}
+		communitySlug = communityURL
+
+		Log.Infof("Looking up community with URL: '%s'", communityURL)
+		c := models.Community{}
+		if err := c.FindByURL(communityURL); err != nil {
+			Log.Errorf("Community query failed when creating post for community '%s': %v", communityURL, err)
+			SendResponse(w, utils.MakeError("Community '"+communityURL+"' does not exist. Please create it first."), 404)
+			return
+		}
+		communityID = c.ID
+	}
+
+	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Link, payload.Content, payload.Type, payload.Width, payload.Height, communityID)
 	if err != nil {
 		Log.Error("Post creation failed")
 		sendSystemError(w, err)
@@ -60,14 +82,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	for _, tag := range payload.Tags {
 		// check if the tag exists, if not create it
 		t := models.Tag{}
-		if err := t.FindByTagName(tag); err != nil {
+		if err := t.FindByTagName(tag, communityID); err != nil {
 			Log.Error("Tag query failed when creating post")
 			sendSystemError(w, err)
 			return
 		}
 		// if the tag doesn't exist, create it
 		if t.ID == 0 {
-			tempTag, err := models.TagFactory(tag, u)
+			tempTag, err := models.TagFactory(tag, u, communityID)
 			if err != nil {
 				Log.Error("Creating a new tag during post creation failed")
 				sendSystemError(w, err)
@@ -134,6 +156,9 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	newPost.Tags = tags
+	if communityID > 0 && communitySlug != "" {
+		newPost.CommunityURL = &communitySlug
+	}
 
 	SendResponse(w, &newPost, 200)
 

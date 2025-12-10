@@ -75,12 +75,18 @@ func (s *Subscription) FindSubscription(tagID int, userID int) error {
 }
 
 // GetSubscriptions will return the user's tag subscriptions
-func (u *User) GetSubscriptions() ([]Subscription, error) {
-	subscriptions := []Subscription{}
+func (u *User) GetSubscriptions(communityID int) ([]*Subscription, error) {
+	subscriptions := []*Subscription{}
 
-	// run the correct sql query
-	var query = "SELECT * FROM subscriptions WHERE user_id = ?"
-	err := DBConn.Select(&subscriptions, query, u.ID)
+	var err error
+	if communityID == 0 {
+		query := "SELECT s.* FROM subscriptions s JOIN tags t ON s.tag_id = t.id WHERE s.user_id = ? AND (t.community_id IS NULL OR t.community_id = 0)"
+		err = DBConn.Select(&subscriptions, query, u.ID)
+	} else {
+		query := "SELECT s.* FROM subscriptions s JOIN tags t ON s.tag_id = t.id WHERE s.user_id = ? AND t.community_id = ?"
+		err = DBConn.Select(&subscriptions, query, u.ID, communityID)
+	}
+
 	if err != nil {
 		return subscriptions, err
 	}

@@ -13,7 +13,17 @@ import (
 // GetCommentVotesForPost - gets a user's votes for a post.
 func GetCommentVotesForPost(w http.ResponseWriter, r *http.Request) {
 	Log.Info("getting comment votes")
-	url := utils.ParseRouteParameter(r.URL.Path, "/comment-votes/post/")
+	communitySlug, url := parseCommunityAndSlug(r.URL.Path, "/comment-votes/post/")
+	if communitySlug == "" {
+		communitySlug = strings.TrimSpace(r.URL.Query().Get("community"))
+	}
+
+	communityID, err := resolveCommunityID(communitySlug)
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("community lookup: %v", err))
+		return
+	}
+
 	if strings.TrimSpace(url) == "" {
 		sendSystemError(w, errors.New("a post url is needed to get the comment votes for it"))
 		return
@@ -23,7 +33,7 @@ func GetCommentVotesForPost(w http.ResponseWriter, r *http.Request) {
 	u.FindByID(r.Context().Value("user_id").(int))
 
 	p := models.Post{}
-	err := p.FindByURL(url)
+	err = p.FindByURL(url, communityID)
 	if err != nil {
 		sendNotFound(w, errors.New("we couldn't find a post with the url `"+url+"`"))
 		return
@@ -55,8 +65,14 @@ func GetCommentVotes(w http.ResponseWriter, r *http.Request) {
 	// Only returns votes on comments that match a specific post url.
 	post := strings.TrimSpace(r.FormValue("post"))
 	if post != "" {
+		communitySlug := strings.TrimSpace(r.FormValue("community"))
+		communityID, err := resolveCommunityID(communitySlug)
+		if err != nil {
+			sendSystemError(w, fmt.Errorf("query comment votes by post %s: %v", post, err))
+			return
+		}
 		p := &models.Post{}
-		err := p.FindByURL(post)
+		err = p.FindByURL(post, communityID)
 		if err != nil {
 			sendSystemError(w, fmt.Errorf("query comment votes by post %s: %v", post, err))
 			return

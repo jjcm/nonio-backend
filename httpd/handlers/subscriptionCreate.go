@@ -17,7 +17,8 @@ func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		TagName string `json:"tag"`
+		TagName   string `json:"tag"`
+		Community string `json:"community"`
 	}
 
 	var payload requestPayload
@@ -28,8 +29,26 @@ func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	user.FindByID(r.Context().Value("user_id").(int))
 
+	communityID := 0
+	if payload.Community != "" {
+		// Remove @ prefix if present
+		communityURL := payload.Community
+		if len(communityURL) > 0 && communityURL[0] == '@' {
+			communityURL = communityURL[1:]
+		}
+		c := models.Community{}
+		if err := c.FindByURL(communityURL); err == nil {
+			communityID = c.ID
+		}
+	}
+
 	tag := models.Tag{}
-	tag.FindByTagName(payload.TagName)
+	tag.FindByTagName(payload.TagName, communityID)
+
+	if tag.ID == 0 {
+		SendResponse(w, utils.MakeError("tag not found"), 404)
+		return
+	}
 
 	subscription := models.Subscription{}
 

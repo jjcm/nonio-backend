@@ -31,15 +31,18 @@ type Post struct {
 	Width        int       `db:"width" json:"width"`
 	Height       int       `db:"height" json:"height"`
 	IsEncoding   bool      `db:"is_encoding" json:"isEncoding"`
+	CommunityID  *int      `db:"community_id" json:"communityID,omitempty"`
+	CommunityURL *string   `db:"community_url" json:"community,omitempty"`
 }
 
 // PostQueryParams - structure represents the parameters for querying posts
 type PostQueryParams struct {
-	TagID  int
-	Since  string
-	Offset int
-	UserID int
-	Sort   string
+	TagID       int
+	Since       string
+	Offset      int
+	UserID      int
+	Sort        string
+	CommunityID int
 }
 
 // MarshalJSON custom JSON builder for Post structs
@@ -55,6 +58,16 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 	}
 
 	// return the custom JSON for this post
+	var communityID *int
+	if p.CommunityID != nil && *p.CommunityID != 0 {
+		communityID = p.CommunityID
+	}
+
+	var communityURL *string
+	if p.CommunityURL != nil && *p.CommunityURL != "" {
+		communityURL = p.CommunityURL
+	}
+
 	return json.Marshal(&struct {
 		ID           int       `json:"ID"`
 		Title        string    `json:"title"`
@@ -70,6 +83,8 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		Width        int       `json:"width"`
 		Height       int       `json:"height"`
 		IsEncoding   bool      `json:"isEncoding"`
+		CommunityID  *int      `json:"communityID,omitempty"`
+		CommunityURL *string   `json:"community,omitempty"`
 	}{
 		ID:           p.ID,
 		Title:        p.Title,
@@ -85,6 +100,8 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 		Width:        p.Width,
 		Height:       p.Height,
 		IsEncoding:   p.IsEncoding,
+		CommunityID:  communityID,
+		CommunityURL: communityURL,
 	})
 }
 
@@ -102,9 +119,14 @@ func (p *Post) ToJSON() string {
 /************************************************/
 
 // CreatePost - create a new post in the database
-func (u *User) CreatePost(title string, postUrl string, link string, content string, postType string, width int, height int) (Post, error) {
+func (u *User) CreatePost(title string, postUrl string, link string, content string, postType string, width int, height int, communityID ...int) (Post, error) {
 	p := Post{}
 	now := time.Now().Format("2006-01-02 15:04:05")
+
+	communityIDVal := 0
+	if len(communityID) > 0 {
+		communityIDVal = communityID[0]
+	}
 
 	if len(title) == 0 {
 		return p, fmt.Errorf("post must contain a title")
@@ -144,8 +166,14 @@ func (u *User) CreatePost(title string, postUrl string, link string, content str
 	// set is_encoding to true for video posts (they need encoding)
 	isEncoding := postType == "video"
 
+	// Normalize communityID so that root/frontpage posts use 0
+	communityKey := communityIDVal
+	if communityKey < 0 {
+		communityKey = 0
+	}
+
 	// try and create the post in the DB
-	result, err := DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, width, height, is_encoding, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, postUrl, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, width, height, isEncoding, now, now)
+	result, err := DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, width, height, is_encoding, community_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, postUrl, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, width, height, isEncoding, communityKey, now, now)
 	// check for specific error of an existing post URL
 	// if we hit this error, run a second DB call to see how many of the posts have a similar URL alias and then tack on a suffix to make this one unique
 	if err != nil && err.Error()[0:10] == "Error 1062" {
@@ -155,7 +183,7 @@ func (u *User) CreatePost(title string, postUrl string, link string, content str
 		if len(urlToCheckFor) > 240 {
 			urlToCheckFor = urlToCheckFor[0:240] // 240 is safe enough, since this is such an edge case that it's probably never going to happen
 		}
-		DBConn.Get(&countSimilarAliases, "SELECT COUNT(*) FROM posts WHERE url LIKE ?", urlToCheckFor+"%")
+		DBConn.Get(&countSimilarAliases, "SELECT COUNT(*) FROM posts WHERE url LIKE ? AND COALESCE(community_id, 0) = ?", urlToCheckFor+"%", communityKey)
 		suffix := "-" + strconv.Itoa(countSimilarAliases+1)
 		newURL := postUrl + suffix
 		if len(newURL) > 255 {
@@ -163,7 +191,7 @@ func (u *User) CreatePost(title string, postUrl string, link string, content str
 		}
 
 		// now let's try it again with the updated post URL
-		result, err = DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, width, height, is_encoding, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, newURL, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, width, height, isEncoding, now, now)
+		result, err = DBConn.Exec("INSERT INTO posts (title, url, link, domain, user_id, thumbnail, score, content, type, width, height, is_encoding, community_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", title, newURL, postLink.String(), postLink.Host, u.ID, "", 0, content, postType, width, height, isEncoding, communityKey, now, now)
 		if err != nil {
 			return p, err
 		}
@@ -200,10 +228,21 @@ func (p *Post) FindByID(id int) error {
 	return nil
 }
 
-// FindByURL - find a given post in the database by its URL
-func (p *Post) FindByURL(url string) error {
+// FindByURL - find a given post in the database by its URL scoped to a community
+// If no community is provided, the root/frontpage (0) is assumed.
+func (p *Post) FindByURL(url string, communityID ...int) error {
+	communityKey := 0
+	if len(communityID) > 0 {
+		communityKey = communityID[0]
+	}
 	dbPost := Post{}
-	err := DBConn.Get(&dbPost, "SELECT * FROM posts WHERE url = ?", url)
+	query := `
+		SELECT p.*, c.url AS community_url
+		FROM posts p
+		LEFT JOIN communities c ON p.community_id = c.id
+		WHERE p.url = ? AND COALESCE(p.community_id, 0) = ?
+		LIMIT 1`
+	err := DBConn.Get(&dbPost, query, url, communityKey)
 	if err != nil {
 		Log.Error(err.Error())
 		return err
@@ -217,36 +256,50 @@ func (p *Post) FindByURL(url string) error {
 func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	args := []interface{}{}
 
-	query := "select * from posts where created_at > ? and is_encoding = false"
+	query := `
+		SELECT p.*, c.url AS community_url
+		FROM posts p
+		LEFT JOIN communities c ON p.community_id = c.id
+		WHERE p.created_at > ? AND p.is_encoding = false`
 	// time range
 	args = append(args, params.Since)
 	Log.Infof("time range: %s", params.Since)
 
 	// special user
 	if params.UserID > 0 {
-		query = query + " and user_id = ?"
+		query = query + " and p.user_id = ?"
 		args = append(args, params.UserID)
+	}
+
+	// community
+	if params.CommunityID > 0 {
+		query = query + " and p.community_id = ?"
+		args = append(args, params.CommunityID)
+	} else {
+		// If no community is specified, only show posts with no community (frontpage)
+		// Or should we show all? The requirement says "Content submitted to a community wouldn't be visible on the frontpage"
+		// So if CommunityID is 0 (or not set), we should filter out community posts.
+		query = query + " and (p.community_id IS NULL OR p.community_id = 0)"
 	}
 
 	// tags
 	if params.TagID > 0 {
 		Log.Infof("tag id: %d", params.TagID)
-		query = query + " and id in (SELECT post_id from posts_tags where tag_id = ?)"
+		query = query + " and p.id in (SELECT post_id from posts_tags where tag_id = ?)"
 		args = append(args, params.TagID)
 	}
 
 	// orders
 	switch params.Sort {
 	case "popular":
-		query = query + " order by score / POWER(((current_timestamp() - created_at) / 3600000), 1.8) desc"
-		//query = query + " order by score desc"
+		query = query + " order by p.score / POWER(((current_timestamp() - p.created_at) / 3600000), 1.8) desc"
 	case "top":
-		query = query + " order by score desc"
+		query = query + " order by p.score desc"
 		Log.Info("top")
 	case "new":
-		query = query + " order by created_at desc"
+		query = query + " order by p.created_at desc"
 	default:
-		query = query + " order by created_at desc"
+		query = query + " order by p.created_at desc"
 	}
 
 	// offset

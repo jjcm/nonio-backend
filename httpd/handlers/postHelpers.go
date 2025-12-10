@@ -19,14 +19,54 @@ func CheckIfURLIsAvailable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	communitySlug := strings.TrimSpace(r.URL.Query().Get("community"))
+	communityID, err := resolveCommunityID(communitySlug)
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
 	Log.Info("Checking if URL is available: " + requestedURL)
-	isAvailable, err := models.URLIsAvailable(requestedURL)
+	isAvailable, err := models.URLIsAvailable(requestedURL, communityID)
 	if err != nil {
 		sendSystemError(w, err)
 		return
 	}
 
 	SendResponse(w, isAvailable, 200)
+}
+
+// resolveCommunityID takes a community slug (with or without @ prefix) and returns its ID.
+// An empty slug represents the root/frontpage and returns 0.
+func resolveCommunityID(communitySlug string) (int, error) {
+	trimmed := strings.TrimSpace(communitySlug)
+	if trimmed == "" {
+		return 0, nil
+	}
+
+	if trimmed[0] == '@' {
+		trimmed = trimmed[1:]
+	}
+
+	c := models.Community{}
+	if err := c.FindByURL(trimmed); err != nil {
+		return 0, err
+	}
+
+	return c.ID, nil
+}
+
+// parseCommunityAndSlug parses a path like "/posts/@community/slug" or "/posts/slug"
+// into its community slug (without @) and post slug.
+func parseCommunityAndSlug(path string, prefix string) (string, string) {
+	trimmed := utils.ParseRouteParameter(path, prefix)
+	parts := strings.SplitN(trimmed, "/", 2)
+
+	if len(parts) == 2 && strings.HasPrefix(parts[0], "@") {
+		return strings.TrimPrefix(parts[0], "@"), parts[1]
+	}
+
+	return "", trimmed
 }
 
 func CheckExternalURLTitle(w http.ResponseWriter, r *http.Request) {

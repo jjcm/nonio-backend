@@ -10,7 +10,7 @@ import (
 )
 
 // find the structure of user, post, tag with user id, post url, tag name from database
-func findUserPostTag(userID int, postURL string, tagName string) (*models.User, *models.Post, *models.Tag, error) {
+func findUserPostTag(userID int, postURL string, tagName string, communityID int) (*models.User, *models.Post, *models.Tag, error) {
 	// query the user by user id
 	user := models.User{}
 	if err := user.FindByID(userID); err != nil {
@@ -19,18 +19,22 @@ func findUserPostTag(userID int, postURL string, tagName string) (*models.User, 
 
 	// query the post by post id
 	post := models.Post{}
-	if err := post.FindByURL(postURL); err != nil {
+	if err := post.FindByURL(postURL, communityID); err != nil {
 		return nil, nil, nil, fmt.Errorf("query post: %v", err)
 	}
 
 	// query the tag by tag id
 	tag := models.Tag{}
-	if err := tag.FindByTagName(tagName); err != nil {
+	communityKey := communityID
+	if post.CommunityID != nil {
+		communityKey = *post.CommunityID
+	}
+	if err := tag.FindByTagName(tagName, communityKey); err != nil {
 		return nil, nil, nil, fmt.Errorf("query tag: %v", err)
 	}
 	// if the tag doesn't exist, create it
 	if tag.ID == 0 {
-		tempTag, err := models.TagFactory(tagName, user)
+		tempTag, err := models.TagFactory(tagName, user, communityKey)
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("create tag: %v", err)
 		}
@@ -50,8 +54,9 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		PostURL string `json:"post"`
-		TagName string `json:"tag"`
+		PostURL   string `json:"post"`
+		TagName   string `json:"tag"`
+		Community string `json:"community"`
 	}
 
 	var payload requestPayload
@@ -61,8 +66,14 @@ func CreatePostTag(w http.ResponseWriter, r *http.Request) {
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)
 
+	communityID, err := resolveCommunityID(payload.Community)
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
 	// find the structure of user, post, tag with user id, post url and tag name
-	user, post, tag, err := findUserPostTag(userID, payload.PostURL, payload.TagName)
+	user, post, tag, err := findUserPostTag(userID, payload.PostURL, payload.TagName, communityID)
 	if err != nil {
 		sendSystemError(w, err)
 		return

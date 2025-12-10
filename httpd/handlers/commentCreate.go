@@ -12,9 +12,10 @@ import (
 // CommentOnPost will read in the JSON payload to add a comment to a given post
 func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 	type requestPayload struct {
-		PostURL  string `json:"post"`
-		Content  string `json:"content"`
-		ParentID *int   `json:"parent"`
+		PostURL   string `json:"post"`
+		Community string `json:"community"`
+		Content   string `json:"content"`
+		ParentID  *int   `json:"parent"`
 	}
 
 	if r.Method != "POST" {
@@ -31,9 +32,14 @@ func CommentOnPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// first, find the post we are commenting on
+	communityID, err := resolveCommunityID(payload.Community)
+	if err != nil {
+		sendSystemError(w, fmt.Errorf("community lookup: %v", err))
+		return
+	}
+
 	post := models.Post{}
-	post.FindByURL(payload.PostURL)
-	if post.ID == 0 {
+	if err := post.FindByURL(payload.PostURL, communityID); err != nil || post.ID == 0 {
 		sendNotFound(w, errors.New("Post with URL '"+payload.PostURL+"' was not found"))
 		return
 	}

@@ -18,8 +18,9 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type requestPayload struct {
-		PostURL string `json:"post"`
-		TagName string `json:"tag"`
+		PostURL   string `json:"post"`
+		TagName   string `json:"tag"`
+		Community string `json:"community"`
 	}
 
 	var payload requestPayload
@@ -29,8 +30,14 @@ func AddPostTagVote(w http.ResponseWriter, r *http.Request) {
 	// get the user id from context
 	userID := r.Context().Value("user_id").(int)
 
+	communityID, err := resolveCommunityID(payload.Community)
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
 	// find the structure of user, post, tag with user id, post url and tag name
-	user, post, tag, err := findUserPostTag(userID, payload.PostURL, payload.TagName)
+	user, post, tag, err := findUserPostTag(userID, payload.PostURL, payload.TagName, communityID)
 	if err != nil {
 		sendSystemError(w, err)
 		return
