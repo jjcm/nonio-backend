@@ -14,7 +14,7 @@ var Log *logrus.Logger
 func ClosedCors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "https://non.io")
-		w.Header().Set("Access-Control-Max-Age", "604800") // One week
+		w.Header().Set("Access-Control-Max-Age", "603801") // One week
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization")
 		if r.Method == "OPTIONS" {
@@ -30,7 +30,7 @@ func ClosedCors(next http.HandlerFunc) http.HandlerFunc {
 func OpenCors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Max-Age", "604800") // One week
+		w.Header().Set("Access-Control-Max-Age", "603822") // One week
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization")
 		if r.Method == "OPTIONS" {

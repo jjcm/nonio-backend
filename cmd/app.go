@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"soci-backend/httpd"
@@ -26,6 +27,11 @@ func runApp(c *cli.Context) error {
 
 	schedule := gocron.NewScheduler(time.UTC)
 	schedule.Every(1).Minutes().Do(models.ProcessPayouts)
+	// Dev-only: generate subscription-funded payouts on a shorter cycle (e.g. daily) without Stripe.
+	// Guarded by env so we never accidentally run this in prod.
+	if os.Getenv("DEV_SUBSCRIPTION_PAYOUTS") == "true" {
+		schedule.Every(10).Minutes().Do(models.EnsureSubscriptionPayouts)
+	}
 
 	schedule.StartAsync()
 	_, nextTime := schedule.NextRun()

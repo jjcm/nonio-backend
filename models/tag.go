@@ -3,9 +3,12 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	mysqlDriver "github.com/go-sql-driver/mysql"
 )
 
 // Tag - code representation of a single tag
@@ -94,9 +97,24 @@ func TagFactory(tag string, author User, communityID ...int) (Tag, error) {
 
 	err := createTag(tag, author, communityKey)
 	if err != nil {
+		// Handle concurrent tag creation and the (current) global-unique constraint on tag name.
+		// If another request created this tag first, treat it as success and just look it up.
+		var mysqlErr *mysqlDriver.MySQLError
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			// Try community-scoped lookup first, then fall back to global tag.
+			_ = t.FindByTagName(tag, communityKey)
+			if t.ID == 0 && communityKey != 0 {
+				_ = t.FindByTagName(tag, 0)
+			}
+			return t, nil
+		}
 		return t, err
 	}
 	err = t.FindByTagName(tag, communityKey)
+	// If tags are globally unique (current schema), a community-scoped lookup may miss a global tag.
+	if err == nil && t.ID == 0 && communityKey != 0 {
+		err = t.FindByTagName(tag, 0)
+	}
 
 	return t, err
 }

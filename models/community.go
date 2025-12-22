@@ -13,6 +13,7 @@ type Community struct {
 	Name        string    `db:"name" json:"name"`
 	URL         string    `db:"url" json:"url"`
 	Description string    `db:"description" json:"description"`
+	CreatorID   int       `db:"creator_id" json:"creatorID"`
 	PrivacyType string    `db:"privacy_type" json:"privacyType"`
 	PostPermission    string    `db:"post_permission" json:"postPermission"`
 	CommentPermission string    `db:"comment_permission" json:"commentPermission"`
@@ -27,6 +28,7 @@ func (c *Community) MarshalJSON() ([]byte, error) {
 		Name        string `json:"name"`
 		URL         string `json:"url"`
 		Description string `json:"description"`
+		CreatorID   int    `json:"creatorID"`
 		PrivacyType string `json:"privacyType"`
 		PostPermission    string `json:"postPermission"`
 		CommentPermission string `json:"commentPermission"`
@@ -36,6 +38,7 @@ func (c *Community) MarshalJSON() ([]byte, error) {
 		Name:        c.Name,
 		URL:         c.URL,
 		Description: c.Description,
+		CreatorID:   c.CreatorID,
 		PrivacyType: c.PrivacyType,
 		PostPermission: c.PostPermission,
 		CommentPermission: c.CommentPermission,
@@ -79,7 +82,7 @@ func (u *User) CreateCommunity(name, url, description, privacyType string) (Comm
 		privacyType = "public"
 	}
 
-	result, err := DBConn.Exec("INSERT INTO communities (name, url, description, privacy_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", name, url, description, privacyType, now, now)
+	result, err := DBConn.Exec("INSERT INTO communities (name, url, description, privacy_type, creator_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)", name, url, description, privacyType, u.ID, now, now)
 	if err != nil {
 		return c, err
 	}

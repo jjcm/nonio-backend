@@ -77,6 +77,8 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/communities/subscribed": handlers.GetSubscribedCommunities,
 		"/community/add-moderator": handlers.AddModerator,
 		"/community/remove-moderator": handlers.RemoveModerator,
+		"/community/add-member": handlers.AddMember,
+		"/community/remove-member": handlers.RemoveMember,
 		"/community/moderators": handlers.GetModerators,
 		"/community/update": handlers.UpdateCommunity,
 		"/community/ban": handlers.BanUser,
@@ -94,6 +96,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/user/update-description":   handlers.UpdateDescription,
 		"/user/get-financials":       handlers.GetFinancials,
 		"/user/get-financial-ledger": handlers.GetFinancialLedger,
+		"/users/search": handlers.SearchUsers,
 		// TODO - set up the GetSettings route or something similar to return whether the user is a subscriber or not
 		// "/user/get-settings":        handlers.GetSettings,
 		"/user/choose-free-account": handlers.ChooseFreeAccount,
@@ -122,6 +125,9 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		// ADMIN ROUTES
 		"/admin/ban":  handlers.UserBan,
 		"/admin/nuke": handlers.NukeUser,
+
+		// DEV ROUTES (guarded inside handlers)
+		"/dev/user/set-subscription": handlers.DevSetSubscription,
 	}
 
 	return routes

@@ -65,3 +65,25 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	SendResponse(w, &info, 200)
 }
+
+// SearchUsers returns usernames that start with the provided query.
+func SearchUsers(w http.ResponseWriter, r *http.Request) {
+	type result struct {
+		Username string `db:"username" json:"username"`
+	}
+
+	query := strings.ToLower(strings.TrimSpace(r.FormValue("q")))
+	if len(query) < 2 {
+		SendResponse(w, map[string]interface{}{"users": []result{}}, 200)
+		return
+	}
+
+	results := []result{}
+	err := models.DBConn.Select(&results, "SELECT username FROM users WHERE LOWER(username) LIKE ? ORDER BY username ASC LIMIT 8", query+"%")
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
+	SendResponse(w, map[string]interface{}{"users": results}, 200)
+}

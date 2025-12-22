@@ -21,6 +21,9 @@ func main() {
 		},
 	}
 	app.Action = runApp
+	app.Commands = []cli.Command{
+		migrateQuillToMarkdownCommand(),
+	}
 
 	err := app.Run(os.Args)
 	if err != nil {

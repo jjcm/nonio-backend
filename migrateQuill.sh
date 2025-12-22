@@ -1,5 +1,17 @@
-cd cmd
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Runs the Quill -> Markdown backfill using the same local env vars as localRun.sh.
+# Usage:
+#   ./migrateQuill.sh --dry-run
+#   ./migrateQuill.sh            # performs updates
+#   ./migrateQuill.sh --limit 500
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+cd "${SCRIPT_DIR}/cmd"
 go build -o ../dist/socid
+
 export APP_KEY="asdfa323faefjifajwiefawef"
 export WEB_HOST="http://localhost:4200"
 export DB_HOST="127.0.0.1"
@@ -18,13 +30,16 @@ export STRIPE_SECRET_KEY="sk_test_51EpA4oH4gvdXgbs5rBv4JI29C38uWuNEGuB8Agt5hfya1
 export STRIPE_PUBLISHABLE_KEY="pk_test_51EpA4oH4gvdXgbs5r0aq0i3U6IzOwbWRVYaBYXMFLLHvihVHGHotHPAi2EJ7Km9JqudFZyLE30kt2YQSUOSK88Xx00Q6eEqxmS"
 export WEBHOOK_ENDPOINT_SECRET=""
 
-# Dev-only: enable simulator support (safe for local dev only)
+# Dev-only: keep consistent with localRun.sh
 export DEV_TOOLS_ENABLED="true"
 export DEV_SUBSCRIPTION_PAYOUTS="true"
 export PAYOUT_CYCLE_DAYS="1"
 
-cd ../migrations
+# Ensure schema is up-to-date before running the backfill
+cd "${SCRIPT_DIR}/migrations"
 goose mysql "${DB_USER}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_DATABASE}" up
 
-../dist/socid
+cd "${SCRIPT_DIR}"
+./dist/socid migrate-quill-to-markdown "$@"
+
 

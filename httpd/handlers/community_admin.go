@@ -121,6 +121,117 @@ func RemoveModerator(w http.ResponseWriter, r *http.Request) {
 	SendResponse(w, true, 200)
 }
 
+// AddMember - add a member to a community (admin action)
+func AddMember(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		SendResponse(w, utils.MakeError("you can only POST to this route"), 405)
+		return
+	}
+
+	type requestPayload struct {
+		CommunityURL string `json:"community"`
+		Username     string `json:"username"`
+	}
+	var payload requestPayload
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&payload)
+
+	c := models.Community{}
+	if err := c.FindByURL(payload.CommunityURL); err != nil {
+		sendNotFound(w, errors.New("community not found"))
+		return
+	}
+
+	// Check if requester is a moderator
+	requesterID := r.Context().Value("user_id").(int)
+	mods, err := c.GetModerators()
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+	isMod := false
+	for _, mod := range mods {
+		if mod.ID == requesterID {
+			isMod = true
+			break
+		}
+	}
+	if !isMod {
+		SendResponse(w, utils.MakeError("only moderators can add members"), 403)
+		return
+	}
+
+	member := models.User{}
+	if err := member.FindByUsername(payload.Username); err != nil {
+		sendNotFound(w, errors.New("user not found"))
+		return
+	}
+
+	if err := c.Subscribe(member.ID); err != nil {
+		// Treat duplicate subscriptions as success to keep the action idempotent.
+		if !strings.Contains(strings.ToLower(err.Error()), "duplicate") {
+			sendSystemError(w, err)
+			return
+		}
+	}
+
+	SendResponse(w, true, 200)
+}
+
+// RemoveMember - remove a member from a community (admin action)
+func RemoveMember(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		SendResponse(w, utils.MakeError("you can only POST to this route"), 405)
+		return
+	}
+
+	type requestPayload struct {
+		CommunityURL string `json:"community"`
+		Username     string `json:"username"`
+	}
+	var payload requestPayload
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&payload)
+
+	c := models.Community{}
+	if err := c.FindByURL(payload.CommunityURL); err != nil {
+		sendNotFound(w, errors.New("community not found"))
+		return
+	}
+
+	// Check if requester is a moderator
+	requesterID := r.Context().Value("user_id").(int)
+	mods, err := c.GetModerators()
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+	isMod := false
+	for _, mod := range mods {
+		if mod.ID == requesterID {
+			isMod = true
+			break
+		}
+	}
+	if !isMod {
+		SendResponse(w, utils.MakeError("only moderators can remove members"), 403)
+		return
+	}
+
+	member := models.User{}
+	if err := member.FindByUsername(payload.Username); err != nil {
+		sendNotFound(w, errors.New("user not found"))
+		return
+	}
+
+	if err := c.Unsubscribe(member.ID); err != nil {
+		sendSystemError(w, err)
+		return
+	}
+
+	SendResponse(w, true, 200)
+}
+
 // UpdateCommunity - update a community
 func UpdateCommunity(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -369,16 +480,30 @@ func GetCommunityFinancials(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get financials for last month
-	since := time.Now().AddDate(0, -1, 0)
+	// Get financials for the current month
+	now := time.Now()
+	since := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
 	financials, err := c.GetFinancials(since)
 	if err != nil {
 		sendSystemError(w, err)
 		return
 	}
 
+	totalEarned := 0.0
+	for _, f := range financials {
+		totalEarned += f.Amount
+	}
+
+	adminPayoutPerAdmin := 0.0
+	if len(mods) > 0 {
+		adminPayoutPerAdmin = (totalEarned * 0.10) / float64(len(mods))
+	}
+
 	output := map[string]interface{}{
-		"financials": financials,
+		"financials":          financials,
+		"totalEarnedThisMonth": totalEarned,
+		"adminPayoutPerAdmin": adminPayoutPerAdmin,
 	}
 	SendResponse(w, output, 200)
 }
