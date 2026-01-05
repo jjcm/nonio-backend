@@ -737,7 +737,7 @@ func (u *User) ForgotPasswordRequest(email string) error {
 	}
 
 	encodedToken = re.ReplaceAllString(encodedToken, "")
-	expiry := time.Now().Add(time.Hour).Format("2006-01-02 15:04:05")
+	expiry := time.Now().Add(24 * time.Hour).Format("2006-01-02 15:04:05")
 
 	// delete any previous request
 	_, err = DBConn.Exec("DELETE FROM user_temp_passwords WHERE email = ?", email)
@@ -753,7 +753,7 @@ func (u *User) ForgotPasswordRequest(email string) error {
 	}
 
 	// TODO - make the host an environment variable
-	utils.SendEmailOAUTH2(
+	utils.SendEmail(
 		email,
 		"Nonio - Forgot Password Request",
 		fmt.Sprintf("Please click the following link to set a new password: %v/admin/change-forgotten-password?token=%v", WebHost, encodedToken),

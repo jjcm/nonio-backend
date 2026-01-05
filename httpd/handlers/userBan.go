@@ -67,7 +67,7 @@ func UserBan(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		utils.SendEmailOAUTH2(u.Email, "You have been banned", `
+		utils.SendEmail(u.Email, "You have been banned", `
 			You've been banned from`+os.Getenv("WEB_HOST")+`. The reason for your ban is the following:`+"\n\n"+payload.Reason+"\n\n"+`To challenge this ban, respond to this email. If no response is heard your subscription will be cancelled.`)
 	}
 }
