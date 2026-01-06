@@ -36,12 +36,13 @@ func CheckIfURLIsAvailable(w http.ResponseWriter, r *http.Request) {
 	SendResponse(w, isAvailable, 200)
 }
 
-// resolveCommunityID takes a community slug (with or without @ prefix) and returns its ID.
-// An empty slug represents the root/frontpage and returns 0.
-func resolveCommunityID(communitySlug string) (int, error) {
+// resolveCommunity takes a community slug (with or without @ prefix) and returns:
+// - the Community (nil for root/frontpage)
+// - the normalized slug (without @, trimmed)
+func resolveCommunity(communitySlug string) (*models.Community, string, error) {
 	trimmed := strings.TrimSpace(communitySlug)
 	if trimmed == "" {
-		return 0, nil
+		return nil, "", nil
 	}
 
 	if trimmed[0] == '@' {
@@ -50,9 +51,22 @@ func resolveCommunityID(communitySlug string) (int, error) {
 
 	c := models.Community{}
 	if err := c.FindByURL(trimmed); err != nil {
-		return 0, err
+		return nil, trimmed, err
 	}
 
+	return &c, trimmed, nil
+}
+
+// resolveCommunityID takes a community slug (with or without @ prefix) and returns its ID.
+// An empty slug represents the root/frontpage and returns 0.
+func resolveCommunityID(communitySlug string) (int, error) {
+	c, _, err := resolveCommunity(communitySlug)
+	if err != nil {
+		return 0, err
+	}
+	if c == nil {
+		return 0, nil
+	}
 	return c.ID, nil
 }
 

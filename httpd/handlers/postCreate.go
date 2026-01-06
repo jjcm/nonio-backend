@@ -36,39 +36,40 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	// Check if user can post (has active subscription or account created before Nov 1, 2025)
-	canPost, err := u.CanPost()
-	if err != nil {
-		Log.Error("Error checking if user can post")
-		sendSystemError(w, err)
-		return
-	}
-	if !canPost {
-		SendResponse(w, utils.MakeError("only users with an active subscription or accounts created before Nov 1, 2025 can submit posts"), 403)
-		return
-	}
-
 	Log.Info("attempting to create post")
 	Log.Infof("Community value received: '%s' (length: %d)", payload.Community, len(payload.Community))
 
 	communityID := 0
 	communitySlug := ""
-	if payload.Community != "" {
-		// Remove @ prefix if present
-		communityURL := payload.Community
-		if len(communityURL) > 0 && communityURL[0] == '@' {
-			communityURL = communityURL[1:]
-		}
-		communitySlug = communityURL
+	c, slug, err := resolveCommunity(payload.Community)
+	if err != nil {
+		Log.Errorf("Community query failed when creating post for community '%s': %v", slug, err)
+		SendResponse(w, utils.MakeError("Community '"+slug+"' does not exist. Please create it first."), 404)
+		return
+	}
+	if c != nil {
+		communityID = c.ID
+		communitySlug = slug
+	}
 
-		Log.Infof("Looking up community with URL: '%s'", communityURL)
-		c := models.Community{}
-		if err := c.FindByURL(communityURL); err != nil {
-			Log.Errorf("Community query failed when creating post for community '%s': %v", communityURL, err)
-			SendResponse(w, utils.MakeError("Community '"+communityURL+"' does not exist. Please create it first."), 404)
+	// Posting permissions:
+	// - root/frontpage: requires CanPost() (paid/legacy)
+	// - community posts: obey community.post_permission ("all" vs "paid")
+	if c == nil || c.PostPermission == "paid" {
+		canPost, err := u.CanPost()
+		if err != nil {
+			Log.Error("Error checking if user can post")
+			sendSystemError(w, err)
 			return
 		}
-		communityID = c.ID
+		if !canPost {
+			if c != nil {
+				SendResponse(w, utils.MakeError("only users with an active subscription or accounts created before Nov 1, 2025 can submit posts in this community"), 403)
+				return
+			}
+			SendResponse(w, utils.MakeError("only users with an active subscription or accounts created before Nov 1, 2025 can submit posts"), 403)
+			return
+		}
 	}
 
 	newPost, err := u.CreatePost(payload.Title, payload.URL, payload.Link, payload.Content, payload.Type, payload.Width, payload.Height, communityID)

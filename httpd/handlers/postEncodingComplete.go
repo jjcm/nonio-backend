@@ -33,13 +33,16 @@ func PostEncodingComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	Log.Infof("Received encoding complete notification for post URL: %s", payload.URL)
+	
 	p := models.Post{}
 	if err := p.MarkEncodingComplete(payload.URL); err != nil {
-		Log.Error("Failed to mark encoding complete")
+		Log.Errorf("Failed to mark encoding complete for post URL %s: %v", payload.URL, err)
 		sendSystemError(w, err)
 		return
 	}
 
+	Log.Infof("Successfully marked encoding complete for post URL: %s", payload.URL)
 	SendResponse(w, map[string]string{"status": "success"}, 200)
 }
 

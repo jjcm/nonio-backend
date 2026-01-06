@@ -260,7 +260,7 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 		SELECT p.*, c.url AS community_url
 		FROM posts p
 		LEFT JOIN communities c ON p.community_id = c.id
-		WHERE p.created_at > ? AND p.is_encoding = false`
+		WHERE p.created_at > ? AND (p.is_encoding = false OR (p.type = 'video' AND p.is_encoding = true AND p.created_at < DATE_SUB(CURRENT_TIMESTAMP(), INTERVAL 24 HOUR)))`
 	// time range
 	args = append(args, params.Since)
 	Log.Infof("time range: %s", params.Since)
@@ -367,8 +367,22 @@ func (p *Post) DecrementScoreWithTx(tx Transaction, id int) error {
 
 // MarkEncodingComplete - mark a post as no longer encoding
 func (p *Post) MarkEncodingComplete(url string) error {
-	_, err := DBConn.Exec("update posts set is_encoding = false where url = ?", url)
-	return err
+	result, err := DBConn.Exec("update posts set is_encoding = false where url = ?", url)
+	if err != nil {
+		Log.Errorf("Error updating encoding status for post with url %s: %v", url, err)
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		Log.Errorf("Error getting rows affected for post with url %s: %v", url, err)
+		return err
+	}
+	if rowsAffected == 0 {
+		Log.Warnf("No post found with url %s to mark encoding complete", url)
+		return fmt.Errorf("no post found with url %s", url)
+	}
+	Log.Infof("Marked encoding complete for post with url %s (rows affected: %d)", url, rowsAffected)
+	return nil
 }
 
 /************************************************/
