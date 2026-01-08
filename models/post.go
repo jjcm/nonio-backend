@@ -43,6 +43,7 @@ type PostQueryParams struct {
 	UserID      int
 	Sort        string
 	CommunityID int
+	Type        string
 }
 
 // MarshalJSON custom JSON builder for Post structs
@@ -287,6 +288,12 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 		Log.Infof("tag id: %d", params.TagID)
 		query = query + " and p.id in (SELECT post_id from posts_tags where tag_id = ?)"
 		args = append(args, params.TagID)
+	}
+
+	// type filter (image, video, blog, link, audio)
+	if params.Type != "" {
+		query = query + " and p.type = ?"
+		args = append(args, params.Type)
 	}
 
 	// orders

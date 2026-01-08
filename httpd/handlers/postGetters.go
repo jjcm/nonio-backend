@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"soci-backend/models"
@@ -18,6 +19,7 @@ type PostQueryResponse struct {
 }
 
 var PostCache map[string]PostQueryResponse = make(map[string]PostQueryResponse)
+var postCacheMu sync.RWMutex
 
 // GetPostByURL find a specific post in the database and send back a JSON
 // representation of it
@@ -69,7 +71,10 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	var cacheResponse PostQueryResponse
 	// Use if we ever want to invalidate the cache after a period of time.
 	//if cacheResponse, ok := PostCache[r.URL.String()]; ok && time.Now().Add(time.Minute*-1).Before(cacheResponse.CreatedAt) {
-	if cacheResponse, ok := PostCache[r.URL.String()]; ok {
+	postCacheMu.RLock()
+	cacheResponse, ok := PostCache[r.URL.String()]
+	postCacheMu.RUnlock()
+	if ok {
 		Log.Info("cache hit")
 		Log.Info(r.URL)
 		SendJSONResponse(w, cacheResponse.Response, 200)
@@ -198,6 +203,17 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		params.UserID = author.ID
 	}
 
+	// ?type=image|video|blog|link|audio
+	// Only returns posts of a specific type.
+	formType := strings.TrimSpace(r.FormValue("type"))
+	if formType != "" {
+		// Validate type
+		validTypes := map[string]bool{"image": true, "video": true, "blog": true, "link": true, "audio": true}
+		if validTypes[formType] {
+			params.Type = formType
+		}
+	}
+
 	// query the posts by the url parameters
 	posts, err := models.GetPostsByParams(params)
 	if err != nil {
@@ -209,6 +225,12 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	if err := fillPostTags(posts); err != nil {
 		sendSystemError(w, fmt.Errorf("query tags by posts: %v", err))
 		return
+	}
+
+	// Truncate content for feed responses (prevents shipping full long-form content with every list fetch).
+	// Full post content is available via GetPostByURL.
+	for _, post := range posts {
+		post.Content = truncateLines(post.Content, 10, 2000)
 	}
 
 	output := map[string]interface{}{
@@ -225,5 +247,36 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	// Add the query to our cache
 	cacheResponse.Response = jsonData
 	cacheResponse.CreatedAt = time.Now()
+	postCacheMu.Lock()
 	PostCache[r.URL.String()] = cacheResponse
+	postCacheMu.Unlock()
+}
+
+// truncateLines returns at most maxLines of text (by '\n') and caps total length to maxChars.
+// If truncated, it appends a trailing "\n…".
+func truncateLines(s string, maxLines int, maxChars int) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	if maxLines < 1 {
+		maxLines = 1
+	}
+	if maxChars < 1 {
+		maxChars = 2000
+	}
+
+	s = strings.ReplaceAll(s, "\r\n", "\n")
+	lines := strings.Split(s, "\n")
+	if len(lines) > maxLines {
+		s = strings.Join(lines[:maxLines], "\n")
+		s = strings.TrimRight(s, "\n")
+		s += "\n…"
+	}
+	if len(s) > maxChars {
+		s = s[:maxChars]
+		s = strings.TrimRight(s, "\n")
+		s += "\n…"
+	}
+	return s
 }
