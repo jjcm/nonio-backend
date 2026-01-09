@@ -6,11 +6,13 @@
 --  - `community_id` (denormalized from tags.community_id for fast filtering)
 -- NOTE: some environments may already have an `id` column; make this migration idempotent.
 
--- Ensure `id` exists (column only; PK added below if needed).
+-- Ensure `id` exists.
+-- IMPORTANT: MySQL requires AUTO_INCREMENT columns to be indexed at the time they're created/modified.
+-- So we add the column first (non-auto), add PK if needed, then enable AUTO_INCREMENT once it's keyed.
 SET @sql := IF(
   (SELECT COUNT(*) FROM information_schema.COLUMNS
    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'subscriptions' AND COLUMN_NAME = 'id') = 0,
-  'ALTER TABLE `subscriptions` ADD `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT FIRST',
+  'ALTER TABLE `subscriptions` ADD `id` bigint(20) unsigned NOT NULL FIRST',
   'SELECT 1'
 );
 PREPARE stmt FROM @sql;
@@ -22,6 +24,20 @@ SET @sql := IF(
   (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'subscriptions' AND CONSTRAINT_TYPE = 'PRIMARY KEY') = 0,
   'ALTER TABLE `subscriptions` ADD PRIMARY KEY (`id`)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Ensure `id` is AUTO_INCREMENT once it's a key.
+SET @sql := IF(
+  (SELECT COUNT(*) FROM information_schema.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'subscriptions' AND COLUMN_NAME = 'id' AND EXTRA LIKE '%auto_increment%') = 0
+  AND
+  (SELECT COUNT(*) FROM information_schema.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'subscriptions' AND INDEX_NAME = 'PRIMARY' AND COLUMN_NAME = 'id') > 0,
+  'ALTER TABLE `subscriptions` MODIFY `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT',
   'SELECT 1'
 );
 PREPARE stmt FROM @sql;
