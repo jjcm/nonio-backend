@@ -17,6 +17,7 @@ import (
 
 var testingDBInitOnce sync.Once
 var testingDBInitErr error
+var testingDBTables []string
 
 func setupTestingDB() error {
 	var testingDBName = "socidb_testing"
@@ -62,6 +63,16 @@ func setupTestingDB() error {
 		if err != nil {
 			testingDBInitErr = fmt.Errorf("%w: %s", err, output.String())
 		}
+
+		// Cache table list for fast per-test truncation.
+		var tables []string
+		DBConn.Select(&tables, "SHOW TABLES")
+		for _, t := range tables {
+			if strings.HasPrefix(t, "goose_") {
+				continue
+			}
+			testingDBTables = append(testingDBTables, t)
+		}
 	})
 
 	if testingDBInitErr != nil {
@@ -91,13 +102,7 @@ func resetTestingDB() {
 func wipeTestingDB() {
 	DBConn.Exec("SET FOREIGN_KEY_CHECKS=0")
 
-	var tables []string
-	DBConn.Select(&tables, "SHOW TABLES")
-	for _, t := range tables {
-		// Goose uses this table to track migration versions; keep it so we don't re-run migrations.
-		if strings.HasPrefix(t, "goose_") {
-			continue
-		}
+	for _, t := range testingDBTables {
 		_, err := DBConn.Exec("TRUNCATE TABLE `" + t + "`")
 		if err != nil {
 			panic(err)

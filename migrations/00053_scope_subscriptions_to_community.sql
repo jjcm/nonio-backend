@@ -19,6 +19,28 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- If `id` exists but is unset/duplicated (common when added without AUTO_INCREMENT),
+-- backfill unique values before adding a PRIMARY KEY.
+SET @needs_backfill := (
+  SELECT COUNT(*) FROM `subscriptions` WHERE `id` IS NULL OR `id` = 0
+);
+SET @has_pk := (
+  SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'subscriptions'
+    AND CONSTRAINT_TYPE = 'PRIMARY KEY'
+);
+SET @max_id := (SELECT IFNULL(MAX(id),0) FROM `subscriptions`);
+SET @i := @max_id;
+SET @sql := IF(
+  @needs_backfill > 0 AND @has_pk = 0,
+  'UPDATE `subscriptions` SET `id` = (@i := @i + 1) WHERE `id` IS NULL OR `id` = 0 ORDER BY `user_id`, `tag_id`',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- Ensure primary key exists (on `id`).
 SET @sql := IF(
   (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
