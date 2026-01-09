@@ -14,7 +14,7 @@ type PostTag struct {
 	PostID    int           `db:"post_id" json:"postID"`
 	PostURL   string        `db:"-" json:"post"`
 	Tag       *Tag          `db:"-" json:"-"`
-	TagName   string        `db:"-" json:"tag"`
+	TagName   string        `db:"tag_name" json:"tag"`
 	TagID     int           `db:"tag_id" json:"tagID"`
 	Score     int           `db:"score" json:"score"`
 	CreatedAt time.Time     `db:"created_at" json:"-"`
@@ -24,11 +24,18 @@ type PostTag struct {
 // MarshalJSON custom JSON builder for Post structs
 func (p *PostTag) MarshalJSON() ([]byte, error) {
 
-	// populate tag if it currently isn't hydrated
-	if p.Tag == nil {
+	// Prefer already-selected tag name (e.g. via JOIN) to avoid extra DB lookups.
+	if p.Tag != nil {
+		p.TagName = p.Tag.Name
+	}
+
+	// populate tag if it currently isn't hydrated and we don't already know the name
+	if p.Tag == nil && p.TagName == "" {
 		tag := Tag{}
-		tag.FindByID(p.TagID)
-		p.Tag = &tag
+		if err := tag.FindByID(p.TagID); err == nil {
+			p.Tag = &tag
+			p.TagName = tag.Name
+		}
 	}
 
 	// return the custom JSON for this post
@@ -39,7 +46,7 @@ func (p *PostTag) MarshalJSON() ([]byte, error) {
 		Score   int    `json:"score"`
 	}{
 		PostID:  p.PostID,
-		TagName: p.Tag.Name,
+		TagName: p.TagName,
 		TagID:   p.TagID,
 		Score:   p.Score,
 	})
@@ -168,20 +175,23 @@ func (p *Post) getPostTags() error {
 func GetPostTags(id int) ([]PostTag, error) {
 	tags := []PostTag{}
 
-	err := DBConn.Select(&tags, "SELECT * FROM posts_tags where post_id = ?", id)
+	// Join against tags so dangling rows (e.g. tag_id=0 or deleted tags) don't crash feeds.
+	// This also avoids N+1 queries.
+	err := DBConn.Select(&tags, `
+		SELECT
+			pt.id,
+			pt.post_id,
+			pt.tag_id,
+			pt.score,
+			pt.created_at,
+			t.name AS tag_name
+		FROM posts_tags pt
+		JOIN tags t ON t.id = pt.tag_id
+		WHERE pt.post_id = ? AND pt.tag_id <> 0
+	`, id)
 	if err != nil {
 		Log.Errorf("Error getting post tags: %v", err)
 		return nil, err
-	}
-
-	// query the tag name with id
-	for i, item := range tags {
-		tag := Tag{}
-		if err = tag.FindByID(item.TagID); err != nil {
-			Log.Errorf("Error finding tag ID: %v, %d", err, item.TagID)
-			return nil, err
-		}
-		tags[i].TagName = tag.Name
 	}
 
 	return tags, err

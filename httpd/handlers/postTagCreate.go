@@ -24,22 +24,13 @@ func findUserPostTag(userID int, postURL string, tagName string, communityID int
 	}
 
 	// query the tag by tag id
-	tag := models.Tag{}
 	communityKey := communityID
 	if post.CommunityID != nil {
 		communityKey = *post.CommunityID
 	}
-	if err := tag.FindByTagName(tagName, communityKey); err != nil {
-		return nil, nil, nil, fmt.Errorf("query tag: %v", err)
-	}
-	// if the tag doesn't exist, create it
-	if tag.ID == 0 {
-		tempTag, err := models.TagFactory(tagName, user, communityKey)
-		if err != nil {
-			return nil, nil, nil, fmt.Errorf("create tag: %v", err)
-		}
-
-		tag = tempTag
+	tag, err := models.GetOrCreateTag(tagName, user, communityKey)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("resolve tag: %v", err)
 	}
 
 	return &user, &post, &tag, nil

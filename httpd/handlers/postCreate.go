@@ -81,23 +81,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	// Create tags
 	for _, tag := range payload.Tags {
-		// check if the tag exists, if not create it
-		t := models.Tag{}
-		if err := t.FindByTagName(tag, communityID); err != nil {
-			Log.Error("Tag query failed when creating post")
+		t, err := models.GetOrCreateTag(tag, u, communityID)
+		if err != nil {
+			Log.Error("Resolving tag during post creation failed")
 			sendSystemError(w, err)
 			return
-		}
-		// if the tag doesn't exist, create it
-		if t.ID == 0 {
-			tempTag, err := models.TagFactory(tag, u, communityID)
-			if err != nil {
-				Log.Error("Creating a new tag during post creation failed")
-				sendSystemError(w, err)
-				return
-			}
-
-			t = tempTag
 		}
 
 		// Create the post tag

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -13,13 +14,15 @@ func GetSubscriptions(w http.ResponseWriter, r *http.Request) {
 	u := models.User{}
 	u.FindByID(r.Context().Value("user_id").(int))
 
-	communityURL := strings.TrimSpace(r.FormValue("community"))
+	communitySlug := strings.TrimSpace(r.FormValue("community"))
 	communityID := 0
-	if communityURL != "" {
-		c := models.Community{}
-		if err := c.FindByURL(communityURL); err == nil {
-			communityID = c.ID
+	if communitySlug != "" {
+		id, err := resolveCommunityID(communitySlug)
+		if err != nil {
+			sendNotFound(w, errors.New("we couldn't find a community matching `"+communitySlug+"`"))
+			return
 		}
+		communityID = id
 	}
 
 	subscriptions, err := u.GetSubscriptions(communityID)

@@ -13,6 +13,7 @@ type Subscription struct {
 	TagID     int       `db:"tag_id" json:"-"`
 	User      User      `db:"-" json:"-"`
 	UserID    int       `db:"user_id" json:"-"`
+	CommunityID int     `db:"community_id" json:"-"`
 	CreatedAt time.Time `db:"created_at" json:"-"`
 }
 
@@ -49,7 +50,11 @@ func (u *User) CreateSubscription(tag Tag) (Subscription, error) {
 	s := Subscription{}
 	now := time.Now().Format("2006-01-02 15:04:05")
 
-	_, err := DBConn.Exec("INSERT INTO subscriptions (tag_id, user_id, created_at) VALUES (?, ?, ?)", tag.ID, u.ID, now)
+	communityID := 0
+	if tag.CommunityID != nil {
+		communityID = *tag.CommunityID
+	}
+	_, err := DBConn.Exec("INSERT INTO subscriptions (tag_id, user_id, community_id, created_at) VALUES (?, ?, ?, ?)", tag.ID, u.ID, communityID, now)
 	if err != nil {
 		return s, err
 	}
@@ -78,14 +83,7 @@ func (s *Subscription) FindSubscription(tagID int, userID int) error {
 func (u *User) GetSubscriptions(communityID int) ([]*Subscription, error) {
 	subscriptions := []*Subscription{}
 
-	var err error
-	if communityID == 0 {
-		query := "SELECT s.* FROM subscriptions s JOIN tags t ON s.tag_id = t.id WHERE s.user_id = ? AND (t.community_id IS NULL OR t.community_id = 0)"
-		err = DBConn.Select(&subscriptions, query, u.ID)
-	} else {
-		query := "SELECT s.* FROM subscriptions s JOIN tags t ON s.tag_id = t.id WHERE s.user_id = ? AND t.community_id = ?"
-		err = DBConn.Select(&subscriptions, query, u.ID, communityID)
-	}
+	err := DBConn.Select(&subscriptions, "SELECT * FROM subscriptions WHERE user_id = ? AND community_id = ?", u.ID, communityID)
 
 	if err != nil {
 		return subscriptions, err

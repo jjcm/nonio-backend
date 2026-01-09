@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/icrowley/fake"
@@ -17,26 +18,20 @@ func TestCanGetTags(t *testing.T) {
 	// create an author for tags
 	author, _ := UserFactory("example@example.com", "", "password")
 
-	// create a huge number of tags, so we can test our tag retriever with valid limits and offsets
-	limit := 500
-	index := 0
-	for index < limit {
-		tag, err := TagFactory(fake.Words(), author)
-		// i expect the faker library to return a bunch of duplicates, but I want 500 unique words so we will only increment the index counter if they are all unique
-		if err == nil {
-			index++
+	// Create enough distinct tags with count>0 so GetTags(limit, offset) is meaningful.
+	// (Use deterministic unique names so the test is fast and stable.)
+	limit := 120
+	for i := 0; i < limit; i++ {
+		tag, err := TagFactory(fmt.Sprintf("tag-%d", i), author)
+		if err != nil {
+			t.Errorf("Error creating tag: %v", err.Error())
 		}
-
 		if err := WithTransaction(func(tx Transaction) error {
-			postTag := PostTag{}
-			postTag.PostID = 0
-			postTag.TagID = tag.ID
-			postTag.CreatePostTagWithTx(tx)
-			return nil
+			postTag := PostTag{PostID: i + 1, TagID: tag.ID}
+			return postTag.CreatePostTagWithTx(tx)
 		}); err != nil {
 			t.Errorf("Error creating post tag: %v", err.Error())
 		}
-
 	}
 
 	batch1, err := GetTags(0, 100)
@@ -77,13 +72,53 @@ func TestYouCantCreateATagWithTheNameOfAnExistingTag(t *testing.T) {
 	author, _ := UserFactory("example@example.com", "", "password")
 
 	newTag := fake.Word()
-	_, err := TagFactory(newTag, author)
+	tag1, err := TagFactory(newTag, author)
 	if err != nil {
 		t.Errorf("The initial creation of a tag should have worked fine")
 	}
-	// try it again
-	_, err = TagFactory(newTag, author)
-	if err == nil {
-		t.Errorf("This tag should already exist, so an error should have been thrown when trying to create it again")
+
+	// try it again (should resolve existing tag)
+	tag2, err := TagFactory(newTag, author)
+	if err != nil {
+		t.Errorf("Creating an existing tag should return the existing row, not error: %v", err)
+	}
+	if tag1.ID == 0 || tag2.ID == 0 || tag1.ID != tag2.ID {
+		t.Errorf("Expected both tag instances to resolve to the same ID. Got %d and %d", tag1.ID, tag2.ID)
+	}
+}
+
+func TestSameTagNameCanExistInDifferentCommunities(t *testing.T) {
+	setupTestingDB()
+
+	author, _ := UserFactory("example@example.com", "", "password")
+	c1, err := author.CreateCommunity("Community 1", "community-1", "", "public")
+	if err != nil {
+		t.Errorf("Community 1 creation should have worked. Error received: %v", err)
+	}
+	c2, err := author.CreateCommunity("Community 2", "community-2", "", "public")
+	if err != nil {
+		t.Errorf("Community 2 creation should have worked. Error received: %v", err)
+	}
+
+	t1, err := TagFactory("baseball", author, c1.ID)
+	if err != nil {
+		t.Errorf("Tag creation in community 1 should have worked. Error received: %v", err)
+	}
+	t2, err := TagFactory("baseball", author, c2.ID)
+	if err != nil {
+		t.Errorf("Tag creation in community 2 should have worked. Error received: %v", err)
+	}
+	if t1.ID == 0 || t2.ID == 0 || t1.ID == t2.ID {
+		t.Errorf("Expected different tag IDs across communities. Got %d and %d", t1.ID, t2.ID)
+	}
+
+	check := Tag{}
+	_ = check.FindByTagName("baseball", c1.ID)
+	if check.ID != t1.ID {
+		t.Errorf("Expected community 1 lookup to return %d, got %d", t1.ID, check.ID)
+	}
+	_ = check.FindByTagName("baseball", c2.ID)
+	if check.ID != t2.ID {
+		t.Errorf("Expected community 2 lookup to return %d, got %d", t2.ID, check.ID)
 	}
 }

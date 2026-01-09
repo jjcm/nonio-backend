@@ -29,17 +29,10 @@ func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	user.FindByID(r.Context().Value("user_id").(int))
 
-	communityID := 0
-	if payload.Community != "" {
-		// Remove @ prefix if present
-		communityURL := payload.Community
-		if len(communityURL) > 0 && communityURL[0] == '@' {
-			communityURL = communityURL[1:]
-		}
-		c := models.Community{}
-		if err := c.FindByURL(communityURL); err == nil {
-			communityID = c.ID
-		}
+	communityID, err := resolveCommunityID(payload.Community)
+	if err != nil {
+		sendNotFound(w, fmt.Errorf("we couldn't find a community matching `%s`", payload.Community))
+		return
 	}
 
 	tag := models.Tag{}
@@ -50,17 +43,8 @@ func CreateSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subscription := models.Subscription{}
-
-	// if the Subscription already exists, then just return true
-	subscription.FindSubscription(tag.ID, user.ID)
-	if subscription.ID > 0 {
-		SendResponse(w, subscription, 200)
-		return
-	}
-
 	// otherwise, let's make a subscription!
-	subscription, err := user.CreateSubscription(tag)
+	_, err = user.CreateSubscription(tag)
 	if err != nil {
 		sendSystemError(w, fmt.Errorf("couldn't create a subscription: %v", err))
 		return

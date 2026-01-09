@@ -299,7 +299,9 @@ func GetPostsByParams(params *PostQueryParams) ([]*Post, error) {
 	// orders
 	switch params.Sort {
 	case "popular":
-		query = query + " order by p.score / POWER(((current_timestamp() - p.created_at) / 3600000), 1.8) desc"
+		// "Hot" sort: score decays by age (in hours). Use TIMESTAMPDIFF for correct units.
+		// +2 prevents division by zero and reduces extreme boosting for brand-new posts.
+		query = query + " order by p.score / POWER(((TIMESTAMPDIFF(SECOND, p.created_at, CURRENT_TIMESTAMP()) / 3600) + 2), 1.8) desc"
 	case "top":
 		query = query + " order by p.score desc"
 		Log.Info("top")

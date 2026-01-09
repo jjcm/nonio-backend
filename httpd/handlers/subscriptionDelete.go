@@ -29,17 +29,10 @@ func DeleteSubscription(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	user.FindByID(r.Context().Value("user_id").(int))
 
-	communityID := 0
-	if payload.Community != "" {
-		// Remove @ prefix if present
-		communityURL := payload.Community
-		if len(communityURL) > 0 && communityURL[0] == '@' {
-			communityURL = communityURL[1:]
-		}
-		c := models.Community{}
-		if err := c.FindByURL(communityURL); err == nil {
-			communityID = c.ID
-		}
+	communityID, err := resolveCommunityID(payload.Community)
+	if err != nil {
+		sendNotFound(w, fmt.Errorf("we couldn't find a community matching `%s`", payload.Community))
+		return
 	}
 
 	// figure out what tag they're trying to remove

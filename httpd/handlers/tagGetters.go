@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"soci-backend/httpd/utils"
 	"soci-backend/models"
@@ -9,13 +10,15 @@ import (
 
 // GetTags - get tags out of the database, 100 at a time, optional offset
 func GetTags(w http.ResponseWriter, r *http.Request) {
-	communityURL := strings.TrimSpace(r.FormValue("community"))
+	communitySlug := strings.TrimSpace(r.FormValue("community"))
 	communityID := 0
-	if communityURL != "" {
-		c := models.Community{}
-		if err := c.FindByURL(communityURL); err == nil {
-			communityID = c.ID
+	if communitySlug != "" {
+		id, err := resolveCommunityID(communitySlug)
+		if err != nil {
+			sendNotFound(w, errors.New("we couldn't find a community matching `"+communitySlug+"`"))
+			return
 		}
+		communityID = id
 	}
 
 	tags, err := models.GetTags(0, 100, communityID)
@@ -38,13 +41,15 @@ func GetTagsByPrefix(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	communityURL := strings.TrimSpace(r.FormValue("community"))
+	communitySlug := strings.TrimSpace(r.FormValue("community"))
 	communityID := 0
-	if communityURL != "" {
-		c := models.Community{}
-		if err := c.FindByURL(communityURL); err == nil {
-			communityID = c.ID
+	if communitySlug != "" {
+		id, err := resolveCommunityID(communitySlug)
+		if err != nil {
+			sendNotFound(w, errors.New("we couldn't find a community matching `"+communitySlug+"`"))
+			return
 		}
+		communityID = id
 	}
 
 	tags, err := models.GetTagsByPrefix(prefix, communityID)

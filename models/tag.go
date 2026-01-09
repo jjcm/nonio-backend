@@ -70,16 +70,7 @@ func createTag(tag string, author User, communityID int) error {
 	}
 
 	now := time.Now().Format("2006-01-02 15:04:05")
-
-	// Convert communityID to nullable value
-	var communityIDPtr interface{}
-	if communityID == 0 {
-		communityIDPtr = nil
-	} else {
-		communityIDPtr = communityID
-	}
-
-	_, err := DBConn.Exec("INSERT INTO tags (name, user_id, community_id, created_at) VALUES (?, ?, ?, ?)", tag, author.ID, communityIDPtr, now)
+	_, err := DBConn.Exec("INSERT INTO tags (name, user_id, community_id, created_at) VALUES (?, ?, ?, ?)", tag, author.ID, communityID, now)
 	if err != nil {
 		return err
 	}
@@ -95,25 +86,29 @@ func TagFactory(tag string, author User, communityID ...int) (Tag, error) {
 		communityKey = communityID[0]
 	}
 
+	// Fast path: tag already exists.
+	if err := t.FindByTagName(tag, communityKey); err != nil {
+		return t, err
+	}
+	if t.ID != 0 {
+		return t, nil
+	}
+
 	err := createTag(tag, author, communityKey)
 	if err != nil {
-		// Handle concurrent tag creation and the (current) global-unique constraint on tag name.
-		// If another request created this tag first, treat it as success and just look it up.
+		// If another request created this tag first, resolve it and treat as success.
 		var mysqlErr *mysqlDriver.MySQLError
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
-			// Try community-scoped lookup first, then fall back to global tag.
 			_ = t.FindByTagName(tag, communityKey)
-			if t.ID == 0 && communityKey != 0 {
-				_ = t.FindByTagName(tag, 0)
+			if t.ID != 0 {
+				return t, nil
 			}
-			return t, nil
 		}
 		return t, err
 	}
 	err = t.FindByTagName(tag, communityKey)
-	// If tags are globally unique (current schema), a community-scoped lookup may miss a global tag.
-	if err == nil && t.ID == 0 && communityKey != 0 {
-		err = t.FindByTagName(tag, 0)
+	if err == nil && t.ID == 0 {
+		return t, fmt.Errorf("tag %q was created but could not be resolved", tag)
 	}
 
 	return t, err
@@ -143,12 +138,7 @@ func (t *Tag) FindByTagName(name string, communityID ...int) error {
 	if len(communityID) > 0 {
 		communityKey = communityID[0]
 	}
-	var err error
-	if communityKey == 0 {
-		err = DBConn.Get(&dbTag, "SELECT * FROM tags WHERE name = ? AND (community_id IS NULL OR community_id = 0)", name)
-	} else {
-		err = DBConn.Get(&dbTag, "SELECT * FROM tags WHERE name = ? AND community_id = ?", name, communityKey)
-	}
+	err := DBConn.Get(&dbTag, "SELECT * FROM tags WHERE name = ? AND community_id = ?", name, communityKey)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -161,21 +151,21 @@ func (t *Tag) FindByTagName(name string, communityID ...int) error {
 	return nil
 }
 
+// GetOrCreateTag returns an existing tag by name, or creates it if it doesn't exist.
+// This is the helper you typically want when attaching tags to posts.
+func GetOrCreateTag(tag string, author User, communityID int) (Tag, error) {
+	return TagFactory(tag, author, communityID)
+}
+
 // GetTags - get tags out of the database offset by an integer
 // communityID defaults to 0 (frontpage) if omitted.
 func GetTags(offset int, limit int, communityID ...int) ([]Tag, error) {
 	tags := []Tag{}
-	var err error
 	communityKey := 0
 	if len(communityID) > 0 {
 		communityKey = communityID[0]
 	}
-
-	if communityKey == 0 {
-		err = DBConn.Select(&tags, "SELECT id, name, count FROM tags WHERE count > 0 AND (community_id IS NULL OR community_id = 0) ORDER BY count DESC LIMIT ? OFFSET ?", limit, offset)
-	} else {
-		err = DBConn.Select(&tags, "SELECT id, name, count FROM tags WHERE count > 0 AND community_id = ? ORDER BY count DESC LIMIT ? OFFSET ?", communityKey, limit, offset)
-	}
+	err := DBConn.Select(&tags, "SELECT id, name, count, community_id FROM tags WHERE count > 0 AND community_id = ? ORDER BY count DESC LIMIT ? OFFSET ?", communityKey, limit, offset)
 
 	if err != nil {
 		return tags, err
@@ -187,12 +177,7 @@ func GetTags(offset int, limit int, communityID ...int) ([]Tag, error) {
 // GetTagsByPrefix - get tags that match a specific prefix
 func GetTagsByPrefix(prefix string, communityID int) ([]Tag, error) {
 	tags := []Tag{}
-	var err error
-	if communityID == 0 {
-		err = DBConn.Select(&tags, "SELECT name, count FROM tags WHERE name LIKE ? AND (community_id IS NULL OR community_id = 0) ORDER BY count DESC LIMIT 100", fmt.Sprintf("%v%%", prefix))
-	} else {
-		err = DBConn.Select(&tags, "SELECT name, count FROM tags WHERE name LIKE ? AND community_id = ? ORDER BY count DESC LIMIT 100", fmt.Sprintf("%v%%", prefix), communityID)
-	}
+	err := DBConn.Select(&tags, "SELECT name, count, community_id FROM tags WHERE name LIKE ? AND community_id = ? ORDER BY count DESC LIMIT 100", fmt.Sprintf("%v%%", prefix), communityID)
 
 	if err != nil {
 		return tags, err
