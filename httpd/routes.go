@@ -31,7 +31,7 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/tags/": handlers.GetTagsByPrefix,
 
 		// COMMUNITY ROUTES
-		"/communities":  handlers.GetCommunities,
+		"/communities": handlers.GetCommunities,
 
 		"/stripe/webhooks": handlers.StripeWebhook,
 	}
@@ -53,8 +53,8 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/protected": handlers.GetTokenDetails,
 
 		// POST ROUTES
-		"/post/create": handlers.CreatePost,
-		"/post/delete": handlers.DeletePost,
+		"/post/create":             handlers.CreatePost,
+		"/post/delete":             handlers.DeletePost,
 		"/post/parse-external-url": handlers.CheckExternalURLTitle,
 
 		// COMMENT ROUTES
@@ -71,20 +71,23 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/posttag/remove-vote": handlers.RemovePostTagVote,
 
 		// COMMUNITY ROUTES
-		"/community/create":      handlers.CreateCommunity,
-		"/community/subscribe":   handlers.SubscribeToCommunity,
-		"/community/unsubscribe": handlers.UnsubscribeFromCommunity,
-		"/communities/subscribed": handlers.GetSubscribedCommunities,
-		"/community/add-moderator": handlers.AddModerator,
+		"/community/create":           handlers.CreateCommunity,
+		"/community/subscribe":        handlers.SubscribeToCommunity,
+		"/community/unsubscribe":      handlers.UnsubscribeFromCommunity,
+		"/communities/subscribed":     handlers.GetSubscribedCommunities,
+		"/community/add-moderator":    handlers.AddModerator,
 		"/community/remove-moderator": handlers.RemoveModerator,
-		"/community/add-member": handlers.AddMember,
-		"/community/remove-member": handlers.RemoveMember,
-		"/community/moderators": handlers.GetModerators,
-		"/community/update": handlers.UpdateCommunity,
-		"/community/ban": handlers.BanUser,
-		"/community/unban": handlers.UnbanUser,
-		"/community/users": handlers.GetCommunityUsers,
-		"/community/financials": handlers.GetCommunityFinancials,
+		"/community/add-member":       handlers.AddMember,
+		"/community/remove-member":    handlers.RemoveMember,
+		"/community/moderators":       handlers.GetModerators,
+		"/community/update":           handlers.UpdateCommunity,
+		"/community/ban":              handlers.BanUser,
+		"/community/unban":            handlers.UnbanUser,
+		"/community/users":            handlers.GetCommunityUsers,
+		"/community/financials":       handlers.GetCommunityFinancials,
+		"/community/channels":         handlers.GetChannels,
+		"/community/channel/create":   handlers.ChannelCreate,
+		"/community/channel/messages": handlers.ChannelMessages,
 
 		// SUBSCRIPTION ROUTES
 		"/subscriptions":       handlers.GetSubscriptions,
@@ -96,7 +99,7 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/user/update-description":   handlers.UpdateDescription,
 		"/user/get-financials":       handlers.GetFinancials,
 		"/user/get-financial-ledger": handlers.GetFinancialLedger,
-		"/users/search": handlers.SearchUsers,
+		"/users/search":              handlers.SearchUsers,
 		// TODO - set up the GetSettings route or something similar to return whether the user is a subscriber or not
 		// "/user/get-settings":        handlers.GetSettings,
 		"/user/choose-free-account": handlers.ChooseFreeAccount,
@@ -121,6 +124,10 @@ func ProtectedRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/stripe/price-config":        handlers.StripeGetPriceConfig,
 		"/stripe/create-customer":     handlers.StripeCreateCustomer,
 		"/stripe/get-connect-link":    handlers.GetConnectLink,
+
+		// VOICE (LiveKit)
+		"/voice/join":     handlers.VoiceJoin,
+		"/voice/presence": handlers.VoicePresence,
 
 		// ADMIN ROUTES
 		"/admin/ban":  handlers.UserBan,

@@ -57,6 +57,18 @@ If you are having trouble with permissions, you may also want to add your user t
 
 This release script is pretty rudimentary, and assumes success on each build step, so there is definitly room for improvement here. Since this is a temporary hold while we are still pre alpha, it'll do the job.
 
+## Voice (LiveKit)
+
+Voice channels use a self-hosted [LiveKit](https://github.com/livekit/livekit) server. If the following env vars are not set, the `/voice/join` endpoint returns 503 and the frontend hides voice UI when not configured.
+
+Optional environment variables:
+
+- `LIVEKIT_URL` – LiveKit server URL (e.g. `https://livekit.example.com` or `wss://livekit.example.com`). The API returns the WebSocket URL to the client (http(s) is converted to ws(s)).
+- `LIVEKIT_API_KEY` – LiveKit API key (e.g. `devkey` for local dev).
+- `LIVEKIT_API_SECRET` – LiveKit API secret (e.g. `secret` for local dev).
+
+Run LiveKit locally: `livekit-server --dev` (see [LiveKit docs](https://docs.livekit.io)). Then set `LIVEKIT_URL=http://localhost:7880` (or your LiveKit HTTP URL). Only community members (subscribers) can obtain a token to join a community’s voice channels.
+
 ## Example
 
 Start up the Go API (if you're on OSX, the example below needs to run the socid-osx binary), then jump into the example directory and start up a dev server (example below uses PHP 🤔) to see how this works. There's a very basic HTML file in there that uses vue.js to make a few AJAX requests.

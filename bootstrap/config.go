@@ -26,6 +26,11 @@ type Config struct {
 	DBConn               *sqlx.DB
 	StripeSecretKey      string
 	StripePublishableKey string
+
+	// LiveKit (optional): if set, voice channels are enabled
+	LiveKitURL    string
+	LiveKitAPIKey string
+	LiveKitSecret string
 }
 
 // InitConfig this function will run and log out all the different environment
@@ -56,6 +61,9 @@ func InitConfig() (Config, error) {
 		HMACKey:              []byte(os.Getenv("APP_KEY")),
 		StripeSecretKey:      os.Getenv("STRIPE_SECRET_KEY"),
 		StripePublishableKey: os.Getenv("STRIPE_PUBLISHABLE_KEY"),
+		LiveKitURL:           os.Getenv("LIVEKIT_URL"),
+		LiveKitAPIKey:        os.Getenv("LIVEKIT_API_KEY"),
+		LiveKitSecret:        os.Getenv("LIVEKIT_API_SECRET"),
 	}
 	// now that we've tried to pull the env values, let's set defaults if any of them are empty
 	if c.DBHost == "" {

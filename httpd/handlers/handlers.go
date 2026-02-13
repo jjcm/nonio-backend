@@ -11,3 +11,6 @@ var DBConn *sqlx.DB
 
 // Log this is here so we can share the same logger with the main package
 var Log *logrus.Logger
+
+// LiveKit config for voice channels (set by bootstrap when LIVEKIT_* env vars are present)
+var LiveKitURL, LiveKitAPIKey, LiveKitSecret string

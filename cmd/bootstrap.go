@@ -48,4 +48,9 @@ func bootstrap() {
 
 	// init the stripe secret key
 	stripe.Key = sociConfig.StripeSecretKey
+
+	// LiveKit voice (optional)
+	handlers.LiveKitURL = sociConfig.LiveKitURL
+	handlers.LiveKitAPIKey = sociConfig.LiveKitAPIKey
+	handlers.LiveKitSecret = sociConfig.LiveKitSecret
 }
