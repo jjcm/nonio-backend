@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
-	"sort"
 	"strings"
 	"time"
 
@@ -180,45 +178,10 @@ func VoicePresence(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roomService, err := newLiveKitRoomServiceClient()
+	channels, err := getVoicePresenceChannels(c.URL)
 	if err != nil {
 		sendSystemError(w, err)
 		return
-	}
-
-	allChannels, err := models.GetChannelsByCommunityID(c.ID)
-	if err != nil {
-		sendSystemError(w, err)
-		return
-	}
-	voiceSlugs := make([]string, 0, len(allChannels))
-	for _, ch := range allChannels {
-		if ch.Kind == models.ChannelKindVoice {
-			voiceSlugs = append(voiceSlugs, ch.Slug)
-		}
-	}
-
-	channels := map[string][]string{}
-	for _, channel := range voiceSlugs {
-		roomName := voiceRoomName(c.URL, channel)
-		resp, listErr := roomService.ListParticipants(context.Background(), &livekit.ListParticipantsRequest{Room: roomName})
-		if listErr != nil {
-			// Empty/non-existent rooms can return errors depending on LiveKit node state; treat as empty.
-			Log.WithError(listErr).Debugf("voice presence: list participants failed for %s", roomName)
-			channels[channel] = []string{}
-			continue
-		}
-
-		idents := make([]string, 0, len(resp.Participants))
-		for _, p := range resp.Participants {
-			identity := strings.TrimSpace(p.Identity)
-			if identity == "" {
-				continue
-			}
-			idents = append(idents, identity)
-		}
-		sort.Strings(idents)
-		channels[channel] = idents
 	}
 
 	SendResponse(w, map[string]interface{}{
