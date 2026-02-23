@@ -38,6 +38,16 @@ block content
       h3 Example payload
       :code(javascript)
         { "community": "@myslug", "channel": "general", "content": "Hello!" }
+    +endpoint#get_community_channel_ws
+      h2 <span>GET</span> /community/channel/ws?community=:slug&channel=:channelSlug&token=:jwt
+      p WebSocket stream for real-time text-channel message events.
+      +auth
+      h3 Message-created payload
+      :code(javascript)
+        { "type": "channel.message.created", "community": "myslug", "channel": "general", "message": { ... } }
+      h3 Reaction payload
+      :code(javascript)
+        { "type": "channel.message.reaction", "community": "myslug", "channel": "general", "messageID": 123, "emoji": "🔥", "reacted": true, "count": 7 }
     +endpoint#get_community_channel_thread
       h2 <span>GET</span> /community/channel/thread?community=:slug&channel=:channelSlug&message=:messageId
       p Returns a thread (replies) for a message.

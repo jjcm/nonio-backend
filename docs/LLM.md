@@ -296,6 +296,11 @@ List messages. Auth required.
 ### POST /community/channel/messages
 Create message. Auth required. JSON: community, channel, content, imageURL?.
 
+### GET /community/channel/ws?community=:slug&channel=:slug&token=:jwt
+WebSocket for real-time text-channel events. Emits:
+- `channel.message.created` with a full message payload.
+- `channel.message.reaction` with `{ messageID, emoji, reacted, count }`.
+
 ### GET /community/channel/thread?community=:slug&channel=:slug&message=:id
 Get thread replies. Auth required.
 

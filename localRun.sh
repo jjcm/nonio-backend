@@ -15,6 +15,9 @@ export ADMIN_EMAIL_PASSWORD="Some password here"
 export STRIPE_SECRET_KEY="sk_test_51EpA4oH4gvdXgbs5rBv4JI29C38uWuNEGuB8Agt5hfya1fjgVGOQePyfj7x6ANDPE7hyYNZEMRWwkP93NAa7QTCl00GPr79F0w"
 export STRIPE_PUBLISHABLE_KEY="pk_test_51EpA4oH4gvdXgbs5r0aq0i3U6IzOwbWRVYaBYXMFLLHvihVHGHotHPAi2EJ7Km9JqudFZyLE30kt2YQSUOSK88Xx00Q6eEqxmS"
 export WEBHOOK_ENDPOINT_SECRET=""
+export LIVEKIT_URL="http://localhost:7880"
+export LIVEKIT_API_KEY="devkey"
+export LIVEKIT_API_SECRET="secret"
 
 # Dev-only: enable simulator support (safe for local dev only)
 export DEV_TOOLS_ENABLED="true"

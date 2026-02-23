@@ -396,3 +396,15 @@ func ToggleChannelMessageReaction(messageID, userID int, emoji string) (bool, er
 	}
 	return true, nil
 }
+
+func GetReactionCountForMessageEmoji(messageID int, emoji string) (int, error) {
+	emoji = strings.TrimSpace(emoji)
+	if messageID <= 0 || emoji == "" {
+		return 0, errors.New("messageID and emoji are required")
+	}
+	var count int
+	if err := DBConn.Get(&count, "SELECT COUNT(*) FROM community_channel_message_reactions WHERE message_id = ? AND emoji = ?", messageID, emoji); err != nil {
+		return 0, err
+	}
+	return count, nil
+}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"sync"
@@ -101,6 +102,12 @@ func (h *communityVoicePresenceHub) communityClients(community string) []*voiceP
 	return out
 }
 
+func (h *communityVoicePresenceHub) communityClientCount(community string) int {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return len(h.clients[community])
+}
+
 func (c *voicePresenceClient) writeJSON(payload interface{}) error {
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -147,6 +154,7 @@ func ensureVoicePresenceBroadcaster() {
 						"channels":  next,
 						"changes":   changes,
 					}
+					Log.Infof("voice presence ws: broadcast update @%s changes=%d clients=%d", community, len(changes), voicePresenceHub.communityClientCount(community))
 					for _, client := range voicePresenceHub.communityClients(community) {
 						if err := client.writeJSON(msg); err != nil {
 							Log.WithError(err).Debugf("voice presence ws: dropping stale client for @%s", community)
@@ -162,35 +170,47 @@ func ensureVoicePresenceBroadcaster() {
 
 // VoicePresenceWS - GET /voice/presence/ws?community=...&token=...
 func VoicePresenceWS(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			Log.Errorf("voice presence ws: panic url=%s remote=%s panic=%v stack=%s", r.URL.String(), r.RemoteAddr, rec, string(debug.Stack()))
+		}
+	}()
+
 	if r.Method != http.MethodGet {
+		Log.Warnf("voice presence ws: reject method=%s url=%s remote=%s", r.Method, r.URL.String(), r.RemoteAddr)
 		SendResponse(w, utils.MakeError("you can only GET this route"), http.StatusMethodNotAllowed)
 		return
 	}
 	if LiveKitURL == "" || LiveKitAPIKey == "" || LiveKitSecret == "" {
+		Log.Warnf("voice presence ws: reject voice-not-configured url=%s remote=%s", r.URL.String(), r.RemoteAddr)
 		SendResponse(w, utils.MakeError("voice is not configured"), http.StatusServiceUnavailable)
 		return
 	}
 
 	communityURL := strings.TrimSpace(strings.TrimPrefix(r.URL.Query().Get("community"), "@"))
 	if communityURL == "" {
+		Log.Warnf("voice presence ws: reject missing-community url=%s remote=%s", r.URL.String(), r.RemoteAddr)
 		SendResponse(w, utils.MakeError("community is required"), http.StatusBadRequest)
 		return
 	}
 
 	user, err := wsAuthUserFromRequest(r)
 	if err != nil {
+		Log.WithError(err).Warnf("voice presence ws: reject auth url=%s remote=%s", r.URL.String(), r.RemoteAddr)
 		SendResponse(w, utils.MakeError(err.Error()), http.StatusUnauthorized)
 		return
 	}
 
 	c := models.Community{}
 	if err := c.FindByURL(communityURL); err != nil {
+		Log.WithError(err).Warnf("voice presence ws: reject community-not-found community=%s url=%s remote=%s", communityURL, r.URL.String(), r.RemoteAddr)
 		sendNotFound(w, errors.New("community not found"))
 		return
 	}
 
 	subs, err := user.GetSubscribedCommunities()
 	if err != nil {
+		Log.WithError(err).Warnf("voice presence ws: reject membership-fetch-failed community=%s userID=%d url=%s remote=%s", c.URL, user.ID, r.URL.String(), r.RemoteAddr)
 		sendSystemError(w, err)
 		return
 	}
@@ -202,20 +222,27 @@ func VoicePresenceWS(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !isMember {
+		Log.Warnf("voice presence ws: reject not-member community=%s userID=%d url=%s remote=%s", c.URL, user.ID, r.URL.String(), r.RemoteAddr)
 		SendResponse(w, utils.MakeError("you must be a member of this community to view voice presence"), http.StatusForbidden)
 		return
 	}
 
 	ensureVoicePresenceBroadcaster()
+	Log.Infof("voice presence ws: attempting upgrade community=%s userID=%d remote=%s origin=%s", c.URL, user.ID, r.RemoteAddr, r.Header.Get("Origin"))
 
 	websocket.Handler(func(conn *websocket.Conn) {
+		remoteAddr := conn.RemoteAddr().String()
+		Log.Infof("voice presence ws: connected @%s userID=%d remote=%s", c.URL, user.ID, remoteAddr)
 		client := &voicePresenceClient{
 			conn:      conn,
 			community: c.URL,
 		}
 		voicePresenceHub.add(client)
+		Log.Infof("voice presence ws: clients @%s now=%d", c.URL, voicePresenceHub.communityClientCount(c.URL))
+		closeReason := "handler-exit"
 		defer func() {
 			voicePresenceHub.remove(client)
+			Log.Infof("voice presence ws: disconnected @%s userID=%d remote=%s reason=%s clients_now=%d", c.URL, user.ID, remoteAddr, closeReason, voicePresenceHub.communityClientCount(c.URL))
 			_ = conn.Close()
 		}()
 
@@ -227,6 +254,7 @@ func VoicePresenceWS(w http.ResponseWriter, r *http.Request) {
 				"community": c.URL,
 				"channels":  initial,
 			})
+			Log.Infof("voice presence ws: initial snapshot sent @%s channels=%d", c.URL, len(initial))
 		} else {
 			Log.WithError(err).Warnf("voice presence ws: initial snapshot failed for @%s", c.URL)
 		}
@@ -234,10 +262,13 @@ func VoicePresenceWS(w http.ResponseWriter, r *http.Request) {
 		for {
 			var ignored string
 			if err := websocket.Message.Receive(conn, &ignored); err != nil {
+				closeReason = err.Error()
+				Log.WithError(err).Infof("voice presence ws: receive loop ended @%s userID=%d remote=%s", c.URL, user.ID, remoteAddr)
 				return
 			}
 		}
 	}).ServeHTTP(w, r)
+	Log.Infof("voice presence ws: upgrade handler returned community=%s userID=%d remote=%s", c.URL, user.ID, r.RemoteAddr)
 }
 
 func wsAuthUserFromRequest(r *http.Request) (models.User, error) {

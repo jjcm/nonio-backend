@@ -208,8 +208,10 @@ func ChannelMessageCreate(w http.ResponseWriter, r *http.Request) {
 		SendResponse(w, map[string]string{"error": err.Error()}, 400)
 		return
 	}
+	msg.Author = u
+	broadcastChannelMessageCreated(c.URL, ch.Slug, &msg)
 
-	SendResponse(w, msg, 201)
+	SendResponse(w, &msg, 201)
 }
 
 // GetChannelMessages - GET /community/channel/messages?community=...&channel=...&before=...&limit=...
@@ -415,7 +417,9 @@ func ChannelThreadCreate(w http.ResponseWriter, r *http.Request) {
 		SendResponse(w, map[string]string{"error": err.Error()}, 400)
 		return
 	}
-	SendResponse(w, msg, 201)
+	msg.Author = u
+	broadcastChannelMessageCreated(c.URL, ch.Slug, &msg)
+	SendResponse(w, &msg, 201)
 }
 
 func collectMessageImageURLs(imageURL string, imageURLs []string) []string {
@@ -501,6 +505,12 @@ func ChannelMessageReact(w http.ResponseWriter, r *http.Request) {
 		SendResponse(w, map[string]string{"error": err.Error()}, 400)
 		return
 	}
+	count, err := models.GetReactionCountForMessageEmoji(payload.MessageID, payload.Emoji)
+	if err != nil {
+		sendSystemError(w, err)
+		return
+	}
+	broadcastChannelMessageReactionUpdated(c.URL, ch.Slug, payload.MessageID, payload.Emoji, reacted, count)
 	SendResponse(w, map[string]interface{}{"reacted": reacted}, 200)
 }
 

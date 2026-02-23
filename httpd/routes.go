@@ -31,8 +31,9 @@ func OpenRoutes() map[string]func(http.ResponseWriter, *http.Request) {
 		"/tags/": handlers.GetTagsByPrefix,
 
 		// COMMUNITY ROUTES
-		"/communities":       handlers.GetCommunities,
-		"/voice/presence/ws": handlers.VoicePresenceWS,
+		"/communities":          handlers.GetCommunities,
+		"/voice/presence/ws":    handlers.VoicePresenceWS,
+		"/community/channel/ws": handlers.ChannelMessagesWS,
 
 		"/stripe/webhooks": handlers.StripeWebhook,
 	}
